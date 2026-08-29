@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GUP - Contacto | Gestión Urbana de Propiedades</title>
+
+    <!-- Fuente Montserrat de Google Fonts para igualar la tipografía del prototipo -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Hoja de estilos principal para la página de contacto -->
+    <link rel="stylesheet" href="css/contacto.css">
+</head>
+<body>
+
+    <!-- ========================================== -->
+    <!-- BARRA DE NAVEGACIÓN SUPERIOR (HEADER)     -->
+    <!-- ========================================== -->
+    <header class="encabezado">
+        <div class="logo-contenedor">
+            <!-- Insignia / Caja del Logo GUP -->
+            <div class="logo-caja">GUP</div>
+            <div class="logo-texto">
+                <span class="nombre-marca">GESTIÓN URBANA</span>
+                <span class="sub-marca">DE PROPIEDADES</span>
+            </div>
+        </div>
+
+        <!-- Menú de navegación principal -->
+        <nav class="menu-navegacion">
+            <a href="landing_page.html">INICIO</a>
+            <a href="#">PROPIEDADES</a>
+            <a href="#">NOSOTROS</a>
+            <!-- La clase "activo" resalta la página donde está posicionado el usuario -->
+            <a href="contacto.html" class="activo">CONTACTO</a>
+        </nav>
+
+        <!-- Botón de perfil / usuario a la derecha -->
+        <div class="usuario-icono" title="Cuenta de Usuario">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+        </div>
+    </header>
+
+    <!-- ========================================== -->
+    <!-- SECCIÓN DE CABECERA Y TÍTULO (HERO)       -->
+    <!-- ========================================== -->
+    <section class="hero-contacto">
+        <div class="hero-contenido">
+            <span class="categoria-hero">ATENCIÓN AL CLIENTE Y CONSULTAS</span>
+            <h1>CONTÁCTANOS</h1>
+            <p>Estamos aquí para resolver tus dudas sobre arriendos, publicaciones y administración de propiedades.</p>
+        </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- CONTENIDO PRINCIPAL: CONTACTO Y FORMULARIO -->
+    <!-- ========================================== -->
+    <main class="seccion-contacto">
+        <div class="contenedor-contacto">
+
+            <!-- COLUMNA 1: Tarjetas de Información de Contacto -->
+            <div class="info-contacto">
+                <h2>Información de Atención</h2>
+                <p class="descripcion-info">Puedes comunicarte con nuestro equipo a través de los siguientes canales directos o visitarnos en nuestra oficina central.</p>
+
+                <!-- Tarjeta: Dirección -->
+                <div class="tarjeta-info">
+                    <div class="icono-info">📍</div>
+                    <div class="texto-info">
+                        <h3>Oficina Central</h3>
+                        <p>Antonio Varas 810, Oficina 602<br>Providencia, Santiago, Chile</p>
+                    </div>
+                </div>
+
+                <!-- Tarjeta: Teléfonos -->
+                <div class="tarjeta-info">
+                    <div class="icono-info">📞</div>
+                    <div class="texto-info">
+                        <h3>Teléfonos de Contacto</h3>
+                        <p>Central: +56 2 2345 6789</p>
+                        <p>WhatsApp Comercial: +56 9 8765 4321</p>
+                    </div>
+                </div>
+
+                <!-- Tarjeta: Correo Electrónico -->
+                <div class="tarjeta-info">
+                    <div class="icono-info">✉️</div>
+                    <div class="texto-info">
+                        <h3>Correo Electrónico</h3>
+                        <p>contacto@gup-propiedades.cl</p>
+                        <p>soporte@gup-propiedades.cl</p>
+                    </div>
+                </div>
+
+                <!-- Tarjeta: Horario de Atención -->
+                <div class="tarjeta-info">
+                    <div class="icono-info">⏰</div>
+                    <div class="texto-info">
+                        <h3>Horario de Atención</h3>
+                        <p>Lunes a Viernes: 09:00 - 18:30 hrs</p>
+                        <p>Sábados: 10:00 - 14:00 hrs</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUMNA 2: Formulario de Contacto -->
+            <div class="tarjeta-formulario">
+                <h2>Envíanos un Mensaje</h2>
+                <p class="subtitulo-form">Completa los campos requeridos y un ejecutivo se pondrá en contacto contigo a la brevedad.</p>
+
+                <form id="formContacto" class="formulario">
+                    
+                    <!-- Campo: Nombre Completo -->
+                    <div class="campo">
+                        <label for="nombre">Nombre Completo <span class="requerido">*</span></label>
+                        <input type="text" id="nombre" name="nombre" placeholder="Ej. Martin Sepulveda" required>
+                    </div>
+
+                    <!-- Campo: Correo Electrónico -->
+                    <div class="campo">
+                        <label for="email">Correo Electrónico <span class="requerido">*</span></label>
+                        <input type="email" id="email" name="email" placeholder="ejemplo@correo.com" required>
+                    </div>
+
+                    <!-- Campo: Teléfono -->
+                    <div class="campo">
+                        <label for="telefono">Teléfono de Contacto</label>
+                        <input type="tel" id="telefono" name="telefono" placeholder="+56 9 1234 5678">
+                    </div>
+
+                    <!-- Campo: Motivo / Asunto -->
+                    <div class="campo">
+                        <label for="asunto">Motivo de la Consulta <span class="requerido">*</span></label>
+                        <select id="asunto" name="asunto" required>
+                            <option value="">-- Selecciona una opción --</option>
+                            <option value="arriendo">Consulta sobre Arriendo de Propiedad</option>
+                            <option value="publicar">Quiero Publicar mi Propiedad</option>
+                            <option value="administracion">Servicio de Administración Inmobiliaria</option>
+                            <option value="visita">Coordinación de Visita</option>
+                            <option value="otro">Otro Motivo</option>
+                        </select>
+                    </div>
+
+                    <!-- Campo: Mensaje -->
+                    <div class="campo">
+                        <label for="mensaje">Mensaje <span class="requerido">*</span></label>
+                        <textarea id="mensaje" name="mensaje" rows="4" placeholder="Escribe aquí tu consulta o requerimiento en detalle..." required></textarea>
+                    </div>
+
+                    <!-- Contenedor para mostrar mensajes de éxito o error vía JavaScript -->
+                    <div id="mensajeEstado" class="mensaje-estado"></div>
+
+                    <!-- Botón Enviar -->
+                    <button type="submit" class="boton-enviar">Enviar Mensaje</button>
+                </form>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- ========================================== -->
+    <!-- PIE DE PÁGINA INSTITUCIONAL (FOOTER)      -->
+    <!-- ========================================== -->
+    <footer class="pie-pagina">
+        <div class="contenedor-footer">
+            <!-- Columna Marca -->
+            <div class="columna-marca">
+                <div class="logo-caja-footer">GUP</div>
+                <p class="descripcion-footer">Gestión Urbana de Propiedades. Corretaje y administración de arriendos.</p>
+            </div>
+
+            <!-- Columna Enlaces: Propiedades -->
+            <div class="columna-footer">
+                <h4>PROPIEDADES</h4>
+                <ul>
+                    <li><a href="#">Departamentos</a></li>
+                    <li><a href="#">Casas</a></li>
+                    <li><a href="#">Oficinas</a></li>
+                    <li><a href="#">Locales comerciales</a></li>
+                </ul>
+            </div>
+
+            <!-- Columna Enlaces: Propietarios -->
+            <div class="columna-footer">
+                <h4>PROPIETARIOS</h4>
+                <ul>
+                    <li><a href="#">Administración de arriendo</a></li>
+                    <li><a href="#">Tasación</a></li>
+                    <li><a href="#">Comisiones</a></li>
+                    <li><a href="#">Preguntas frecuentes</a></li>
+                </ul>
+            </div>
+
+            <!-- Columna Enlaces: Empresa -->
+            <div class="columna-footer">
+                <h4>EMPRESA</h4>
+                <ul>
+                    <li><a href="#">Nosotros</a></li>
+                    <li><a href="#">Equipo</a></li>
+                    <li><a href="#">Trabaja con nosotros</a></li>
+                    <li><a href="contacto.html">Contacto</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="copyright-bar">
+            <p>© 2026 GUP Propiedades SpA</p>
+        </div>
+    </footer>
+
+    <!-- Script de validación en JavaScript Vanilla -->
+    <script src="js/contacto.js"></script>
+</body>
+</html>
