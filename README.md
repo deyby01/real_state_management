@@ -34,6 +34,29 @@ The project is in its **design phase**. Right now we are only starting to implem
 └── docs/              # Project documentation
 ```
 
+## Git workflow
+
+We work with a branch-based workflow on GitHub. **All changes go through a Pull Request — never commit directly to `development`.**
+
+1. **Pull first.** Before starting any work, update your local copy of `development`:
+   ```bash
+   git checkout development
+   git pull origin development
+   ```
+2. **Create a branch** using the following naming convention:
+   ```
+   feature/name-user/name-of-implementation
+   ```
+   For example: `feature/deyby/landing-page-header`.
+3. **Work and commit** on your branch only.
+4. **Rebase before opening the PR.** If `development` moved ahead while you were working, bring those changes into your branch to avoid conflicts:
+   ```bash
+   git fetch origin
+   git rebase origin/development
+   ```
+   Fix any conflicts, then push (use `--force-with-lease` if you already pushed the branch before rebasing).
+5. **Open the Pull Request** against `development` and wait for review before merging.
+
 ## Documentation
 
 The full project brief is available in [docs/Caso3_GestionInmobiliaria.docx](docs/Caso3_GestionInmobiliaria.docx).
