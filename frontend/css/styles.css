@@ -52,6 +52,7 @@ ul {
 .site-header {
     background-color: var(--c-accent-900);
     position: sticky;
+    top: 0;
 }
 
 .nav {
@@ -73,10 +74,20 @@ ul {
 
 .nav-brand img {
     height: 120px;
-    width: 120px;
+    width: auto;
 }
 
-ul.nav-menu {
+.nav-toggle {
+    display: none;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: var(--c-neutral-100);
+    font-size: 24px;
+    padding: 10px;
+}
+
+.nav-menu {
     display: flex;
     align-items: center;
     gap: 30px;
@@ -183,7 +194,7 @@ ul.nav-menu {
 
 .site-footer-brand img {
     height: 110px;
-    width: 110px;
+    width: auto;
     margin-bottom: 1px;
 }
 
@@ -223,4 +234,48 @@ ul.nav-menu {
     color: var(--c-neutral-500);
     font-size: 13px;
     text-align: left;
+}
+
+
+/* ======= RESPONSIVE: MOVIL ======*/
+@media (max-width: 768px) {
+
+    .nav {
+        flex-wrap: wrap;
+        padding: 10px 20px;
+    }
+
+    .nav-brand img,
+    .site-footer-brand img {
+        height: 80px;
+        width: auto;
+    }
+
+    .nav-toggle {
+        display: block;
+    }
+
+    .nav-menu {
+        display: none;
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        padding-bottom: 10px;
+        text-align: right;
+    }
+
+    .nav-menu.is-open {
+        display: flex;
+    }
+
+    .site-footer-cols {
+        grid-template-columns: 1fr;
+        gap: 30px;
+        text-align: center;
+    }
+
+    .site-footer {
+        padding: 30px 20px 20px;
+    }
 }
