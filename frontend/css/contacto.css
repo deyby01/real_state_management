@@ -1,22 +1,21 @@
 /* ==========================================================================
-   HOJA DE ESTILOS: PÁGINA DE CONTACTO (GUP - GESTIÓN URBANA DE PROPIEDADES)
+   HOJA DE ESTILOS: PÁGINA DE CONTACTO (ESTILO NEGRO Y GRIS MONOCROMÁTICO)
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   1. VARIABLES DE ESTILO Y PALETA DE COLORES (PROTOTIPO LANDING-HOME.PDF)
+   1. VARIABLES DE ESTILO (PALETA DE COLORES NEGRO, GRIS Y BLANCO)
    -------------------------------------------------------------------------- */
 :root {
-    --color-primario: #1b2735;      /* Azul marino oscuro para Header y Footer */
-    --color-hero: #2f455c;          /* Azul pizarra para la franja del Hero */
-    --color-acento: #4b7094;        /* Azul metálico para botones y enlaces */
-    --color-acento-hover: #375675;  /* Color del botón al pasar el cursor (hover) */
-    --color-fondo: #f4f6f8;         /* Fondo gris claro suave para la página */
-    --color-blanco: #ffffff;        /* Blanco puro para tarjetas y fondo del formulario */
-    --color-texto: #1e293b;         /* Color oscuro principal para títulos y textos */
-    --color-texto-suave: #64748b;   /* Color gris para subtítulos y descripciones */
-    --color-borde: #cbd5e1;         /* Gris para bordes de inputs y líneas divisoras */
-    --color-exito: #16a34a;         /* Verde para mensaje de éxito */
-    --color-error: #dc2626;         /* Rojo para mensaje de error */
+    --color-primario: #0a0a0a;        /* Negro absoluto para Header y Footer */
+    --color-acento: #18181b;          /* Negro grafito para botones principales */
+    --color-acento-hover: #3f3f46;    /* Gris medio al pasar el cursor (hover) */
+    --color-fondo: #f4f4f5;           /* Fondo gris neutro muy suave para el cuerpo */
+    --color-tarjeta: #ffffff;         /* Blanco puro para las tarjetas y formulario */
+    --color-borde: #e4e4e7;           /* Gris claro para bordes y divisiones */
+    --color-texto: #18181b;           /* Texto principal en tono grafito oscuro */
+    --color-texto-suave: #71717a;     /* Texto secundario en gris suave */
+    --color-exito: #16a34a;           /* Verde para mensaje de éxito */
+    --color-error: #dc2626;           /* Rojo para mensaje de error */
     --fuente-principal: 'Montserrat', sans-serif;
 }
 
@@ -43,15 +42,16 @@ a {
 }
 
 /* --------------------------------------------------------------------------
-   3. BARRA DE NAVEGACIÓN SUPERIOR (HEADER)
+   3. BARRA DE NAVEGACIÓN SUPERIOR (HEADER NEGRO EGANTE)
    -------------------------------------------------------------------------- */
 .encabezado {
     background-color: var(--color-primario);
-    color: var(--color-blanco);
+    color: #ffffff;
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 1.2rem 3rem;
+    border-bottom: 1px solid #27272a;
 }
 
 /* Estilo del Logo GUP */
@@ -62,7 +62,7 @@ a {
 }
 
 .logo-caja {
-    background-color: var(--color-blanco);
+    background-color: #ffffff;
     color: var(--color-primario);
     font-weight: 800;
     font-size: 1.1rem;
@@ -84,7 +84,7 @@ a {
 
 .sub-marca {
     font-size: 0.7rem;
-    color: #94a3b8;
+    color: #a1a1aa;
     letter-spacing: 1px;
 }
 
@@ -98,17 +98,17 @@ a {
     font-size: 0.85rem;
     font-weight: 600;
     letter-spacing: 1.5px;
-    color: #cbd5e1;
+    color: #a1a1aa;
     padding-bottom: 0.2rem;
 }
 
 .menu-navegacion a:hover {
-    color: var(--color-blanco);
+    color: #ffffff;
 }
 
 .menu-navegacion a.activo {
-    color: var(--color-blanco);
-    border-bottom: 2px solid var(--color-acento);
+    color: #ffffff;
+    border-bottom: 2px solid #ffffff;
 }
 
 .usuario-icono {
@@ -119,50 +119,134 @@ a {
     height: 36px;
     border-radius: 50%;
     background-color: rgba(255, 255, 255, 0.1);
-    color: var(--color-blanco);
+    color: #ffffff;
     cursor: pointer;
     transition: background 0.2s ease;
 }
 
 .usuario-icono:hover {
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.25);
 }
 
 /* --------------------------------------------------------------------------
-   4. SECCIÓN HERO (FRANJA DE TÍTULO PRINCIPAL)
+   4. SECCIÓN HERO CON SLIDESHOW DE FOTOS Y CAPA DE LEGIBILIDAD
    -------------------------------------------------------------------------- */
 .hero-contacto {
-    background-color: var(--color-hero);
-    color: var(--color-blanco);
+    position: relative;
+    overflow: hidden;
+    min-height: 420px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
-    padding: 3.5rem 1.5rem;
+    color: #ffffff;
+    padding: 4rem 1.5rem;
 }
 
+/* Contenedor absoluto de las imágenes de fondo */
+.hero-slideshow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+/* Cada diapositiva de imagen con efecto de transición suave */
+.slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transition: opacity 1.2s ease-in-out;
+}
+
+.slide.activa {
+    opacity: 1;
+}
+
+/* CAPA DE SUPERPOSICIÓN (OVERLAY): Filtro oscuro que asegura la legibilidad del texto */
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.70) 0%, rgba(10, 10, 10, 0.85) 100%);
+    z-index: 2;
+}
+
+/* Contenido de Texto posicionado encima del filtro */
 .hero-contenido {
-    max-width: 800px;
+    position: relative;
+    z-index: 3;
+    max-width: 850px;
     margin: 0 auto;
 }
 
 .categoria-hero {
     font-size: 0.8rem;
     font-weight: 700;
-    letter-spacing: 2.5px;
-    color: #94a3b8;
+    letter-spacing: 3px;
+    color: #d4d4d8;
     display: block;
     margin-bottom: 0.8rem;
 }
 
 .hero-contacto h1 {
-    font-size: 2.5rem;
+    font-size: 2.8rem;
     font-weight: 800;
-    letter-spacing: 2px;
-    margin-bottom: 0.8rem;
+    letter-spacing: 3px;
+    margin-bottom: 0.9rem;
+    color: #ffffff;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
 }
 
 .hero-contacto p {
-    font-size: 1.05rem;
-    color: #e2e8f0;
+    font-size: 1.1rem;
+    color: #f4f4f5;
     font-weight: 400;
+    max-width: 700px;
+    margin: 0 auto;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+/* Indicadores de puntos (Dots) interactivos del Slideshow */
+.slideshow-dots {
+    position: absolute;
+    bottom: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    z-index: 4;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.35);
+    border: 2px solid rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.dot:hover {
+    background-color: rgba(255, 255, 255, 0.7);
+    transform: scale(1.15);
+}
+
+.dot.activa {
+    background-color: #ffffff;
+    border-color: #ffffff;
+    transform: scale(1.25);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 
 /* --------------------------------------------------------------------------
@@ -181,7 +265,7 @@ a {
 }
 
 /* --------------------------------------------------------------------------
-   6. COLUMNA 1: TARJETAS DE INFORMACIÓN DE CONTACTO
+   6. COLUMNA 1: TARJETAS DE INFORMACIÓN EN TONOS GRISES
    -------------------------------------------------------------------------- */
 .info-contacto {
     flex: 1 1 400px;
@@ -201,7 +285,7 @@ a {
 }
 
 .tarjeta-info {
-    background-color: var(--color-blanco);
+    background-color: var(--color-tarjeta);
     border: 1px solid var(--color-borde);
     border-radius: 8px;
     padding: 1.2rem 1.5rem;
@@ -209,13 +293,14 @@ a {
     align-items: flex-start;
     gap: 1.2rem;
     margin-bottom: 1.2rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .tarjeta-info:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    border-color: #a1a1aa;
 }
 
 .icono-info {
@@ -235,22 +320,54 @@ a {
     color: var(--color-texto-suave);
 }
 
+/* Tarjeta de Mapa de Ubicación (Google Maps en Escala de Grises) */
+.tarjeta-mapa {
+    background-color: var(--color-tarjeta);
+    border: 1px solid var(--color-borde);
+    border-radius: 8px;
+    padding: 1.2rem;
+    margin-top: 1.5rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.tarjeta-mapa h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 0.8rem;
+    color: var(--color-texto);
+}
+
+.contenedor-iframe-mapa {
+    width: 100%;
+    height: 220px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--color-borde);
+}
+
+.contenedor-iframe-mapa iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
 /* --------------------------------------------------------------------------
-   7. COLUMNA 2: TARJETA Y FORMULARIO DE CONTACTO
+   7. COLUMNA 2: FORMULARIO DE CONTACTO EN GAMA NEGRA/GRIS
    -------------------------------------------------------------------------- */
 .tarjeta-formulario {
     flex: 1 1 500px;
-    background-color: var(--color-blanco);
+    background-color: var(--color-tarjeta);
     border: 1px solid var(--color-borde);
     border-radius: 8px;
     padding: 2.5rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
 }
 
 .tarjeta-formulario h2 {
     font-size: 1.6rem;
     font-weight: 700;
     margin-bottom: 0.4rem;
+    color: var(--color-texto);
 }
 
 .subtitulo-form {
@@ -291,7 +408,7 @@ a {
     font-size: 0.95rem;
     border: 1px solid var(--color-borde);
     border-radius: 6px;
-    background-color: #f8fafc;
+    background-color: #fafafa;
     color: var(--color-texto);
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -300,15 +417,35 @@ a {
 .campo select:focus,
 .campo textarea:focus {
     outline: none;
-    border-color: var(--color-acento);
-    background-color: var(--color-blanco);
-    box-shadow: 0 0 0 3px rgba(75, 112, 148, 0.15);
+    border-color: #18181b;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.15);
 }
 
-/* Botón Enviar */
+/* Indicador del contador de caracteres del textarea */
+.contador-caracteres {
+    font-size: 0.78rem;
+    color: var(--color-texto-suave);
+    text-align: right;
+    display: block;
+    margin-top: 0.2rem;
+    transition: color 0.2s ease;
+}
+
+.contador-caracteres.limite-cercano {
+    color: #d97706;
+    font-weight: 600;
+}
+
+.contador-caracteres.limite-alcanzado {
+    color: var(--color-error);
+    font-weight: 700;
+}
+
+/* Botón Enviar en tono negro grafito */
 .boton-enviar {
     background-color: var(--color-acento);
-    color: var(--color-blanco);
+    color: #ffffff;
     font-family: var(--fuente-principal);
     font-size: 0.95rem;
     font-weight: 700;
@@ -335,7 +472,7 @@ a {
     border-radius: 6px;
     font-size: 0.9rem;
     font-weight: 500;
-    display: none; /* Se activa dinámicamente con JS */
+    display: none;
 }
 
 .mensaje-estado.exito {
@@ -353,12 +490,113 @@ a {
 }
 
 /* --------------------------------------------------------------------------
-   8. PIE DE PÁGINA (FOOTER)
+   7.5 SECCIÓN DE PREGUNTAS FRECUENTES (FAQ - ACORDEÓN)
+   -------------------------------------------------------------------------- */
+.seccion-faq {
+    max-width: 1100px;
+    margin: 4rem auto 1rem auto;
+}
+
+.encabezado-faq {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.encabezado-faq h2 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--color-texto);
+    margin-bottom: 0.5rem;
+}
+
+.encabezado-faq p {
+    font-size: 0.95rem;
+    color: var(--color-texto-suave);
+    max-width: 650px;
+    margin: 0 auto;
+}
+
+.contenedor-faq {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.faq-item {
+    background-color: var(--color-tarjeta);
+    border: 1px solid var(--color-borde);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.faq-item:hover {
+    border-color: #a1a1aa;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.faq-pregunta {
+    width: 100%;
+    padding: 1.2rem 1.5rem;
+    background: none;
+    border: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+    font-family: var(--fuente-principal);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-texto);
+    cursor: pointer;
+    gap: 1rem;
+}
+
+.faq-icono {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--color-texto-suave);
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+
+/* Respuesta oculta por defecto */
+.faq-respuesta {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease, padding 0.35s ease;
+    background-color: #fafafa;
+    border-top: 1px solid transparent;
+}
+
+.faq-respuesta p {
+    font-size: 0.92rem;
+    color: var(--color-texto-suave);
+    line-height: 1.6;
+    padding: 0 1.5rem;
+}
+
+/* Estado Activo cuando se abre la pregunta */
+.faq-item.activa .faq-respuesta {
+    max-height: 200px;
+    padding-top: 1rem;
+    padding-bottom: 1.2rem;
+    border-top-color: var(--color-borde);
+}
+
+.faq-item.activa .faq-icono {
+    transform: rotate(45deg);
+    color: var(--color-texto);
+}
+
+/* --------------------------------------------------------------------------
+   8. PIE DE PÁGINA INSTITUCIONAL (FOOTER NEGRO ABSOLUTO)
    -------------------------------------------------------------------------- */
 .pie-pagina {
     background-color: var(--color-primario);
-    color: var(--color-blanco);
+    color: #ffffff;
     padding-top: 3rem;
+    border-top: 1px solid #27272a;
 }
 
 .contenedor-footer {
@@ -377,7 +615,7 @@ a {
 
 .logo-caja-footer {
     display: inline-block;
-    background-color: var(--color-blanco);
+    background-color: #ffffff;
     color: var(--color-primario);
     font-weight: 800;
     font-size: 1.1rem;
@@ -389,7 +627,7 @@ a {
 
 .descripcion-footer {
     font-size: 0.85rem;
-    color: #94a3b8;
+    color: #a1a1aa;
     line-height: 1.5;
 }
 
@@ -398,7 +636,7 @@ a {
     font-weight: 700;
     letter-spacing: 2px;
     margin-bottom: 1.2rem;
-    color: #cbd5e1;
+    color: #e4e4e7;
 }
 
 .columna-footer ul {
@@ -410,23 +648,56 @@ a {
 
 .columna-footer ul a {
     font-size: 0.85rem;
-    color: #94a3b8;
+    color: #a1a1aa;
 }
 
 .columna-footer ul a:hover {
-    color: var(--color-blanco);
+    color: #ffffff;
 }
 
 .copyright-bar {
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid #27272a;
     text-align: center;
     padding: 1.2rem 1.5rem;
     font-size: 0.8rem;
-    color: #64748b;
+    color: #71717a;
 }
 
 /* --------------------------------------------------------------------------
-   9. ADAPTABILIDAD A MOVILES Y TABLETS (RESPONSIVE DESIGN)
+   8.5 BOTÓN FLOTANTE DE WHATSAPP COMERCIAL
+   -------------------------------------------------------------------------- */
+.boton-whatsapp-flotante {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    z-index: 100;
+    background-color: #25d366;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 1.2rem;
+    border-radius: 50px;
+    font-family: var(--fuente-principal);
+    font-size: 0.9rem;
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+}
+
+.boton-whatsapp-flotante:hover {
+    background-color: #20ba5a;
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 6px 20px rgba(37, 211, 102, 0.6);
+    color: #ffffff;
+}
+
+.icono-whatsapp {
+    flex-shrink: 0;
+}
+
+/* --------------------------------------------------------------------------
+   9. ADAPTABILIDAD A MÓVILES Y TABLETS (RESPONSIVE DESIGN)
    -------------------------------------------------------------------------- */
 @media (max-width: 850px) {
     .encabezado {
@@ -445,10 +716,21 @@ a {
     }
 
     .hero-contacto h1 {
-        font-size: 2rem;
+        font-size: 2.1rem;
     }
 
     .contenedor-footer {
         flex-direction: column;
+    }
+
+    .boton-whatsapp-flotante span {
+        display: none;
+    }
+
+    .boton-whatsapp-flotante {
+        padding: 0.8rem;
+        border-radius: 50%;
+        bottom: 20px;
+        right: 20px;
     }
 }
