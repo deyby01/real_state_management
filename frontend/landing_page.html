@@ -47,11 +47,221 @@
     </header>
 
 
-<!-- ===== MAIN CONTENT =============== -->
-    <main></main>
+    <!-- ===== MAIN CONTENT =============== -->
+    <main>
+
+        <!-- ===== HERO =====-->
+        <section class="hero">
+            <div class="hero-content">
+                <p class="hero-kicker">Región Metropolitana</p>
+                <h1 class="hero-title">
+                    <span>Encuentre dónde vivir.</span>
+                    <span>Nosotros nos encargamos</span>
+                    <span>del resto.</span>
+                </h1>
+            </div>
+        </section>
+
+        <!-- ===== BUSCADOR ===== -->
+        <section class="search">
+            <form class="search-box">
+                <div class="search-field">
+                    <label for="operation">Operación</label>
+                    <select id="operation" name="operation">
+                        <option>Arriendo</option>
+                        <option>Venta</option>
+                    </select>
+                </div>
+
+                <div class="search-field">
+                    <label for="type">Tipo</label>
+                    <select id="type" name="type">
+                        <option>Departamento</option>
+                        <option>Casa</option>
+                        <option>Oficina</option>
+                        <option>Local comercial</option>
+                    </select>
+                </div>
+
+                <div class="search-field">
+                    <label for="commune">Comuna</label>
+                    <select id="commune" name="commune">
+                        <option>Santiago</option>
+                        <option>Providencia</option>
+                        <option>Las Condes</option>
+                        <option>Ñuñoa</option>
+                    </select>
+                </div>
+
+                <button class="search-button" type="submit">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    Buscar
+                </button>
+            </form>
+        </section>
+
+        <section class="feed">
+            <div class="feed-head">
+                <h2 class="feed-title">En vitrina</h2>
+                <p class="feed-count">8 propiedades</p>
+            </div>
+            <hr class="feed-line">
+
+            <div class="feed-grid">
+
+                <!-- ── Tarjeta de propiedad (repetir) ─────────────────────────────── -->
+                <article class="property">
+                    <img src="images/departamento1.jpg" alt="Departamento en Providencia">
+                    <div class="property-body">
+                        <div>
+                            <p class="property-kind">Departamento · Providencia</p>
+                            <h3 class="property-title">Av. Los Leones 1240</h3>
+                        </div>
+                        <p class="property-price">$680.000</p>
+                        <hr class="property-line">
+                        <ul class="specs">
+                            <li class="specs-item"><span class="specs-label">Dorm</span><span class="specs-value">2</span></li>
+                            <li class="specs-item"><span class="specs-label">Baños</span><span class="specs-value">2</span></li>
+                            <li class="specs-item"><span class="specs-label">Superficie</span><span class="specs-value">68 m²</span></li>
+                        </ul>
+                        <hr class="property-line">
+                        <a class="btn-contact" href="propiedad.html">Contactar</a>
+                    </div>
+                </article>
+
+                <article class="property">
+                    <img src="images/casa1.jpg" alt="Casa en La Reina">
+                    <div class="property-body">
+                        <div>
+                            <p class="property-kind">Casa · La Reina</p>
+                            <h3 class="property-title">Alonso de Camargo 890</h3>
+                        </div>
+                        <p class="property-price">$1.450.000</p>
+                        <hr class="property-line">
+                        <ul class="specs">
+                            <li class="specs-item"><span class="specs-label">Dorm</span><span class="specs-value">4</span></li>
+                            <li class="specs-item"><span class="specs-label">Baños</span><span class="specs-value">3</span></li>
+                            <li class="specs-item"><span class="specs-label">Superficie</span><span class="specs-value">180 m²</span></li>
+                        </ul>
+                        <hr class="property-line">
+                        <a class="btn-contact" href="propiedad.html">Contactar</a>
+                    </div>
+                </article>
+
+                <article class="property">
+                    <img src="images/oficina.jpg" alt="Oficina en Las Condes">
+                    <div class="property-body">
+                        <div>
+                            <p class="property-kind">Oficina · Las Condes</p>
+                            <h3 class="property-title">Apoquindo 4501, of. 802</h3>
+                        </div>
+                        <p class="property-price">$1.120.000</p>
+                        <hr class="property-line">
+                        <ul class="specs">
+                            <li class="specs-item"><span class="specs-label">Privados</span><span class="specs-value">4</span></li>
+                            <li class="specs-item"><span class="specs-label">Baños</span><span class="specs-value">2</span></li>
+                            <li class="specs-item"><span class="specs-label">Superficie</span><span class="specs-value">96 m²</span></li>
+                        </ul>
+                        <hr class="property-line">
+                        <a class="btn-contact" href="propiedad.html">Contactar</a>
+                    </div>
+                </article>
+
+                <!-- ── Destacados: bloque intercalado, cruza las 3 columnas ───────── -->
+                <section class="featured" aria-label="Propiedades destacadas">
+                    <article class="featured-item">
+                        <p class="featured-label">Destacado</p>
+                        <h3 class="featured-title">Padre Hurtado Norte 1560, Vitacura</h3>
+                        <p class="featured-text">Casa de dos pisos con jardín de 320 m², sala de estar independiente y estacionamiento para tres autos. Recién repintada y disponible para entrega inmediata.</p>
+                        <div class="featured-foot">
+                            <span class="featured-price">$2.300.000</span>
+                            <span class="featured-meta">5D · 4B · 260 m²</span>
+                        </div>
+                        <a class="btn-contact" href="propiedad.html">Contactar</a>
+                    </article>
+
+                    <article class="featured-item">
+                        <p class="featured-label">Destacado</p>
+                        <h3 class="featured-title">Isidora Goyenechea 3200, Las Condes</h3>
+                        <p class="featured-text">Piso alto con vista al cerro, cocina equipada y bodega. Edificio con conserjería las veinticuatro horas.</p>
+                        <div class="featured-foot">
+                            <span class="featured-price">$1.680.000</span>
+                            <span class="featured-meta">3D · 2B · 118 m²</span>
+                        </div>
+                        <a class="btn-contact" href="propiedad.html">Contactar</a>
+                    </article>
+                </section>
+
+                <!-- ── Resto del feed: misma tarjeta ──────────────────────────────── -->
+                <article class="property">
+                    <img src="images/departamento2.jpg" alt="Departamento en Ñuñoa">
+                    <div class="property-body">
+                        <div>
+                            <p class="property-kind">Departamento · Ñuñoa</p>
+                            <h3 class="property-title">Irarrázaval 3320</h3>
+                        </div>
+                        <p class="property-price">$520.000</p>
+                        <hr class="property-line">
+                        <ul class="specs">
+                            <li class="specs-item"><span class="specs-label">Dorm</span><span class="specs-value">1</span></li>
+                            <li class="specs-item"><span class="specs-label">Baños</span><span class="specs-value">1</span></li>
+                            <li class="specs-item"><span class="specs-label">Superficie</span><span class="specs-value">44 m²</span></li>
+                        </ul>
+                        <hr class="property-line">
+                        <a class="btn-contact" href="propiedad.html">Contactar</a>
+                    </div>
+                </article>
+
+                <article class="property">
+                    <img src="images/departamento1.jpg" alt="Departamento en Santiago Centro">
+                    <div class="property-body">
+                        <div>
+                            <p class="property-kind">Departamento · Santiago</p>
+                            <h3 class="property-title">Moneda 1170</h3>
+                        </div>
+                        <p class="property-price">$430.000</p>
+                        <hr class="property-line">
+                        <ul class="specs">
+                            <li class="specs-item"><span class="specs-label">Dorm</span><span class="specs-value">2</span></li>
+                            <li class="specs-item"><span class="specs-label">Baños</span><span class="specs-value">1</span></li>
+                            <li class="specs-item"><span class="specs-label">Superficie</span><span class="specs-value">52 m²</span></li>
+                        </ul>
+                        <hr class="property-line">
+                        <a class="btn-contact" href="propiedad.html">Contactar</a>
+                    </div>
+                </article>
+
+                <article class="property">
+                    <img src="images/casa2.jpg" alt="Casa en Peñalolén">
+                    <div class="property-body">
+                        <div>
+                            <p class="property-kind">Casa · Peñalolén</p>
+                            <h3 class="property-title">Consistorial 2745</h3>
+                        </div>
+                        <p class="property-price">$980.000</p>
+                        <hr class="property-line">
+                        <ul class="specs">
+                            <li class="specs-item"><span class="specs-label">Dorm</span><span class="specs-value">3</span></li>
+                            <li class="specs-item"><span class="specs-label">Baños</span><span class="specs-value">2</span></li>
+                            <li class="specs-item"><span class="specs-label">Superficie</span><span class="specs-value">128 m²</span></li>
+                        </ul>
+                        <hr class="property-line">
+                        <a class="btn-contact" href="propiedad.html">Contactar</a>
+                    </div>
+                </article>
+
+            </div>
+
+            <div class="feed-more">
+                <button class="btn-more" type="button">Cargar más</button>
+            </div>
+
+        </section>
+
+    </main>
 
 
-<!-- ====== FOOTER ======= -->
+    <!-- ====== FOOTER ======= -->
     <footer class="site-footer">
         <div class="site-footer-cols">
             <div class="site-footer-brand">
