@@ -595,6 +595,12 @@ ul {
 /* ======= RESPONSIVE: MOVIL ======*/
 @media (max-width: 768px) {
 
+    .search-box {
+        flex-direction: column;
+        align-items: stretch;
+        margin-top: -30px;
+    }
+
     .feed-grid {
         grid-template-columns: 1fr;
     }
