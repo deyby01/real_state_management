@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GUP — v2 · Editorial</title>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css">
+    <link rel="stylesheet" href="css/landing_page_v2.css">
+</head>
+<body>
+
+<!-- ===== HEADER =============== -->
+    <header class="site-header">
+        <nav class="nav">
+            <a class="nav-brand" href="landing_page_v2.html">
+                <img src="images/logo-gup-nav-sin-fondo.png" alt="gup-logo">
+                <span class="nav-brand-text">Gestión Urbana<br>de Propiedades</span>
+            </a>
+
+            <button class="nav-toggle" type="button" aria-label="Abrir Menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+
+            <ul class="nav-menu">
+                <li><a class="nav-link" href="landing_page_v2.html">Inicio</a></li>
+                <li><a class="nav-link" href="properties.html">Propiedades</a></li>
+                <li><a class="nav-link" href="about_us.html">Nosotros</a></li>
+                <li><a class="nav-link" href="contact.html">Contacto</a></li>
+
+                <li class="user-menu">
+                    <button class="user-menu-toggle" type="button" aria-label="Menú de usuario">
+                        <i class="fa-regular fa-user"></i>
+                    </button>
+                    <ul class="user-menu-panel">
+                        <li><a class="user-menu-item" href="login.html">Iniciar sesión</a></li>
+                        <li><a class="user-menu-item" href="registro.html">Registrarse</a></li>
+                        <li class="user-menu-sep"></li>
+                        <li><a class="user-menu-item user-menu-item-logout" href="#">Cerrar sesión</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+
+    <!-- ===== MAIN CONTENT =============== -->
+    <main>
+
+        <!-- ===== HERO: dos columnas, texto y foto ===== -->
+        <section class="hero">
+            <div class="hero-text">
+                <p class="hero-kicker">Corretaje en la Región Metropolitana</p>
+                <h1 class="hero-title">Cada propiedad<br>que publicamos<br>la visitamos antes.</h1>
+                <p class="hero-lead">Somos una corredora chica. Trabajamos con un catálogo acotado
+                   de arriendos y ventas en ocho comunas, y administramos el arriendo después
+                   de firmado el contrato.</p>
+                <a class="hero-link" href="properties.html">Ver el catálogo</a>
+            </div>
+
+            <div class="hero-photo">
+                <img src="images/hero-background.jpg" alt="Barrio residencial de Santiago">
+            </div>
+        </section>
+
+        <!-- ===== BUSCADOR: fila simple bajo el hero ===== -->
+        <section class="search">
+            <form class="search-box">
+                <div class="search-field">
+                    <label for="operation">Operación</label>
+                    <select id="operation" name="operation">
+                        <option>Arriendo</option>
+                        <option>Venta</option>
+                    </select>
+                </div>
+
+                <div class="search-field">
+                    <label for="type">Tipo</label>
+                    <select id="type" name="type">
+                        <option>Departamento</option>
+                        <option>Casa</option>
+                        <option>Oficina</option>
+                        <option>Local comercial</option>
+                    </select>
+                </div>
+
+                <div class="search-field">
+                    <label for="commune">Comuna</label>
+                    <select id="commune" name="commune">
+                        <option>Santiago</option>
+                        <option>Providencia</option>
+                        <option>Las Condes</option>
+                        <option>Ñuñoa</option>
+                    </select>
+                </div>
+
+                <button class="search-button" type="submit">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    Buscar
+                </button>
+            </form>
+        </section>
+
+        <!-- ===== VITRINA: filas anchas, una propiedad por fila ===== -->
+        <section class="feed">
+            <div class="feed-head">
+                <h2 class="feed-title">En vitrina</h2>
+                <p class="feed-count">8 propiedades disponibles</p>
+            </div>
+
+            <div class="feed-list">
+
+                <article class="property">
+                    <div class="property-photo">
+                        <img src="images/departamento1.jpg" alt="Departamento en Providencia">
+                    </div>
+                    <div class="property-body">
+                        <p class="property-index">01</p>
+                        <p class="property-kind">Departamento · Providencia</p>
+                        <h3 class="property-title">Av. Los Leones 1240</h3>
+                        <p class="property-text">Piso 8 con orientación norte, cocina separada y
+                           estacionamiento. A dos cuadras del metro Los Leones.</p>
+                        <ul class="specs">
+                            <li class="specs-item"><span class="specs-label">Dorm</span><span class="specs-value">2</span></li>
+                            <li class="specs-item"><span class="specs-label">Baños</span><span class="specs-value">2</span></li>
+                            <li class="specs-item"><span class="specs-label">Superficie</span><span class="specs-value">68 m²</span></li>
+                        </ul>
+                        <div class="property-foot">
+                            <p class="property-price">$680.000</p>
+                            <a class="btn-contact" href="propiedad.html">Contactar</a>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="property">
+                    <div class="property-photo">
+                        <img src="images/casa1.jpg" alt="Casa en La Reina">
+                    </div>
+                    <div class="property-body">
+                        <p class="property-index">02</p>
+                        <p class="property-kind">Casa · La Reina</p>
+                        <h3 class="property-title">Alonso de Camargo 890</h3>
+                        <p class="property-text">Casa de dos pisos con patio de 90 m², living con
+                           chimenea y quincho. Entrega desde el 15 de octubre.</p>
+                        <ul class="specs">
+                            <li class="specs-item"><span class="specs-label">Dorm</span><span class="specs-value">4</span></li>
+                            <li class="specs-item"><span class="specs-label">Baños</span><span class="specs-value">3</span></li>
+                            <li class="specs-item"><span class="specs-label">Superficie</span><span class="specs-value">180 m²</span></li>
+                        </ul>
+                        <div class="property-foot">
+                            <p class="property-price">$1.450.000</p>
+                            <a class="btn-contact" href="propiedad.html">Contactar</a>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="property">
+                    <div class="property-photo">
+                        <img src="images/oficina.jpg" alt="Oficina en Las Condes">
+                    </div>
+                    <div class="property-body">
+                        <p class="property-index">03</p>
+                        <p class="property-kind">Oficina · Las Condes</p>
+                        <h3 class="property-title">Apoquindo 4501, of. 802</h3>
+                        <p class="property-text">Cuatro privados, sala de reuniones y recepción.
+                           Edificio con estacionamiento de visitas y conserjería.</p>
+                        <ul class="specs">
+                            <li class="specs-item"><span class="specs-label">Privados</span><span class="specs-value">4</span></li>
+                            <li class="specs-item"><span class="specs-label">Baños</span><span class="specs-value">2</span></li>
+                            <li class="specs-item"><span class="specs-label">Superficie</span><span class="specs-value">96 m²</span></li>
+                        </ul>
+                        <div class="property-foot">
+                            <p class="property-price">$1.120.000</p>
+                            <a class="btn-contact" href="propiedad.html">Contactar</a>
+                        </div>
+                    </div>
+                </article>
+
+            </div>
+
+            <div class="feed-more">
+                <button class="btn-more" type="button">Ver las 8 propiedades</button>
+            </div>
+        </section>
+
+        <!-- ===== CÓMO TRABAJAMOS ===== -->
+        <section class="steps">
+            <h2 class="steps-title">Qué hacemos después de la firma</h2>
+            <ol class="steps-list">
+                <li class="steps-item">
+                    <span class="steps-number">01</span>
+                    <h3 class="steps-name">Cobramos el arriendo</h3>
+                    <p class="steps-text">Emitimos el cobro cada mes y le transferimos al
+                       propietario dentro de los primeros cinco días hábiles.</p>
+                </li>
+                <li class="steps-item">
+                    <span class="steps-number">02</span>
+                    <h3 class="steps-name">Coordinamos reparaciones</h3>
+                    <p class="steps-text">Recibimos el reclamo del arrendatario, pedimos el
+                       presupuesto y esperamos el visto bueno del propietario.</p>
+                </li>
+                <li class="steps-item">
+                    <span class="steps-number">03</span>
+                    <h3 class="steps-name">Revisamos la entrega</h3>
+                    <p class="steps-text">Al terminar el contrato comparamos el inventario
+                       inicial con el estado final y dejamos el acta firmada.</p>
+                </li>
+            </ol>
+        </section>
+
+    </main>
+
+
+    <!-- ====== FOOTER ======= -->
+    <footer class="site-footer">
+        <div class="site-footer-cols">
+            <div class="site-footer-brand">
+                <img src="images/logo-gup-nav-sin-fondo.png" alt="logo-icon">
+                <p class="site-footer-about">Gestión Urbana de Propiedades. Corretaje y administración de arriendos.</p>
+            </div>
+
+            <div>
+                <h3 class="site-footer-title">Propiedades</h3>
+                <ul class="site-footer-list">
+                    <li><a href="#">Departamentos</a></li>
+                    <li><a href="#">Casas</a></li>
+                    <li><a href="#">Oficinas</a></li>
+                    <li><a href="#">Locales comerciales</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 class="site-footer-title">Propietarios</h3>
+                <ul class="site-footer-list">
+                    <li><a href="#">Administración de arriendo</a></li>
+                    <li><a href="#">Tasación</a></li>
+                    <li><a href="#">Comisiones</a></li>
+                    <li><a href="#">Preguntas frecuentes</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 class="site-footer-title">Empresa</h3>
+                <ul class="site-footer-list">
+                    <li><a href="#">Nosotros</a></li>
+                    <li><a href="#">Equipo</a></li>
+                    <li><a href="#">Trabaja con nosotros</a></li>
+                    <li><a href="#">Contacto</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <p class="site-footer-legal">© 2026 GUP Propiedades SpA</p>
+    </footer>
+
+    <script src="js/nav.js"></script>
+
+</body>
+</html>

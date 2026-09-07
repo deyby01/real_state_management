@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GUP — v3 · Portal de búsqueda</title>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css">
+    <link rel="stylesheet" href="css/landing_page_v3.css">
+</head>
+<body>
+
+<!-- ===== HEADER =============== -->
+    <header class="site-header">
+        <nav class="nav">
+            <a class="nav-brand" href="landing_page_v3.html">
+                <img src="images/logo-gup-nav-sin-fondo.png" alt="gup-logo">
+                <span class="nav-brand-text">Gestión Urbana<br>de Propiedades</span>
+            </a>
+
+            <button class="nav-toggle" type="button" aria-label="Abrir Menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+
+            <ul class="nav-menu">
+                <li><a class="nav-link" href="landing_page_v3.html">Inicio</a></li>
+                <li><a class="nav-link" href="properties.html">Propiedades</a></li>
+                <li><a class="nav-link" href="about_us.html">Nosotros</a></li>
+                <li><a class="nav-link" href="contact.html">Contacto</a></li>
+
+                <li class="user-menu">
+                    <button class="user-menu-toggle" type="button" aria-label="Menú de usuario">
+                        <i class="fa-regular fa-user"></i>
+                    </button>
+                    <ul class="user-menu-panel">
+                        <li><a class="user-menu-item" href="login.html">Iniciar sesión</a></li>
+                        <li><a class="user-menu-item" href="registro.html">Registrarse</a></li>
+                        <li class="user-menu-sep"></li>
+                        <li><a class="user-menu-item user-menu-item-logout" href="#">Cerrar sesión</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+
+    <!-- ===== MAIN CONTENT =============== -->
+    <main>
+
+        <!-- ===== BANDA DE BÚSQUEDA: reemplaza al hero ===== -->
+        <section class="search">
+            <div class="search-inner">
+                <h1 class="search-title">Arriendos y ventas en la Región Metropolitana</h1>
+
+                <div class="search-tabs">
+                    <button class="search-tab is-active" type="button">Arriendo</button>
+                    <button class="search-tab" type="button">Venta</button>
+                </div>
+
+                <form class="search-box">
+                    <div class="search-field">
+                        <label for="commune">Comuna</label>
+                        <select id="commune" name="commune">
+                            <option>Todas las comunas</option>
+                            <option>Santiago</option>
+                            <option>Providencia</option>
+                            <option>Las Condes</option>
+                            <option>Ñuñoa</option>
+                        </select>
+                    </div>
+
+                    <div class="search-field">
+                        <label for="type">Tipo</label>
+                        <select id="type" name="type">
+                            <option>Todos los tipos</option>
+                            <option>Departamento</option>
+                            <option>Casa</option>
+                            <option>Oficina</option>
+                            <option>Local comercial</option>
+                        </select>
+                    </div>
+
+                    <div class="search-field">
+                        <label for="rooms">Dormitorios</label>
+                        <select id="rooms" name="rooms">
+                            <option>Indiferente</option>
+                            <option>1 o más</option>
+                            <option>2 o más</option>
+                            <option>3 o más</option>
+                        </select>
+                    </div>
+
+                    <div class="search-field">
+                        <label for="budget">Presupuesto máximo</label>
+                        <select id="budget" name="budget">
+                            <option>Sin límite</option>
+                            <option>Hasta $500.000</option>
+                            <option>Hasta $800.000</option>
+                            <option>Hasta $1.500.000</option>
+                        </select>
+                    </div>
+
+                    <button class="search-button" type="submit">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        Buscar
+                    </button>
+                </form>
+
+                <ul class="search-chips">
+                    <li><a class="chip" href="#">Departamentos en Ñuñoa</a></li>
+                    <li><a class="chip" href="#">Casas con patio</a></li>
+                    <li><a class="chip" href="#">Cerca del metro</a></li>
+                    <li><a class="chip" href="#">Acepta mascotas</a></li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- ===== RESULTADOS: filtros + listado ===== -->
+        <section class="results">
+
+            <!-- Columna de filtros -->
+            <aside class="filters">
+                <h2 class="filters-title">Filtrar</h2>
+
+                <div class="filters-group">
+                    <h3 class="filters-name">Operación</h3>
+                    <label class="filters-check"><input type="checkbox" checked> Arriendo</label>
+                    <label class="filters-check"><input type="checkbox"> Venta</label>
+                </div>
+
+                <div class="filters-group">
+                    <h3 class="filters-name">Tipo de propiedad</h3>
+                    <label class="filters-check"><input type="checkbox" checked> Departamento</label>
+                    <label class="filters-check"><input type="checkbox" checked> Casa</label>
+                    <label class="filters-check"><input type="checkbox"> Oficina</label>
+                    <label class="filters-check"><input type="checkbox"> Local comercial</label>
+                </div>
+
+                <div class="filters-group">
+                    <h3 class="filters-name">Superficie mínima</h3>
+                    <label class="filters-check"><input type="checkbox"> Desde 50 m²</label>
+                    <label class="filters-check"><input type="checkbox"> Desde 100 m²</label>
+                    <label class="filters-check"><input type="checkbox"> Desde 150 m²</label>
+                </div>
+
+                <div class="filters-group">
+                    <h3 class="filters-name">Comodidades</h3>
+                    <label class="filters-check"><input type="checkbox"> Estacionamiento</label>
+                    <label class="filters-check"><input type="checkbox"> Bodega</label>
+                    <label class="filters-check"><input type="checkbox"> Conserjería</label>
+                </div>
+
+                <button class="filters-clear" type="button">Limpiar filtros</button>
+            </aside>
+
+            <!-- Columna de resultados -->
+            <div class="feed">
+                <div class="feed-head">
+                    <p class="feed-count"><strong>8 propiedades</strong> en 4 comunas</p>
+                    <div class="feed-sort">
+                        <label for="sort">Ordenar por</label>
+                        <select id="sort" name="sort">
+                            <option>Más recientes</option>
+                            <option>Menor precio</option>
+                            <option>Mayor superficie</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="feed-list">
+
+                    <article class="property">
+                        <div class="property-photo">
+                            <img src="images/departamento1.jpg" alt="Departamento en Providencia">
+                            <span class="property-badge">Arriendo</span>
+                        </div>
+                        <div class="property-body">
+                            <p class="property-kind">Departamento · Providencia</p>
+                            <h3 class="property-title">Av. Los Leones 1240</h3>
+                            <ul class="specs">
+                                <li class="specs-item"><i class="fa-solid fa-bed"></i> 2 dorm</li>
+                                <li class="specs-item"><i class="fa-solid fa-shower"></i> 2 baños</li>
+                                <li class="specs-item"><i class="fa-solid fa-ruler-combined"></i> 68 m²</li>
+                                <li class="specs-item"><i class="fa-solid fa-car"></i> 1 estac.</li>
+                            </ul>
+                            <p class="property-text">Piso 8 orientación norte, a dos cuadras del metro Los Leones.</p>
+                            <div class="property-foot">
+                                <p class="property-price">$680.000 <span>/ mes</span></p>
+                                <a class="btn-contact" href="propiedad.html">Contactar</a>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="property">
+                        <div class="property-photo">
+                            <img src="images/casa1.jpg" alt="Casa en La Reina">
+                            <span class="property-badge">Arriendo</span>
+                        </div>
+                        <div class="property-body">
+                            <p class="property-kind">Casa · La Reina</p>
+                            <h3 class="property-title">Alonso de Camargo 890</h3>
+                            <ul class="specs">
+                                <li class="specs-item"><i class="fa-solid fa-bed"></i> 4 dorm</li>
+                                <li class="specs-item"><i class="fa-solid fa-shower"></i> 3 baños</li>
+                                <li class="specs-item"><i class="fa-solid fa-ruler-combined"></i> 180 m²</li>
+                                <li class="specs-item"><i class="fa-solid fa-car"></i> 2 estac.</li>
+                            </ul>
+                            <p class="property-text">Dos pisos con patio de 90 m² y quincho. Entrega desde el 15 de octubre.</p>
+                            <div class="property-foot">
+                                <p class="property-price">$1.450.000 <span>/ mes</span></p>
+                                <a class="btn-contact" href="propiedad.html">Contactar</a>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="property">
+                        <div class="property-photo">
+                            <img src="images/oficina.jpg" alt="Oficina en Las Condes">
+                            <span class="property-badge">Arriendo</span>
+                        </div>
+                        <div class="property-body">
+                            <p class="property-kind">Oficina · Las Condes</p>
+                            <h3 class="property-title">Apoquindo 4501, of. 802</h3>
+                            <ul class="specs">
+                                <li class="specs-item"><i class="fa-solid fa-briefcase"></i> 4 privados</li>
+                                <li class="specs-item"><i class="fa-solid fa-shower"></i> 2 baños</li>
+                                <li class="specs-item"><i class="fa-solid fa-ruler-combined"></i> 96 m²</li>
+                                <li class="specs-item"><i class="fa-solid fa-car"></i> 2 estac.</li>
+                            </ul>
+                            <p class="property-text">Sala de reuniones y recepción. Edificio con conserjería.</p>
+                            <div class="property-foot">
+                                <p class="property-price">$1.120.000 <span>/ mes</span></p>
+                                <a class="btn-contact" href="propiedad.html">Contactar</a>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="property">
+                        <div class="property-photo">
+                            <img src="images/departamento2.jpg" alt="Departamento en Ñuñoa">
+                            <span class="property-badge">Arriendo</span>
+                        </div>
+                        <div class="property-body">
+                            <p class="property-kind">Departamento · Ñuñoa</p>
+                            <h3 class="property-title">Irarrázaval 3320</h3>
+                            <ul class="specs">
+                                <li class="specs-item"><i class="fa-solid fa-bed"></i> 1 dorm</li>
+                                <li class="specs-item"><i class="fa-solid fa-shower"></i> 1 baño</li>
+                                <li class="specs-item"><i class="fa-solid fa-ruler-combined"></i> 44 m²</li>
+                                <li class="specs-item"><i class="fa-solid fa-car"></i> Sin estac.</li>
+                            </ul>
+                            <p class="property-text">Estudio remodelado el 2025, cocina americana y bodega en el subterráneo.</p>
+                            <div class="property-foot">
+                                <p class="property-price">$520.000 <span>/ mes</span></p>
+                                <a class="btn-contact" href="propiedad.html">Contactar</a>
+                            </div>
+                        </div>
+                    </article>
+
+                </div>
+
+                <div class="feed-more">
+                    <button class="btn-more" type="button">Cargar más resultados</button>
+                    <p class="feed-page">Mostrando 4 de 8</p>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- ====== FOOTER ======= -->
+    <footer class="site-footer">
+        <div class="site-footer-cols">
+            <div class="site-footer-brand">
+                <img src="images/logo-gup-nav-sin-fondo.png" alt="logo-icon">
+                <p class="site-footer-about">Gestión Urbana de Propiedades. Corretaje y administración de arriendos.</p>
+            </div>
+
+            <div>
+                <h3 class="site-footer-title">Propiedades</h3>
+                <ul class="site-footer-list">
+                    <li><a href="#">Departamentos</a></li>
+                    <li><a href="#">Casas</a></li>
+                    <li><a href="#">Oficinas</a></li>
+                    <li><a href="#">Locales comerciales</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 class="site-footer-title">Propietarios</h3>
+                <ul class="site-footer-list">
+                    <li><a href="#">Administración de arriendo</a></li>
+                    <li><a href="#">Tasación</a></li>
+                    <li><a href="#">Comisiones</a></li>
+                    <li><a href="#">Preguntas frecuentes</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 class="site-footer-title">Empresa</h3>
+                <ul class="site-footer-list">
+                    <li><a href="#">Nosotros</a></li>
+                    <li><a href="#">Equipo</a></li>
+                    <li><a href="#">Trabaja con nosotros</a></li>
+                    <li><a href="#">Contacto</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <p class="site-footer-legal">© 2026 GUP Propiedades SpA</p>
+    </footer>
+
+    <script src="js/nav.js"></script>
+
+</body>
+</html>
