@@ -8,6 +8,7 @@ Course project for **Desarrollo Web y Móvil** (Web and Mobile Development) at *
 - Roberto Varillas
 - Santiago Sanchez
 - Ignacio Latrach
+- Jose Hernandez
 
 **Instructor:** Jerry Jesus Peña
 
@@ -17,22 +18,42 @@ A real estate management system built incrementally over the course of the semes
 
 ## Current status
 
-The project is in its **design phase**. Right now we are only starting to implement the frontend design, based on mockups that were created with the support of AI tools.
+The design phase is done, and we are now moving the frontend to **React** with **Tailwind CSS**.
 
-- **Frontend** — in progress, using HTML, CSS and some JavaScript.
+- **Frontend (React)** — in progress. From now on, all frontend work happens in the `frontend-react/` folder, using React, Tailwind CSS and Vite.
+- **Frontend (HTML/CSS)** — frozen. The original `frontend/` folder, built with HTML, CSS and some JavaScript, **stays in the repo as a design reference** (landing page versions, About Us, Properties). We won't add new features there. We use it as a guide while we rebuild the pages in React.
 - **Backend** — not implemented yet. It stays on hold until it is unlocked later in the semester.
 
 ## Project structure
 
 ```
 .
-├── frontend/          # HTML, CSS and JS (design phase)
+├── frontend-react/    # Active frontend: React + Tailwind CSS (Vite)
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   └── assets/
+│   ├── index.html
+│   └── package.json
+├── frontend/          # Design reference only (HTML, CSS and JS mockups)
 │   ├── landing_page.html
 │   ├── css/
 │   └── js/
 ├── backend/           # Reserved, not implemented yet
 └── docs/              # Project documentation
 ```
+
+## Running the React frontend
+
+Requirements: [Node.js](https://nodejs.org/) (LTS version recommended).
+
+```bash
+cd frontend-react
+npm install
+npm run dev
+```
+
+Then open the URL shown in the terminal (by default `http://localhost:5173`).
 
 ## Git workflow
 
