@@ -18,4 +18,7 @@
     --color-smoke-700: #5d5d60;
 
     --color-danger:      #b3261e;
+
+    /* Fuente */
+    --font-sans: "Manrope","Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }

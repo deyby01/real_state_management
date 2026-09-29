@@ -7,7 +7,7 @@ const navLinks = [
 
 function Header() {
     return (
-        <header className="bg-brand-900 text-smoke-100">
+        <header className="bg-brand-900 text-smoke-100 sticky top-0">
             <nav className="max-w-[1200px] mx-auto px-5 flex items-center justify-between">
                 <a href="#" className="flex items-center gap-2.5">
                     <img className="h-30" src="/logo-gup-nav-sin-fondo.png" alt="logo-gup"/>
