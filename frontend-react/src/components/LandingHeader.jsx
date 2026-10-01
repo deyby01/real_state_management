@@ -10,7 +10,7 @@ const navLinks = [
 function Header() {
     const [isOpen, setIsOpen] = useState(false);
     return (
-        <header className="bg-brand-900 text-smoke-100 sticky top-0">
+        <header className="bg-smoke-900 text-smoke-100 sticky top-0">
             <nav className="max-w-[1200px] mx-auto px-5 flex items-center justify-between">
                 <a href="#" className="flex items-center gap-2.5">
                     <img className="h-30" src="/logo-gup-nav-sin-fondo.png" alt="logo-gup"/>
@@ -18,13 +18,13 @@ function Header() {
                 </a>
                 <ul className="flex gap-7.5 items-center">
                     {navLinks.map((nlink) => (
-                        <li key={nlink.label}><a className="py-2.5 px-3.75 hover:bg-brand-700 rounded block transition-colors duration-300" href={nlink.href}>{nlink.label}</a></li>
+                        <li key={nlink.label}><a className="py-2.5 px-3.75 hover:bg-smoke-700 rounded block transition-colors duration-300" href={nlink.href}>{nlink.label}</a></li>
                     ))}
                     <li className="relative">
                         <button
                             type="button"
                             aria-label="Menú de usuario"
-                            className="py-2.5 px-3.75 hover:bg-brand-700 rounded transition-colors duration-300 text-[25px] cursor-pointer"
+                            className="py-2.5 px-3.75 hover:bg-smoke-700 rounded transition-colors duration-300 text-[25px] cursor-pointer"
                             onClick={() => setIsOpen(!isOpen)}>
                             <i className="fa-regular fa-user"></i>
                         </button>
