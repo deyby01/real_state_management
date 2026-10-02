@@ -1,6 +1,7 @@
 import Header from "../components/LandingHeader";
 import Hero from "../components/LandingHero";
 import Footer from "../components/LandingFooter";
+import Search from "../components/LandingSearch";
 
 function LandingPage() {
     return (
@@ -8,6 +9,7 @@ function LandingPage() {
             <Header />
             <main>
                 <Hero />
+                <Search />
             </main>
             <Footer />
         </div>
