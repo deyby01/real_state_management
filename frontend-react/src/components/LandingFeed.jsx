@@ -1,4 +1,5 @@
 import PropertyCard from "./PropertyCard";
+import FeaturedProperties from "./FeaturedProperties";
 
 const properties = [
     {
@@ -90,8 +91,12 @@ function Feed() {
             </div>
             <hr className="mt-3.75 mb-7.5 h-px border-0 bg-linear-to-r from-smoke-500 to-transparent" />
             <div className="grid grid-cols-3 gap-6.25">
-                {properties.map((property) => (
-                    <PropertyCard key={property.id} image={property.image} alt={property.alt} kind={property.kind} title={property.kind} price={property.price} specs={property.specs} />
+                {properties.slice(0, 3).map((property) => (
+                    <PropertyCard key={property.id} image={property.image} alt={property.alt} kind={property.kind} title={property.title} price={property.price} specs={property.specs} />
+                ))}
+                <FeaturedProperties />
+                {properties.slice(3).map((property) => (
+                    <PropertyCard key={property.id} image={property.image} alt={property.alt} kind={property.kind} title={property.title} price={property.price} specs={property.specs} />
                 ))}
             </div>
         </section>
