@@ -2,6 +2,7 @@ import Header from "../components/LandingHeader";
 import Hero from "../components/LandingHero";
 import Footer from "../components/LandingFooter";
 import Search from "../components/LandingSearch";
+import Feed from "../components/LandingFeed";
 
 function LandingPage() {
     return (
@@ -10,6 +11,7 @@ function LandingPage() {
             <main>
                 <Hero />
                 <Search />
+                <Feed />
             </main>
             <Footer />
         </div>
