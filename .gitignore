@@ -1,0 +1,19 @@
+# Dependencias: cada uno las instala con npm install
+node_modules/
+
+# Variables de entorno: pueden tener claves y contraseñas
+.env
+.env.*
+!.env.example
+
+# Builds
+dist/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema operativo y editores
+.DS_Store
+Thumbs.db
+.idea/
