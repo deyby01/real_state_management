@@ -1,12 +1,15 @@
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
+import AboutUs from "./pages/AboutUs";
 
 function App() {
   return (
     <>
-       <div>
-          <h1>Get started</h1>
-        </div>
+      <Navbar />
+      <AboutUs />
+      <Footer />
     </>
-  )
+  );
 }
 
-export default App
+export default App;
