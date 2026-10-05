@@ -1,8 +1,8 @@
-import Header from "../components/LandingHeader";
-import Hero from "../components/LandingHero";
-import Footer from "../components/LandingFooter";
-import Search from "../components/LandingSearch";
-import Feed from "../components/LandingFeed";
+import Header from "../components/Header";
+import Hero from "../components/landing/LandingHero";
+import Footer from "../components/Footer";
+import Search from "../components/landing/LandingSearch";
+import Feed from "../components/landing/LandingFeed";
 
 function LandingPage() {
     return (

@@ -1,4 +1,4 @@
-import PropertyCard from "./PropertyCard";
+import PropertyCard from "../PropertyCard";
 import FeaturedProperties from "./FeaturedProperties";
 
 const properties = [
