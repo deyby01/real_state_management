@@ -30,10 +30,10 @@ const footerColumns = [
 
 function Footer() {
     return (
-        <footer className="bg-smoke-900 text-smoke-100 pt-12.5 px-5 pb-5 mt-6">
-            <div className="max-w-[1200px] mx-auto grid gap-10 grid-cols-[2fr_1fr_1fr_1fr]">
+        <footer className="bg-smoke-900 text-smoke-100 pt-7.5 md:pt-12.5 px-5 pb-5 mt-6">
+            <div className="max-w-[1200px] mx-auto grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr] gap-7.5 md:gap-10 text-center md:text-left">
                 <div>
-                    <img className="h-27.5" src="/logo-gup-nav-sin-fondo.png" alt="Logo footer" />
+                    <img className="h-20 md:h-27.5 mx-auto md:mx-0" src="/logo-gup-nav-sin-fondo.png" alt="Logo footer" />
                     <p className="text-smoke-500 text-sm leading-relaxed">Gestión Urbana de Propiedades</p>
                 </div>
 

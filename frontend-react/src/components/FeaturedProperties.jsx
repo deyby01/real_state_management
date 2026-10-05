@@ -17,9 +17,9 @@ const highlights = [
 
 function FeaturedProperties() {
     return (
-        <section className="grid grid-cols-2 col-span-full py-8.75 rounded-lg bg-smoke-900 text-smoke-100 divide-x divide-smoke-100/15">
+        <section className="grid grid-cols-1 md:grid-cols-2 col-span-full px-6.25 md:px-0 md:py-8.75 rounded-lg bg-smoke-900 text-smoke-100 divide-y md:divide-y-0 md:divide-x divide-smoke-100/15">
             {highlights.map((hproperty) => (
-                <article key={hproperty.id} className="flex flex-col px-10">
+                <article key={hproperty.id} className="flex flex-col py-6.25 md:py-0 md:px-10">
                     <p className="mb-3.5 text-xs font-semibold tracking-[2px] uppercase text-smoke-300">Destacado</p>
                     <h3 className="mb-3.5 text-2xl font-bold leading-tight uppercase">{hproperty.title}</h3>
                     <p className="mb-5 text-sm leading-relaxed text-smoke-300">{hproperty.description}</p>

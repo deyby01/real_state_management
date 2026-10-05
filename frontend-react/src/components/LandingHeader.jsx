@@ -9,14 +9,23 @@ const navLinks = [
 
 function Header() {
     const [isOpen, setIsOpen] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
     return (
-        <header className="bg-smoke-900 text-smoke-100 sticky top-0">
-            <nav className="max-w-[1200px] mx-auto px-5 flex items-center justify-between">
+        <header className="bg-smoke-900 text-smoke-100 sticky top-0 z-50">
+            <nav className="max-w-[1200px] mx-auto px-5 py-2.5 md:py-0 flex flex-wrap md:flex-nowrap items-center justify-between">
                 <a href="#" className="flex items-center gap-2.5">
-                    <img className="h-30" src="/logo-gup-nav-sin-fondo.png" alt="logo-gup"/>
+                    <img className="h-20 md:h-30" src="/logo-gup-nav-sin-fondo.png" alt="logo-gup"/>
                     <span>Gestion Urbana<br />de Propiedades</span>
                 </a>
-                <ul className="flex gap-7.5 items-center">
+                <button
+                    type="button"
+                    aria-label="Abrir menú"
+                    aria-expanded={isMenuOpen}
+                    className="md:hidden p-2.5 text-2xl cursor-pointer"
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}>
+                    <i className="fa-solid fa-bars"></i>
+                </button>
+                <ul className={`${isMenuOpen ? "flex" : "hidden"} md:flex w-full md:w-auto flex-col md:flex-row md:items-center gap-0 md:gap-7.5 pb-2.5 md:pb-0 text-right md:text-left`}>
                     {navLinks.map((nlink) => (
                         <li key={nlink.label}><a className="py-2.5 px-3.75 hover:bg-smoke-700 rounded block transition-colors duration-300" href={nlink.href}>{nlink.label}</a></li>
                     ))}

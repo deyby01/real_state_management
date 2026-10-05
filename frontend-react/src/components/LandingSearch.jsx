@@ -7,7 +7,7 @@ const searchFields = [
 function Search() {
     return (
         <section className="max-w-[1000px] mx-auto px-5 pb-15">
-            <form className="flex gap-3.75 p-5 bg-smoke-100 rounded-lg shadow-lg -mt-10 relative items-end">
+            <form className="flex flex-col md:flex-row gap-3.75 p-5 bg-smoke-100 rounded-lg shadow-lg -mt-7.5 md:-mt-10 relative md:items-end">
 
                 {searchFields.map((field) => (
                     <div key={field.id} className="flex flex-1 flex-col gap-1.5">
@@ -20,7 +20,7 @@ function Search() {
                     </div>
                 ))}
 
-                <button className="flex items-center gap-2 font-semibold py-2.75 px-6 border border-smoke-300 bg-smoke-900 text-smoke-100 rounded-md cursor-pointer hover:bg-smoke-700 transition-colors duration-300" type="submit">
+                <button className="flex items-center justify-center gap-2 font-semibold py-2.75 px-6 border border-smoke-300 bg-smoke-900 text-smoke-100 rounded-md cursor-pointer hover:bg-smoke-700 transition-colors duration-300" type="submit">
                     <i className="fa-solid fa-magnifying-glass"></i>
                     Buscar
                 </button>
