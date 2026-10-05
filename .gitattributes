@@ -1,0 +1,4 @@
+# Todos los archivos de texto usan saltos de línea de Linux (LF), también en Windows.
+# Los contenedores corren Linux: con saltos de Windows (CRLF) fallarían el Makefile y los scripts.
+# Git detecta solo los archivos binarios (imágenes, .docx) y no los modifica.
+* text=auto eol=lf
