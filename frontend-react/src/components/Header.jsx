@@ -39,8 +39,8 @@ function Header() {
                         </button>
                         {isOpen && (
                             <ul className="absolute top-full mt-2 right-0 bg-smoke-100 border border-smoke-300 rounded-lg min-w-45 overflow-hidden py-1.5 shadow-lg">
-                                <li><a className="block text-center text-ink py-3 px-3.75 transition-colors duration-300 hover:bg-smoke-500 hover:text-smoke-100" href="#">Iniciar Sesión</a></li>
-                                <li><a className="block text-center text-ink py-3 px-3.75 transition-colors duration-300 hover:bg-smoke-500 hover:text-smoke-100" href="#">Registrarse</a></li>
+                                <li><a className="block text-center text-ink py-3 px-3.75 transition-colors duration-300 hover:bg-smoke-500 hover:text-smoke-100" href="/login">Iniciar Sesión</a></li>
+                                <li><a className="block text-center text-ink py-3 px-3.75 transition-colors duration-300 hover:bg-smoke-500 hover:text-smoke-100" href="/registro">Registrarse</a></li>
                                 <li className="bg-smoke-300 h-px my-1.5"></li>
                                 <li><a className="text-danger hover:bg-danger hover:text-smoke-100 text-center block transition-colors duration-300 py-3 px-3.75" href="#">Cerrar Sesión</a></li>
                             </ul>
