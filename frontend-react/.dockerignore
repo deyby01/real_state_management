@@ -1,0 +1,18 @@
+# Se instalan dentro de la imagen con npm ci
+node_modules
+
+# Resultado de npm run build: se regenera
+dist
+
+# Variables de entorno
+.env
+.env.*
+
+# Logs
+npm-debug.log*
+*.log
+
+# No hacen falta dentro de la imagen
+Dockerfile
+.dockerignore
+README.md

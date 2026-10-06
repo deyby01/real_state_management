@@ -1,0 +1,65 @@
+# Entorno de desarrollo: MongoDB + backend (Express) + frontend (React con Vite)
+# Levantar todo:  docker compose up -d   (o: make up)
+
+# Nombre del proyecto: prefijo de contenedores, red y volúmenes
+name: gup
+
+services:
+  # Base de datos
+  mongo:
+    image: mongo:8
+    container_name: gup-mongo
+    ports:
+      # 27017 en tu PC -> 27017 en el contenedor. Solo accesible desde tu PC (127.0.0.1)
+      # Para conectarte con MongoDB Compass: mongodb://localhost:27017
+      # Si tienes MongoDB instalado y corriendo en tu PC, detenlo antes: usa el mismo puerto
+      - "127.0.0.1:27017:27017"
+    volumes:
+      # Los datos sobreviven aunque se borre el contenedor
+      - mongo-data:/data/db
+    healthcheck:
+      # Mongo está "sano" cuando responde a un ping
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # API con Express
+  backend:
+    build: ./backend
+    container_name: gup-backend
+    ports:
+      - "4000:4000"
+    environment:
+      PORT: 4000
+      # "mongo" es el nombre del servicio de arriba: Docker lo traduce a su IP
+      MONGO_URI: mongodb://mongo:27017/real_estate
+      # Revisa los archivos cada poco tiempo en vez de esperar avisos del sistema.
+      # Necesario en Windows y macOS para que nodemon detecte los cambios
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      # Tu código se ve dentro del contenedor: al guardar, nodemon reinicia
+      - ./backend:/app
+      # Protege las dependencias instaladas en la imagen
+      - /app/node_modules
+    depends_on:
+      mongo:
+        # Espera a que Mongo responda, no solo a que su contenedor exista
+        condition: service_healthy
+
+  # React con Vite
+  frontend:
+    build: ./frontend-react
+    container_name: gup-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      # Igual que en el backend: necesario en Windows y macOS para que Vite detecte los cambios
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      # Tu código se ve dentro del contenedor: al guardar, Vite recarga el navegador
+      - ./frontend-react:/app
+      - /app/node_modules
+
+volumes:
+  mongo-data:

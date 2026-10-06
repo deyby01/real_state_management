@@ -1,0 +1,16 @@
+# Se instalan dentro de la imagen con npm ci
+node_modules
+
+# Variables de entorno: no deben quedar guardadas dentro de la imagen
+.env
+.env.*
+!.env.example
+
+# Logs
+npm-debug.log*
+*.log
+
+# No hacen falta dentro de la imagen
+Dockerfile
+.dockerignore
+README.md

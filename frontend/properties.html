@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Propiedades disponibles para arriendo en Gestión Urbana Propiedades">
+  <title>Propiedades en arriendo | Gestión Urbana</title>
+  <link rel="stylesheet" href="css/properties.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-content">
+    <a class="brand" href="index.html">
+      <img class="brand-logo" src="images/logo-gup-nav-sin-fondo.png" alt="GUP Gestión Urbana Propiedades">
+      <span>
+        <strong>Gestión Urbana</strong>
+        <small>Propiedades</small>
+      </span>
+    </a>
+
+    <nav class="main-nav" aria-label="Navegación principal">
+      <a href="index.html">Inicio</a>
+      <a class="active" href="properties.html">Propiedades</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+  </div>
+
+  <div class="hero">
+    <p class="eyebrow">Encuentra tu próximo hogar</p>
+    <h1>Propiedades disponibles para arriendo</h1>
+    <p>Espacios seleccionados para vivir, trabajar y disfrutar.</p>
+  </div>
+</header>
+
+<main>
+  <section class="filters-section" aria-labelledby="filters-title">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Búsqueda rápida</p>
+        <h2 id="filters-title">Encuentra una propiedad</h2>
+      </div>
+      <span class="results-count">3 propiedades disponibles</span>
+    </div>
+
+    <form class="filters">
+      <label for="operation">
+        Operación
+        <select id="operation" name="operation">
+          <option value="arriendo">Arriendo</option>
+          <option value="venta">Venta</option>
+        </select>
+      </label>
+
+      <label for="type">
+        Tipo de propiedad
+        <select id="type" name="type">
+          <option value="todos">Todos los tipos</option>
+          <option value="casa">Casa</option>
+          <option value="departamento">Departamento</option>
+          <option value="oficina">Oficina</option>
+        </select>
+      </label>
+
+      <label for="region">
+        Región
+        <select id="region" name="region">
+          <option value="metropolitana">Metropolitana</option>
+          <option value="ohiggins">Libertador B. O'Higgins</option>
+          <option value="valparaiso">Valparaíso</option>
+        </select>
+      </label>
+
+      <button type="submit">Buscar propiedades</button>
+    </form>
+  </section>
+
+  <section class="properties-section" aria-labelledby="properties-title">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Catálogo inmobiliario</p>
+        <h2 id="properties-title">Nuestros arriendos</h2>
+      </div>
+      <select class="sort-select" aria-label="Ordenar propiedades">
+        <option>Más recientes</option>
+        <option>Menor precio</option>
+        <option>Mayor precio</option>
+      </select>
+    </div>
+
+    <div class="properties">
+      <article class="property-card">
+        <div class="image-wrapper">
+          <img src="images/casa1.jpg" alt="Casa en arriendo en Ñuñoa" loading="lazy">
+          <span class="property-tag">Destacada</span>
+        </div>
+        <div class="property-info">
+          <p class="property-location">Ñuñoa · Región Metropolitana</p>
+          <h3>Casa familiar en Ñuñoa</h3>
+          <p class="details">3 dormitorios <span>·</span> 2 baños <span>·</span> 120 m²</p>
+          <div class="card-footer">
+            <p class="price">$850.000 <small>/ mes</small></p>
+            <a href="detalle.html" class="btn">Ver detalles</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="property-card">
+        <div class="image-wrapper">
+          <img src="images/departamento1.jpg" alt="Departamento en arriendo en Providencia" loading="lazy">
+          <span class="property-tag">Disponible</span>
+        </div>
+        <div class="property-info">
+          <p class="property-location">Providencia · Región Metropolitana</p>
+          <h3>Departamento luminoso</h3>
+          <p class="details">2 dormitorios <span>·</span> 1 baño <span>·</span> 65 m²</p>
+          <div class="card-footer">
+            <p class="price">$650.000 <small>/ mes</small></p>
+            <a href="detalle.html" class="btn">Ver detalles</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="property-card">
+        <div class="image-wrapper">
+          <img src="images/oficina.jpg" alt="Oficina en arriendo en Las Condes" loading="lazy">
+          <span class="property-tag">Comercial</span>
+        </div>
+        <div class="property-info">
+          <p class="property-location">Las Condes · Región Metropolitana</p>
+          <h3>Oficina para empresas</h3>
+          <p class="details">4 privados <span>·</span> 2 baños <span>·</span> 96 m²</p>
+          <div class="card-footer">
+            <p class="price">$1.200.000 <small>/ mes</small></p>
+            <a href="detalle.html" class="btn">Ver detalles</a>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer" id="contacto">
+  <div>
+    <strong>Gestión Urbana Propiedades</strong>
+    <p>Encontramos el espacio ideal para ti.</p>
+  </div>
+  <p class="copyright">© 2026 Gestión Urbana Propiedades</p>
+</footer>
+
+</body>
+</html>
