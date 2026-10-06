@@ -235,7 +235,7 @@ Dependencies live inside the Docker images, so the images have to be rebuilt. Fo
 | make | docker compose | What it does |
 |---|---|---|
 | `make up` | `docker compose up -d` | Starts the whole stack in the background |
-| `make build` | `docker compose up -d --build` | Rebuilds the images and starts. Use it after a dependency changes |
+| `make build` | `docker compose up -d --build --renew-anon-volumes` | Rebuilds the images and starts. Use it after a dependency changes |
 | `make down` | `docker compose down` | Stops and removes the containers. **Database data is kept** |
 | `make restart` | `docker compose restart` | Restarts the services |
 | `make ps` | `docker compose ps` | Shows the status and ports of each service |
