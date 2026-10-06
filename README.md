@@ -82,7 +82,7 @@ Edit the code as usual: **Vite reloads the browser and nodemon restarts the back
 |---|---|---|
 | `make up` | `docker compose up -d` | Starts everything in the background |
 | `make down` | `docker compose down` | Stops everything. **Database data is kept** |
-| `make build` | `docker compose up -d --build` | Rebuilds and starts. Use it after a `package.json` changes |
+| `make build` | `docker compose up -d --build --renew-anon-volumes` | Rebuilds and starts. Use it after a `package.json` changes |
 | `make logs-front` / `make logs-back` / `make logs-db` | `docker compose logs -f --tail=100 <service>` | Live logs of one service (`Ctrl + C` to leave) |
 
 Run `make` with no arguments to see all the commands. On **Windows**, run the `make` commands in **Git Bash**, or use the `docker compose` column in PowerShell. The [setup guide](docs/SETUP.md#commands) has the complete table.
