@@ -23,7 +23,7 @@ const footerColumns = [
             { label: "Nosotros", href: "#" },
             { label: "Equipo", href: "#" },
             { label: "Trabaja con nosotros", href: "#" },
-            { label: "Contacto", href: "#" },
+            { label: "Contacto", href: "/contacto" },
         ],
     }
 ]

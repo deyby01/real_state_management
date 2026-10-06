@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GUP - Contacto | Gestión Urbana de Propiedades</title>
+
+    <!-- Fuente Montserrat de Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Hoja de estilos principal para la página de contacto -->
+    <link rel="stylesheet" href="css/contacto.css">
+</head>
+<body>
+
+    <!-- ========================================== -->
+    <!-- BARRA DE NAVEGACIÓN SUPERIOR (HEADER)     -->
+    <!-- ========================================== -->
+    <header class="encabezado">
+        <div class="logo-contenedor">
+            <!-- Insignia / Caja del Logo GUP -->
+            <div class="logo-caja">GUP</div>
+            <div class="logo-texto">
+                <span class="nombre-marca">GESTIÓN URBANA</span>
+                <span class="sub-marca">DE PROPIEDADES</span>
+            </div>
+        </div>
+
+        <!-- Menú de navegación principal -->
+        <nav class="menu-navegacion">
+            <a href="landing_page.html">INICIO</a>
+            <a href="#">PROPIEDADES</a>
+            <a href="#">NOSOTROS</a>
+            <!-- La clase "activo" resalta la página donde está posicionado el usuario -->
+            <a href="contacto.html" class="activo">CONTACTO</a>
+        </nav>
+
+        <!-- Botón de perfil / usuario a la derecha -->
+        <div class="usuario-icono" title="Cuenta de Usuario">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+        </div>
+    </header>
+
+    <!-- ========================================== -->
+    <!-- SECCIÓN DE CABECERA CON SLIDESHOW (HERO)  -->
+    <!-- ========================================== -->
+    <section class="hero-contacto">
+        
+        <!-- Contenedor del Slideshow de Fotos de Fondo -->
+        <div class="hero-slideshow">
+            <div class="slide activa" style="background-image: url('img/hero1.jpg');"></div>
+            <div class="slide" style="background-image: url('img/hero2.jpg');"></div>
+            <div class="slide" style="background-image: url('img/hero3.jpg');"></div>
+            <div class="slide" style="background-image: url('img/hero4.jpg');"></div>
+        </div>
+
+        <!-- Capa de oscurecimiento (Overlay) para garantizar la legibilidad del texto -->
+        <div class="hero-overlay"></div>
+
+        <!-- Texto e información del Hero -->
+        <div class="hero-contenido">
+            <span class="categoria-hero">ATENCIÓN AL CLIENTE Y CONSULTAS</span>
+            <h1>CONTÁCTANOS</h1>
+            <p>Estamos aquí para resolver tus dudas sobre arriendos, publicaciones y administración de propiedades.</p>
+        </div>
+
+        <!-- Indicadores de navegación (Puntos/Dots) para el Slideshow -->
+        <div class="slideshow-dots" id="slideshowDots"></div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- CONTENIDO PRINCIPAL: CONTACTO Y FORMULARIO -->
+    <!-- ========================================== -->
+    <main class="seccion-contacto">
+        <div class="contenedor-contacto">
+
+            <!-- COLUMNA 1: Tarjetas de Información de Contacto -->
+            <div class="info-contacto">
+                <h2>Información de Atención</h2>
+                <p class="descripcion-info">Puedes comunicarte con nuestro equipo a través de los siguientes canales directos o visitarnos en nuestra oficina central.</p>
+
+                <!-- Tarjeta: Dirección -->
+                <div class="tarjeta-info">
+                    <div class="icono-info">📍</div>
+                    <div class="texto-info">
+                        <h3>Oficina Central</h3>
+                        <p>Antonio Varas 810<br>Providencia, Santiago, Chile</p>
+                    </div>
+                </div>
+
+                <!-- Tarjeta: Teléfonos -->
+                <div class="tarjeta-info">
+                    <div class="icono-info">📞</div>
+                    <div class="texto-info">
+                        <h3>Teléfonos de Contacto</h3>
+                        <p>Central: +56 2 2345 6789</p>
+                        <p>WhatsApp Comercial: +56 9 8765 4321</p>
+                    </div>
+                </div>
+
+                <!-- Tarjeta: Correo Electrónico -->
+                <div class="tarjeta-info">
+                    <div class="icono-info">✉️</div>
+                    <div class="texto-info">
+                        <h3>Correo Electrónico</h3>
+                        <p>contacto@gup-propiedades.cl</p>
+                        <p>soporte@gup-propiedades.cl</p>
+                    </div>
+                </div>
+
+                <!-- Tarjeta: Horario de Atención -->
+                <div class="tarjeta-info">
+                    <div class="icono-info">⏰</div>
+                    <div class="texto-info">
+                        <h3>Horario de Atención</h3>
+                        <p>Lunes a Viernes: 09:00 - 18:30 hrs</p>
+                        <p>Sábados: 10:00 - 14:00 hrs</p>
+                    </div>
+                </div>
+
+                <!-- Tarjeta: Mapa de Ubicación -->
+                <div class="tarjeta-mapa">
+                    <h3>🗺️ Ubicación de nuestra Oficina</h3>
+                    <div class="contenedor-iframe-mapa">
+                        <iframe 
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3329.4772093553254!2d-70.61794772352822!3d-33.43003447339798!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9692ca82a6f44d8b%3A0x6b7e7bc8bc9e96e5!2sAntonio%20Varas%20810%2C%20Providencia%2C%20Regi%C3%B3n%20Metropolitana!5e0!3m2!1ses!2scl!4v1700000000000!5m2!1ses!2scl" 
+                            allowfullscreen="" 
+                            loading="lazy" 
+                            referrerpolicy="no-referrer-when-downgrade"
+                            title="Mapa de ubicación de la oficina de GUP en Antonio Varas 810">
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUMNA 2: Formulario de Contacto -->
+            <div class="tarjeta-formulario">
+                <h2>Envíanos un Mensaje</h2>
+                <p class="subtitulo-form">Completa los campos requeridos y un ejecutivo se pondrá en contacto contigo a la brevedad.</p>
+
+                <form id="formContacto" class="formulario">
+                    
+                    <!-- Campo: Nombre Completo -->
+                    <div class="campo">
+                        <label for="nombre">Nombre Completo <span class="requerido">*</span></label>
+                        <input type="text" id="nombre" name="nombre" placeholder="Ej. Ignacio Latrach" required>
+                    </div>
+
+                    <!-- Campo: Correo Electrónico -->
+                    <div class="campo">
+                        <label for="email">Correo Electrónico <span class="requerido">*</span></label>
+                        <input type="email" id="email" name="email" placeholder="ejemplo@correo.com" required>
+                    </div>
+
+                    <!-- Campo: Teléfono -->
+                    <div class="campo">
+                        <label for="telefono">Teléfono de Contacto</label>
+                        <input type="tel" id="telefono" name="telefono" placeholder="+56 9 1234 5678">
+                    </div>
+
+                    <!-- Campo: Motivo / Asunto -->
+                    <div class="campo">
+                        <label for="asunto">Motivo de la Consulta <span class="requerido">*</span></label>
+                        <select id="asunto" name="asunto" required>
+                            <option value="">-- Selecciona una opción --</option>
+                            <option value="arriendo">Consulta sobre Arriendo de Propiedad</option>
+                            <option value="publicar">Quiero Publicar mi Propiedad</option>
+                            <option value="administracion">Servicio de Administración Inmobiliaria</option>
+                            <option value="visita">Coordinación de Visita</option>
+                            <option value="otro">Otro Motivo</option>
+                        </select>
+                    </div>
+
+                    <!-- Campo: Mensaje -->
+                    <div class="campo">
+                        <label for="mensaje">Mensaje <span class="requerido">*</span></label>
+                        <textarea id="mensaje" name="mensaje" rows="4" maxlength="500" placeholder="Escribe aquí tu consulta o requerimiento en detalle..." required></textarea>
+                        <span id="contadorCaracteres" class="contador-caracteres">0 / 500 caracteres</span>
+                    </div>
+
+                    <!-- Contenedor para mostrar mensajes de éxito o error vía JavaScript -->
+                    <div id="mensajeEstado" class="mensaje-estado"></div>
+
+                    <!-- Botón Enviar -->
+                    <button type="submit" class="boton-enviar">Enviar Mensaje</button>
+                </form>
+            </div>
+        </div> <!-- Cierre del contenedor de 2 columnas (contenedor-contacto) -->
+
+        <!-- ========================================== -->
+        <!-- SECCIÓN DE PREGUNTAS FRECUENTES (FAQ)     -->
+        <!-- ========================================== -->
+        <div class="seccion-faq">
+            <div class="encabezado-faq">
+                <h2>Preguntas Frecuentes</h2>
+                <p>Encuentra respuestas rápidas a las consultas más habituales sobre nuestros servicios de arriendo y administración.</p>
+            </div>
+
+            <div class="contenedor-faq">
+                <!-- FAQ Item 1 -->
+                <div class="faq-item">
+                    <button class="faq-pregunta" type="button">
+                        <span>¿Cuáles son los requisitos generales para arrendar una propiedad?</span>
+                        <span class="faq-icono">+</span>
+                    </button>
+                    <div class="faq-respuesta">
+                        <p>Los requisitos principales son: Cédula de identidad vigente, últimas 3 liquidaciones de sueldo (o acreditación de ingresos equivalentes al triple del valor del arriendo), certificado de cotizaciones previsionales y certificado comercial/DICOM al día.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 2 -->
+                <div class="faq-item">
+                    <button class="faq-pregunta" type="button">
+                        <span>¿Cómo puedo publicar mi propiedad con Gestión Urbana Propiedades?</span>
+                        <span class="faq-icono">+</span>
+                    </button>
+                    <div class="faq-respuesta">
+                        <p>Puedes enviar un mensaje mediante nuestro formulario de contacto seleccionando la opción "Quiero Publicar mi Propiedad". Un ejecutivo comercial se comunicará contigo para realizar la tasación, tomar fotografías profesionales y coordinar la firma de la orden de arriendo.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 3 -->
+                <div class="faq-item">
+                    <button class="faq-pregunta" type="button">
+                        <span>¿Qué servicios incluye la administración de arriendos?</span>
+                        <span class="faq-icono">+</span>
+                    </button>
+                    <div class="faq-respuesta">
+                        <p>Incluye la recaudación del canon mensual de arriendo, pago de gastos comunes y contribuciones, coordinación de mantenciones preventivas y reparaciones, supervisión de visitas y asesoría legal continua durante la vigencia del contrato.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 4 -->
+                <div class="faq-item">
+                    <button class="faq-pregunta" type="button">
+                        <span>¿Cuánto tiempo demora la evaluación de una solicitud de arriendo?</span>
+                        <span class="faq-icono">+</span>
+                    </button>
+                    <div class="faq-respuesta">
+                        <p>Una vez presentados todos los antecedentes requeridos por el postulante, nuestro equipo realiza la evaluación comercial e informa el resultado en un plazo promedio de 24 a 48 horas hábiles.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ========================================== -->
+    <!-- PIE DE PÁGINA INSTITUCIONAL (FOOTER)      -->
+    <!-- ========================================== -->
+    <footer class="pie-pagina">
+        <div class="contenedor-footer">
+            <!-- Columna Marca -->
+            <div class="columna-marca">
+                <div class="logo-caja-footer">GUP</div>
+                <p class="descripcion-footer">Gestión Urbana de Propiedades. Corretaje y administración de arriendos.</p>
+            </div>
+
+            <!-- Columna Enlaces: Propiedades -->
+            <div class="columna-footer">
+                <h4>PROPIEDADES</h4>
+                <ul>
+                    <li><a href="#">Departamentos</a></li>
+                    <li><a href="#">Casas</a></li>
+                    <li><a href="#">Oficinas</a></li>
+                    <li><a href="#">Locales comerciales</a></li>
+                </ul>
+            </div>
+
+            <!-- Columna Enlaces: Propietarios -->
+            <div class="columna-footer">
+                <h4>PROPIETARIOS</h4>
+                <ul>
+                    <li><a href="#">Administración de arriendo</a></li>
+                    <li><a href="#">Tasación</a></li>
+                    <li><a href="#">Comisiones</a></li>
+                    <li><a href="#">Preguntas frecuentes</a></li>
+                </ul>
+            </div>
+
+            <!-- Columna Enlaces: Empresa -->
+            <div class="columna-footer">
+                <h4>EMPRESA</h4>
+                <ul>
+                    <li><a href="#">Nosotros</a></li>
+                    <li><a href="#">Equipo</a></li>
+                    <li><a href="#">Trabaja con nosotros</a></li>
+                    <li><a href="contacto.html">Contacto</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="copyright-bar">
+            <p>© 2026 GUP Propiedades SpA</p>
+        </div>
+    </footer>
+
+    <!-- Botón Flotante de WhatsApp Comercial -->
+    <a href="https://wa.me/56987654321?text=Hola%20GUP,%20me%20gustar%C3%ADa%20recibir%20informaci%C3%B3n%20sobre%20sus%20servicios%20y%20propiedades" 
+       class="boton-whatsapp-flotante" 
+       target="_blank" 
+       rel="noopener noreferrer" 
+       title="Contactar por WhatsApp Comercial">
+        <svg class="icono-whatsapp" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-0.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+        </svg>
+        <span>WhatsApp</span>
+    </a>
+
+    <!-- Script de validación y slideshow en JavaScript Vanilla -->
+    <script src="js/contacto.js"></script>
+</body>
+</html>

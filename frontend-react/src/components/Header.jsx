@@ -1,10 +1,10 @@
 import { useState } from "react";
 
 const navLinks = [
-    { label: "Inicio", href: "#" },
+    { label: "Inicio", href: "/" },
     { label: "Propiedades", href: "#" },
     { label: "Nosotros", href: "#" },
-    { label: "Contacto", href: "#" },
+    { label: "Contacto", href: "/contacto" },
 ]
 
 function Header() {
