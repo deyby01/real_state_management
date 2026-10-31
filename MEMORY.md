@@ -66,7 +66,7 @@ This flow must be demonstrable end to end: **React → Node/Express → MongoDB*
 - **Instructor:** Jerry Jesus Peña.
 - **Team:** Deyby Camacho, Roberto Varillas, Santiago Sanchez, Ignacio Latrach, Jose Hernandez.
 - **Format:** project built incrementally week by week.
-- **Language:** English is the standard for code and technical documentation; business content, UI and team communication may be in Spanish. Business statuses are stored as uppercase constants (`DISPONIBLE`, `PUBLICADA`, etc.) to avoid accent and capitalization issues.
+- **Language:** technical documentation is in English; domain names (collections, fields, models, states, API routes) are in Spanish, exactly as in `docs/DATA_MODEL.md`; UI, API messages and team communication are in Spanish. See [`AGENTS.md → Language conventions`](AGENTS.md#language-conventions). Business statuses are stored as uppercase constants (`DISPONIBLE`, `PUBLICADA`, etc.) to avoid accent and capitalization issues.
 
 ---
 
@@ -81,16 +81,17 @@ The project is in the **data model design and backend preparation phase**. The R
 | UI design | ✅ Done | Landing, Properties, About Us, Contact and Login/Register pages mocked up in React + Tailwind. |
 | Original HTML/CSS frontend | ⏸️ Frozen | `frontend/` remains only as a design reference. No new features are added. |
 | React frontend | 🚧 In progress | Static pages; no API calls yet. |
-| Express backend | 🚧 Basic | Only `GET /api/health`; MongoDB connection configured. |
-| MongoDB data model | 📝 Documented, not implemented | `docs/DATA_MODEL.md` contains the full proposal for 8 collections, rules, states and indexes. |
+| Express backend | 🚧 In progress | `GET /api/health` and the first MVC flow: `TipoPropiedad` model, controller and routes (`GET`/`POST /api/tipo-propiedades`, PR #19). The server stops if the DB connection fails (PR #17). |
+| MongoDB data model | 🚧 1 of 8 implemented | `docs/DATA_MODEL.md` contains the full proposal; only `tiposPropiedad` exists in code. |
 | Postman testing | ⏳ Pending | Will be done after implementing the models and endpoints. |
-| Authentication | ⏳ Pending | Not implemented (no bcrypt, no JWT, no role middleware). |
+| Authentication | 🚧 Starting | Next topic: `Usuario` model, register/login with bcryptjs + JWT, auth and role middlewares. |
 
 ### What is being done now
 
-1. **Validate and close the MongoDB data model** with the professor and the team. This week and next week the professor wants to see the data modeling.
-2. **Prepare the collection schema** based on the case's business model.
+1. **Learning Express by building the backend.** The `TipoPropiedad` MVC flow is done; the developer is now learning **JWT and middlewares** through the `usuarios` collection and the `/api/auth` endpoints.
+2. **Validate and close the MongoDB data model** with the professor and the team.
 3. **Plan the backend tests with Postman** for the next stage.
+4. **AI mentor flow for the team:** `AGENTS.md` + `MEMORY.md` are also used with OpenCode, so teammates without Claude Code can work with an AI tutor following the same rules.
 
 ### Status history (chronological, brief)
 
@@ -119,7 +120,11 @@ real_state_management/
 ├── backend/                 # Express + Mongoose
 │   ├── src/
 │   │   ├── config/db.js     # MongoDB connection
-│   │   ├── app.js           # Express app and routes (health check only)
+│   │   ├── models/          # TipoPropiedad.js
+│   │   ├── controllers/     # tipoPropiedad.controller.js
+│   │   ├── routes/          # tipoPropiedad.routes.js
+│   │   ├── middlewares/     # (empty, auth comes next)
+│   │   ├── app.js           # Express app: middlewares and routers
 │   │   └── index.js         # Entry point
 │   ├── .env.example
 │   ├── Dockerfile
@@ -154,10 +159,33 @@ real_state_management/
 | Method | Route | Response |
 |---|---|---|
 | `GET` | `/api/health` | `{"status":"ok"}` |
+| `GET` | `/api/tipo-propiedades` | List of active property types |
+| `POST` | `/api/tipo-propiedades` | Creates a type (`201`); duplicate name → `409` |
 
 ---
 
 ## NEXT STEPS
+
+### Current step — Authentication with JWT (branch `feature/deyby/jwt-auth-setup`, Deyby)
+
+The developer is learning JWT and middlewares while building it, following the [teaching loop](AGENTS.md#teaching-loop). Each step is tested in Postman before the next one.
+
+| # | Step | What to test in Postman | Status |
+|---|---|---|---|
+| 0 | `JWT_SECRET` and `JWT_EXPIRES_IN` in `docker-compose.yml`, `backend/.env.example` and `backend/README.md` | — | ✅ Done |
+| 1 | Install `jsonwebtoken` and `bcryptjs` (`make build` afterwards); stop the server at startup if `JWT_SECRET` is missing, like `db.js` does with `MONGO_URI` | Server starts | ⏳ |
+| 2 | `models/Usuario.js` following `docs/DATA_MODEL.md` (`passwordHash` with `select: false`) | — | ⏳ |
+| 3 | `POST /api/auth/register`: always creates `CLIENTE`, hashes the password | Hash visible in Compass; duplicate email → `409`; sending `"rol":"ADMIN"` still creates `CLIENTE` | ⏳ |
+| 4 | `POST /api/auth/login`: returns a JWT with `_id` and `rol` | Token returned; inspect it on jwt.io; wrong email or password → `401` with the same message | ⏳ |
+| 5 | `middlewares/auth.middleware.js` + `GET /api/auth/me` | No token → `401`; valid token → user data without `passwordHash` | ⏳ |
+| 6 | `middlewares/role.middleware.js`; protect `POST /api/tipo-propiedades` for `ADMIN` only | As `CLIENTE` → `403`; as `ADMIN` → `201` | ⏳ |
+
+**Decisions taken (pending professor validation where noted):**
+
+- Clients self-register from `/registro`; `ADMIN`, `EJECUTIVO` and `PROPIETARIO` accounts are created by an admin *(pending validation)*.
+- The first `ADMIN` is created by the **fixtures**, since nobody can register as admin.
+- Registration first creates only the `usuarios` document. Creating the linked `clientes` record (D1, `clienteId`) is added once register and login work.
+- Security rules for this step: [`AGENTS.md → Security and authentication`](AGENTS.md#security-and-authentication).
 
 ### Step 1 — Close the data model (this week)
 
@@ -204,7 +232,7 @@ real_state_management/
 1. Authentication:
    - Client registration.
    - Login with email and password.
-   - Password hashing with bcrypt or argon2.
+   - Password hashing with `bcryptjs`.
    - JWT tokens with expiration.
    - Authentication and role middleware.
 2. Suggested minimum endpoints:
@@ -571,6 +599,8 @@ Test passwords go in the fixtures README, never real passwords.
 |---|---|---|
 | `PORT` | `4000` | `4000` |
 | `MONGO_URI` | `mongodb://localhost:27017/real_estate` | `mongodb://mongo:27017/real_estate` |
+| `JWT_SECRET` | Development key in `.env.example` | Development key in `docker-compose.yml` (local development only) |
+| `JWT_EXPIRES_IN` | `1d` | `1d` |
 
 ### Team conventions
 
@@ -578,7 +608,7 @@ Test passwords go in the fixtures README, never real passwords.
 - **Branch name:** `feature/user-name/implementation-name` (e.g., `feature/deyby/landing-page-header`).
 - **Before working:** `git checkout development && git pull origin development`.
 - **Before the PR:** `git fetch origin && git rebase origin/development`.
-- **Language:** code and technical names in English; business documentation and UI in Spanish.
+- **Language:** technical docs in English; domain names, UI and API messages in Spanish (see `AGENTS.md`).
 - **Statuses:** uppercase constants, without accents or spaces.
 - **Prices:** integer numbers in CLP.
 - **Deletion:** soft delete (`activo: false`).
@@ -634,6 +664,8 @@ Test passwords go in the fixtures README, never real passwords.
 | 2026-10-27 | Read the case specification in Markdown and analyzed the business model. | Summary of actors, RF, RNF and rules. |
 | 2026-10-31 | Reviewed `docs/DATA_MODEL.md`, created the persistent memory and separated responsibilities between `AGENTS.md` and `MEMORY.md`. | `MEMORY.md` focused on the project; `AGENTS.md` with the agent's role, rules and mistakes. |
 | 2026-10-31 | Translated `AGENTS.md` and `MEMORY.md` to English and added the language convention to `AGENTS.md`. | Documentation follows the English standard; explanations to the developer remain in Spanish. |
+| 2026-10-31 | Reviewed the `TipoPropiedad` MVC flow (PR #19) and planned authentication: decisions on public registration, admin creation, `JWT_SECRET` handling and the order of steps. | Ready to start the `Usuario` model and auth endpoints. |
+| 2026-10-31 | Created branch `feature/deyby/jwt-auth-setup`; added `JWT_SECRET`/`JWT_EXPIRES_IN` to Docker and docs; improved `AGENTS.md` for OpenCode (teaching loop, team and Git rules, technical conventions, auth security rules, Spanish domain names). | Teammates' agents follow the same conventions; auth step 1 is next. |
 
 ---
 
