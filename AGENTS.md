@@ -126,7 +126,12 @@ The **`TipoPropiedad` flow is the reference implementation**. New features copy 
 ### Environment (Docker)
 
 - The whole stack runs with **Docker Compose** (`make up`). See [`docs/SETUP.md`](docs/SETUP.md).
-- **Environment variables come from `docker-compose.yml`** (`environment:`), not from `backend/.env`. A variable that every teammate needs must be added to `docker-compose.yml` **and** documented in `backend/.env.example` and `backend/README.md`.
+- **Environment variables reach the backend container from two places:**
+  1. `docker-compose.yml` (`environment:`).
+  2. `backend/.env`, if the developer created it: the folder is mounted into the container and the `dev` script runs `node --env-file-if-exists=.env`.
+
+  If both define a variable, **`docker-compose.yml` wins** (Node never overrides a variable that already exists). To test what happens when a variable is missing, remove it from **both** places.
+- A variable that every teammate needs must be added to `docker-compose.yml` **and** documented in `backend/.env.example` and `backend/README.md`, because teammates may not have a `backend/.env`.
 - **Dependencies live inside the Docker image.** After `npm install <package>` in `backend/` or `frontend-react/`, run `make build`. Teammates must also run `make build` after pulling a `package.json` change.
 - Backend logs: `make logs-back`. Database: MongoDB Compass at `mongodb://localhost:27017`, database `real_estate`.
 - Do not run `npm run dev` while Docker is running: both use the same ports.
@@ -188,6 +193,7 @@ The **`TipoPropiedad` flow is the reference implementation**. New features copy 
 | Date | Mistake | Lesson / derived rule |
 |---|---|---|
 | 2026-10-31 | `MEMORY.md` said no model was implemented, although `TipoPropiedad` had already been merged (PR #19). | At the start of every session, compare `MEMORY.md` with `git log` and `backend/src/` (instruction 2). |
+| 2026-10-31 | This file said that with Docker, environment variables come only from `docker-compose.yml`. The developer commented out `JWT_SECRET` there and the server still started, because `backend/.env` is also loaded inside the container. | Variables come from `docker-compose.yml` **and** `backend/.env`; to test a missing variable, remove it from both (see [Environment (Docker)](#environment-docker)). |
 | 2026-10-31 | An earlier version of this file said collection names and API routes were in English, while the model and the code use Spanish. | Domain names are Spanish, exactly as in `docs/DATA_MODEL.md` (see [Language conventions](#language-conventions)). |
 
 ### Observations

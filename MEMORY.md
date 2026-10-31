@@ -173,7 +173,7 @@ The developer is learning JWT and middlewares while building it, following the [
 | # | Step | What to test in Postman | Status |
 |---|---|---|---|
 | 0 | `JWT_SECRET` and `JWT_EXPIRES_IN` in `docker-compose.yml`, `backend/.env.example` and `backend/README.md` | — | ✅ Done |
-| 1 | Install `jsonwebtoken` and `bcryptjs` (`make build` afterwards); stop the server at startup if `JWT_SECRET` is missing, like `db.js` does with `MONGO_URI` | Server starts | ⏳ |
+| 1 | Install `jsonwebtoken` and `bcryptjs` (`make build` afterwards); stop the server at startup if `JWT_SECRET` is missing, like `db.js` does with `MONGO_URI` | Server starts; with `JWT_SECRET` removed from **both** `docker-compose.yml` and `backend/.env`, it stops with a clear message | ✅ Done: libraries installed (`bcryptjs` 3, `jsonwebtoken` 9); `index.js` stops with a clear message if `JWT_SECRET` is missing (tested) |
 | 2 | `models/Usuario.js` following `docs/DATA_MODEL.md` (`passwordHash` with `select: false`) | — | ⏳ |
 | 3 | `POST /api/auth/register`: always creates `CLIENTE`, hashes the password | Hash visible in Compass; duplicate email → `409`; sending `"rol":"ADMIN"` still creates `CLIENTE` | ⏳ |
 | 4 | `POST /api/auth/login`: returns a JWT with `_id` and `rol` | Token returned; inspect it on jwt.io; wrong email or password → `401` with the same message | ⏳ |
