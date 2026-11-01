@@ -178,6 +178,7 @@ The developer is learning JWT and middlewares while building it, following the [
 | 3 | `POST /api/auth/register`: always creates `CLIENTE`, hashes the password | Hash visible in Compass; duplicate email → `409`; sending `"rol":"ADMIN"` still creates `CLIENTE` | ✅ Done (5 Postman tests passed; password minimum 8 characters) |
 | 4 | `POST /api/auth/login`: returns a JWT with `_id` and `rol` | Token returned; inspect it on jwt.io; wrong email or password → `401` with the same message | ✅ Done (payload uses `_id` and `rol`; missing fields must return `400`, not `500`) |
 | 5 | `middlewares/auth.middleware.js` + `GET /api/auth/me` | No token → `401`; valid token → user data without `passwordHash` | ✅ Done (`verificarToken` sets `req.usuario`; tampered and expired tokens → `401`) |
+| 5b | Fixtures: `backend/src/fixtures/` + `make seed` (5 users, one per role + a second executive, and 4 property types; password `Password123`) | Admin can log in after `make seed` | ✅ Done |
 | 6 | `middlewares/role.middleware.js`; protect `POST /api/tipo-propiedades` for `ADMIN` only | As `CLIENTE` → `403`; as `ADMIN` → `201` | ⏳ |
 
 **Decisions taken (pending professor validation where noted):**
@@ -569,6 +570,8 @@ They should include at least:
 
 Test passwords go in the fixtures README, never real passwords.
 
+**Implemented so far** (`backend/src/fixtures/`, run with `make seed`): `data/usuarios.js` (admin, 2 executives, owner, client; all with password `Password123`), `data/tiposPropiedad.js` (4 types) and `seed.js`. The test users are listed in [`backend/src/fixtures/README.md`](backend/src/fixtures/README.md). Every new model adds its data file there.
+
 ### Environment commands (Docker)
 
 | make | docker compose | What it does |
@@ -583,6 +586,7 @@ Test passwords go in the fixtures README, never real passwords.
 | `make logs-back` | `docker compose logs -f --tail=100 backend` | Backend logs. |
 | `make logs-db` | `docker compose logs -f --tail=100 mongo` | MongoDB logs. |
 | `make db-shell` | `docker compose exec mongo mongosh real_estate` | MongoDB shell. |
+| `make seed` | `docker compose exec backend npm run seed` | **Empties** the collections and loads the fixtures (test users per role, property types). |
 | `make clean` | `docker compose down -v` | Deletes containers and **all data** (asks for confirmation). |
 
 **Services and ports:**
@@ -667,6 +671,7 @@ Test passwords go in the fixtures README, never real passwords.
 | 2026-10-31 | Translated `AGENTS.md` and `MEMORY.md` to English and added the language convention to `AGENTS.md`. | Documentation follows the English standard; explanations to the developer remain in Spanish. |
 | 2026-10-31 | Reviewed the `TipoPropiedad` MVC flow (PR #19) and planned authentication: decisions on public registration, admin creation, `JWT_SECRET` handling and the order of steps. | Ready to start the `Usuario` model and auth endpoints. |
 | 2026-10-31 | Created branch `feature/deyby/jwt-auth-setup`; added `JWT_SECRET`/`JWT_EXPIRES_IN` to Docker and docs; improved `AGENTS.md` for OpenCode (teaching loop, team and Git rules, technical conventions, auth security rules, Spanish domain names). | Teammates' agents follow the same conventions; auth step 1 is next. |
+| 2026-11-01 | Auth steps 1–5 built by the developer with guidance (JWT_SECRET check, `Usuario` model, register, login, `verificarToken` + `/me`); fixtures created by the agent on request (`make seed`). | Next: role middleware (step 6). |
 
 ---
 

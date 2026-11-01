@@ -133,6 +133,7 @@ The **`TipoPropiedad` flow is the reference implementation**. New features copy 
   If both define a variable, **`docker-compose.yml` wins** (Node never overrides a variable that already exists). To test what happens when a variable is missing, remove it from **both** places.
 - A variable that every teammate needs must be added to `docker-compose.yml` **and** documented in `backend/.env.example` and `backend/README.md`, because teammates may not have a `backend/.env`.
 - **Dependencies live inside the Docker image.** After `npm install <package>` in `backend/` or `frontend-react/`, run `make build`. Teammates must also run `make build` after pulling a `package.json` change.
+- Test data: `make seed` **empties** the collections and loads the fixtures in `backend/src/fixtures/` (test users per role, password `Password123`). New models must add their data there.
 - Backend logs: `make logs-back`. Database: MongoDB Compass at `mongodb://localhost:27017`, database `real_estate`.
 - Do not run `npm run dev` while Docker is running: both use the same ports.
 
