@@ -176,7 +176,7 @@ The developer is learning JWT and middlewares while building it, following the [
 | 1 | Install `jsonwebtoken` and `bcryptjs` (`make build` afterwards); stop the server at startup if `JWT_SECRET` is missing, like `db.js` does with `MONGO_URI` | Server starts; with `JWT_SECRET` removed from **both** `docker-compose.yml` and `backend/.env`, it stops with a clear message | ✅ Done: libraries installed (`bcryptjs` 3, `jsonwebtoken` 9); `index.js` stops with a clear message if `JWT_SECRET` is missing (tested) |
 | 2 | `models/Usuario.js` following `docs/DATA_MODEL.md` (`passwordHash` with `select: false`) | — | ✅ Done (validations tested: `trim`, `lowercase`, `enum`) |
 | 3 | `POST /api/auth/register`: always creates `CLIENTE`, hashes the password | Hash visible in Compass; duplicate email → `409`; sending `"rol":"ADMIN"` still creates `CLIENTE` | ✅ Done (5 Postman tests passed; password minimum 8 characters) |
-| 4 | `POST /api/auth/login`: returns a JWT with `_id` and `rol` | Token returned; inspect it on jwt.io; wrong email or password → `401` with the same message | ⏳ |
+| 4 | `POST /api/auth/login`: returns a JWT with `_id` and `rol` | Token returned; inspect it on jwt.io; wrong email or password → `401` with the same message | ✅ Done (payload uses `_id` and `rol`; missing fields must return `400`, not `500`) |
 | 5 | `middlewares/auth.middleware.js` + `GET /api/auth/me` | No token → `401`; valid token → user data without `passwordHash` | ⏳ |
 | 6 | `middlewares/role.middleware.js`; protect `POST /api/tipo-propiedades` for `ADMIN` only | As `CLIENTE` → `403`; as `ADMIN` → `201` | ⏳ |
 
