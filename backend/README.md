@@ -32,6 +32,10 @@ The server reads its configuration from environment variables, so the same code 
 |---|---|---|---|
 | `PORT` | Port where Express listens | `4000` | `4000` |
 | `MONGO_URI` | MongoDB connection string | `mongodb://localhost:27017/real_estate` | `mongodb://mongo:27017/real_estate` |
+| `JWT_SECRET` | Key used to sign and verify JWT tokens | Development key from `.env.example` | Development key from `docker-compose.yml` |
+| `JWT_EXPIRES_IN` | How long a token is valid (`15m`, `1h`, `1d`...) | `1d` | `1d` |
+
+> The `JWT_SECRET` in the repository is **for local development only**. Anyone who reads the repo knows it, so it must never be used in production.
 
 - **With Docker** you don't need to do anything: `docker-compose.yml` sets these variables. Inside Docker, `mongo` is the name of the database service, not `localhost`.
 - **Without Docker**, create your local `.env` from the template:

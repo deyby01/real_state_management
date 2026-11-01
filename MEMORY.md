@@ -2,7 +2,7 @@
 
 > **What it is:** this file is the persistent memory of the project. It stores what the project is, what has been done, what is being done, what comes next and the necessary references.
 > **Agent role and rules:** see [`AGENTS.md`](AGENTS.md). That file defines who the agent is, how it must act and which mistakes not to repeat.
-> **Last updated:** 2026-10-31
+> **Last updated:** 2026-11-01
 > **Keep:** do not exceed ~1000 lines. Summarize, do not duplicate. Deep technical details live in `docs/DATA_MODEL.md` and in the case specification.
 
 > ⚠️ **For the agent:** always read `AGENTS.md` and `MEMORY.md` together at the start of every session. `AGENTS.md` contains the role, rules and mistakes; `MEMORY.md` contains the project context.
@@ -66,7 +66,7 @@ This flow must be demonstrable end to end: **React → Node/Express → MongoDB*
 - **Instructor:** Jerry Jesus Peña.
 - **Team:** Deyby Camacho, Roberto Varillas, Santiago Sanchez, Ignacio Latrach, Jose Hernandez.
 - **Format:** project built incrementally week by week.
-- **Language:** English is the standard for code and technical documentation; business content, UI and team communication may be in Spanish. Business statuses are stored as uppercase constants (`DISPONIBLE`, `PUBLICADA`, etc.) to avoid accent and capitalization issues.
+- **Language:** technical documentation is in English; domain names (collections, fields, models, states, API routes) are in Spanish, exactly as in `docs/DATA_MODEL.md`; UI, API messages and team communication are in Spanish. See [`AGENTS.md → Language conventions`](AGENTS.md#language-conventions). Business statuses are stored as uppercase constants (`DISPONIBLE`, `PUBLICADA`, etc.) to avoid accent and capitalization issues.
 
 ---
 
@@ -81,16 +81,17 @@ The project is in the **data model design and backend preparation phase**. The R
 | UI design | ✅ Done | Landing, Properties, About Us, Contact and Login/Register pages mocked up in React + Tailwind. |
 | Original HTML/CSS frontend | ⏸️ Frozen | `frontend/` remains only as a design reference. No new features are added. |
 | React frontend | 🚧 In progress | Static pages; no API calls yet. |
-| Express backend | 🚧 Basic | Only `GET /api/health`; MongoDB connection configured. |
-| MongoDB data model | 📝 Documented, not implemented | `docs/DATA_MODEL.md` contains the full proposal for 8 collections, rules, states and indexes. |
-| Postman testing | ⏳ Pending | Will be done after implementing the models and endpoints. |
-| Authentication | ⏳ Pending | Not implemented (no bcrypt, no JWT, no role middleware). |
+| Express backend | 🚧 In progress | `GET /api/health`, `TipoPropiedad` flow (PR #19) and authentication (`/api/auth`). The server stops if the DB connection or `JWT_SECRET` is missing. |
+| MongoDB data model | 🚧 2 of 8 implemented | `docs/DATA_MODEL.md` contains the full proposal; `tiposPropiedad` and `usuarios` exist in code. |
+| Postman testing | 🚧 Manual | Auth and property type endpoints tested by hand; no shared Postman collection in the repo yet. |
+| Authentication | ✅ Done (pending PR) | Register, login (JWT), `GET /api/auth/me`, `verificarToken` and `permitirRoles` middlewares; fixtures with one user per role (`make seed`). Branch `feature/deyby/jwt-auth-setup`. |
 
 ### What is being done now
 
-1. **Validate and close the MongoDB data model** with the professor and the team. This week and next week the professor wants to see the data modeling.
-2. **Prepare the collection schema** based on the case's business model.
+1. **Pull Request of `feature/deyby/jwt-auth-setup` → `development`** with the whole authentication flow and the fixtures.
+2. **Validate and close the MongoDB data model** with the professor and the team.
 3. **Plan the backend tests with Postman** for the next stage.
+4. **AI mentor flow for the team:** `AGENTS.md` + `MEMORY.md` are also used with OpenCode, so teammates without Claude Code can work with an AI tutor following the same rules.
 
 ### Status history (chronological, brief)
 
@@ -119,7 +120,12 @@ real_state_management/
 ├── backend/                 # Express + Mongoose
 │   ├── src/
 │   │   ├── config/db.js     # MongoDB connection
-│   │   ├── app.js           # Express app and routes (health check only)
+│   │   ├── models/          # TipoPropiedad.js, Usuario.js
+│   │   ├── controllers/     # tipoPropiedad.controller.js, auth.controller.js
+│   │   ├── routes/          # tipoPropiedad.routes.js, auth.routes.js
+│   │   ├── middlewares/     # auth.middleware.js (verificarToken), role.middleware.js (permitirRoles)
+│   │   ├── fixtures/        # seed.js + data/ (run with make seed)
+│   │   ├── app.js           # Express app: middlewares and routers
 │   │   └── index.js         # Entry point
 │   ├── .env.example
 │   ├── Dockerfile
@@ -154,10 +160,47 @@ real_state_management/
 | Method | Route | Response |
 |---|---|---|
 | `GET` | `/api/health` | `{"status":"ok"}` |
+| `GET` | `/api/tipo-propiedades` | List of active property types. **Public** (the catalog filter needs it) |
+| `POST` | `/api/tipo-propiedades` | **`ADMIN` only.** Creates a type (`201`); no token → `401`; other role → `403`; duplicate → `409` |
+| `POST` | `/api/auth/register` | Public. Creates a `CLIENTE` (`201`); duplicate email → `409`; password < 8 chars → `400` |
+| `POST` | `/api/auth/login` | Public. Returns `{ token, usuario }` (`200`); wrong credentials or inactive user → `401`; missing fields → `400` |
+| `GET` | `/api/auth/me` | Any logged-in user. Returns the current user (`200`); no/invalid/expired token → `401` |
 
 ---
 
 ## NEXT STEPS
+
+### Done — Authentication with JWT (branch `feature/deyby/jwt-auth-setup`, Deyby; pending PR)
+
+The developer is learning JWT and middlewares while building it, following the [teaching loop](AGENTS.md#teaching-loop). Each step is tested in Postman before the next one.
+
+| # | Step | What to test in Postman | Status |
+|---|---|---|---|
+| 0 | `JWT_SECRET` and `JWT_EXPIRES_IN` in `docker-compose.yml`, `backend/.env.example` and `backend/README.md` | — | ✅ Done |
+| 1 | Install `jsonwebtoken` and `bcryptjs` (`make build` afterwards); stop the server at startup if `JWT_SECRET` is missing, like `db.js` does with `MONGO_URI` | Server starts; with `JWT_SECRET` removed from **both** `docker-compose.yml` and `backend/.env`, it stops with a clear message | ✅ Done: libraries installed (`bcryptjs` 3, `jsonwebtoken` 9); `index.js` stops with a clear message if `JWT_SECRET` is missing (tested) |
+| 2 | `models/Usuario.js` following `docs/DATA_MODEL.md` (`passwordHash` with `select: false`) | — | ✅ Done (validations tested: `trim`, `lowercase`, `enum`) |
+| 3 | `POST /api/auth/register`: always creates `CLIENTE`, hashes the password | Hash visible in Compass; duplicate email → `409`; sending `"rol":"ADMIN"` still creates `CLIENTE` | ✅ Done (5 Postman tests passed; password minimum 8 characters) |
+| 4 | `POST /api/auth/login`: returns a JWT with `_id` and `rol` | Token returned; inspect it on jwt.io; wrong email or password → `401` with the same message | ✅ Done (payload uses `_id` and `rol`; missing fields must return `400`, not `500`) |
+| 5 | `middlewares/auth.middleware.js` + `GET /api/auth/me` | No token → `401`; valid token → user data without `passwordHash` | ✅ Done (`verificarToken` sets `req.usuario`; tampered and expired tokens → `401`) |
+| 5b | Fixtures: `backend/src/fixtures/` + `make seed` (5 users, one per role + a second executive, and 4 property types; password `Password123`) | Admin can log in after `make seed` | ✅ Done |
+| 6 | `middlewares/role.middleware.js`; protect `POST /api/tipo-propiedades` for `ADMIN` only | As `CLIENTE` → `403`; as `ADMIN` → `201` | ✅ Done (`GET` stays public on purpose) |
+
+**Decisions taken (pending professor validation where noted):**
+
+- Clients self-register from `/registro`; `ADMIN`, `EJECUTIVO` and `PROPIETARIO` accounts are created by an admin *(pending validation)*.
+- The first `ADMIN` is created by the **fixtures**, since nobody can register as admin.
+- Registration first creates only the `usuarios` document. Creating the linked `clientes` record (D1, `clienteId`) is added once register and login work.
+- Password confirmation ("repeat your password") is validated **only in the frontend**: the register form already has the field. The API receives a single `password`, because it is also used by admins and fixtures, where confirmation makes no sense.
+- Security rules for this step: [`AGENTS.md → Security and authentication`](AGENTS.md#security-and-authentication).
+- Protect a route only after asking **who needs to use it**: `GET /api/tipo-propiedades` is public because visitors without an account filter the catalog by type (RF5).
+- Known limitation: the `rol` inside a token does not change until the token expires (24 h). Acceptable for the project; shorter tokens or reading the role from the DB would fix it.
+
+**Pending after the PR (auth follow-ups):**
+
+1. Complete client registration: also create the `clientes` record and link it with `clienteId` (needs the `Cliente` model).
+2. Validate the email format in the `Usuario` model.
+3. Shared Postman collection in the repo, with a variable that stores the token automatically after login.
+4. `/api/usuarios` for the admin to create executives and owners and to deactivate users.
 
 ### Step 1 — Close the data model (this week)
 
@@ -204,7 +247,7 @@ real_state_management/
 1. Authentication:
    - Client registration.
    - Login with email and password.
-   - Password hashing with bcrypt or argon2.
+   - Password hashing with `bcryptjs`.
    - JWT tokens with expiration.
    - Authentication and role middleware.
 2. Suggested minimum endpoints:
@@ -540,6 +583,8 @@ They should include at least:
 
 Test passwords go in the fixtures README, never real passwords.
 
+**Implemented so far** (`backend/src/fixtures/`, run with `make seed`): `data/usuarios.js` (admin, 2 executives, owner, client; all with password `Password123`), `data/tiposPropiedad.js` (4 types) and `seed.js`. The test users are listed in [`backend/src/fixtures/README.md`](backend/src/fixtures/README.md). Every new model adds its data file there.
+
 ### Environment commands (Docker)
 
 | make | docker compose | What it does |
@@ -554,6 +599,7 @@ Test passwords go in the fixtures README, never real passwords.
 | `make logs-back` | `docker compose logs -f --tail=100 backend` | Backend logs. |
 | `make logs-db` | `docker compose logs -f --tail=100 mongo` | MongoDB logs. |
 | `make db-shell` | `docker compose exec mongo mongosh real_estate` | MongoDB shell. |
+| `make seed` | `docker compose exec backend npm run seed` | **Empties** the collections and loads the fixtures (test users per role, property types). |
 | `make clean` | `docker compose down -v` | Deletes containers and **all data** (asks for confirmation). |
 
 **Services and ports:**
@@ -571,6 +617,8 @@ Test passwords go in the fixtures README, never real passwords.
 |---|---|---|
 | `PORT` | `4000` | `4000` |
 | `MONGO_URI` | `mongodb://localhost:27017/real_estate` | `mongodb://mongo:27017/real_estate` |
+| `JWT_SECRET` | Development key in `.env.example` | Development key in `docker-compose.yml` (local development only) |
+| `JWT_EXPIRES_IN` | `1d` | `1d` |
 
 ### Team conventions
 
@@ -578,7 +626,7 @@ Test passwords go in the fixtures README, never real passwords.
 - **Branch name:** `feature/user-name/implementation-name` (e.g., `feature/deyby/landing-page-header`).
 - **Before working:** `git checkout development && git pull origin development`.
 - **Before the PR:** `git fetch origin && git rebase origin/development`.
-- **Language:** code and technical names in English; business documentation and UI in Spanish.
+- **Language:** technical docs in English; domain names, UI and API messages in Spanish (see `AGENTS.md`).
 - **Statuses:** uppercase constants, without accents or spaces.
 - **Prices:** integer numbers in CLP.
 - **Deletion:** soft delete (`activo: false`).
@@ -634,6 +682,10 @@ Test passwords go in the fixtures README, never real passwords.
 | 2026-10-27 | Read the case specification in Markdown and analyzed the business model. | Summary of actors, RF, RNF and rules. |
 | 2026-10-31 | Reviewed `docs/DATA_MODEL.md`, created the persistent memory and separated responsibilities between `AGENTS.md` and `MEMORY.md`. | `MEMORY.md` focused on the project; `AGENTS.md` with the agent's role, rules and mistakes. |
 | 2026-10-31 | Translated `AGENTS.md` and `MEMORY.md` to English and added the language convention to `AGENTS.md`. | Documentation follows the English standard; explanations to the developer remain in Spanish. |
+| 2026-10-31 | Reviewed the `TipoPropiedad` MVC flow (PR #19) and planned authentication: decisions on public registration, admin creation, `JWT_SECRET` handling and the order of steps. | Ready to start the `Usuario` model and auth endpoints. |
+| 2026-10-31 | Created branch `feature/deyby/jwt-auth-setup`; added `JWT_SECRET`/`JWT_EXPIRES_IN` to Docker and docs; improved `AGENTS.md` for OpenCode (teaching loop, team and Git rules, technical conventions, auth security rules, Spanish domain names). | Teammates' agents follow the same conventions; auth step 1 is next. |
+| 2026-11-01 | Auth steps 1–5 built by the developer with guidance (JWT_SECRET check, `Usuario` model, register, login, `verificarToken` + `/me`); fixtures created by the agent on request (`make seed`). | Next: role middleware (step 6). |
+| 2026-11-01 | Step 6: `permitirRoles` middleware; `POST /api/tipo-propiedades` restricted to `ADMIN`, `GET` kept public after review. Authentication complete. | Ready for the PR to `development`. |
 
 ---
 

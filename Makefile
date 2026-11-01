@@ -3,7 +3,7 @@
 # Sin comando (solo "make") muestra esta ayuda
 
 # Estos nombres son comandos, no archivos
-.PHONY: help up build down restart ps logs logs-front logs-back logs-db db-shell clean
+.PHONY: help up build down restart ps logs logs-front logs-back logs-db db-shell seed clean
 
 help:
 	@echo "Comandos disponibles:"
@@ -21,6 +21,7 @@ help:
 	@echo "                   (Ctrl + C para salir de los logs)"
 	@echo ""
 	@echo "  make db-shell    Abre la consola de MongoDB (mongosh) en la base real_estate"
+	@echo "  make seed        BORRA la base y carga los datos de prueba (usuarios de cada rol, etc.)"
 	@echo "  make clean       Apaga todo y BORRA los datos de Mongo (pide confirmacion)"
 
 up:
@@ -52,6 +53,9 @@ logs-db:
 
 db-shell:
 	docker compose exec mongo mongosh real_estate
+
+seed:
+	docker compose exec backend npm run seed
 
 clean:
 	@printf "Esto borra los contenedores y TODOS los datos de MongoDB. Seguro? [s/N] "; \

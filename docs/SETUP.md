@@ -244,6 +244,7 @@ Dependencies live inside the Docker images, so the images have to be rebuilt. Fo
 | `make logs-back` | `docker compose logs -f --tail=100 backend` | Live logs of the backend |
 | `make logs-db` | `docker compose logs -f --tail=100 mongo` | Live logs of MongoDB |
 | `make db-shell` | `docker compose exec mongo mongosh real_estate` | Opens the MongoDB shell on the `real_estate` database |
+| `make seed` | `docker compose exec backend npm run seed` | **Empties the database** and loads the test data. See [`backend/src/fixtures/README.md`](../backend/src/fixtures/README.md) |
 | `make clean` | `docker compose down -v` | Stops everything and **deletes all database data** (asks for confirmation) |
 
 Press `Ctrl + C` to leave the logs. make then prints something like `make: *** [Makefile:48: logs-back] Error 130`. **That is normal:** 130 is the exit code for "interrupted with Ctrl + C", not an error.

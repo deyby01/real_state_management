@@ -34,6 +34,11 @@ services:
       PORT: 4000
       # "mongo" es el nombre del servicio de arriba: Docker lo traduce a su IP
       MONGO_URI: mongodb://mongo:27017/real_estate
+      # Clave para firmar los tokens JWT. SOLO PARA DESARROLLO LOCAL: es pública
+      # porque está en el repositorio. En producción se usa otra, secreta.
+      JWT_SECRET: e0e00448af4e2f0e4acb4f68f5c7b8c48a43ce10dd9bd54d789f5979591ddd7e
+      # Cuánto dura un token antes de expirar (formato: 15m, 1h, 1d...)
+      JWT_EXPIRES_IN: 1d
       # Revisa los archivos cada poco tiempo en vez de esperar avisos del sistema.
       # Necesario en Windows y macOS para que nodemon detecte los cambios
       CHOKIDAR_USEPOLLING: "true"
