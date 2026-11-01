@@ -75,3 +75,22 @@ export const login = async (req, res) => {
         res.status(500).json({ mensaje: "Error al iniciar sesión", error: error.message })
     }
 }
+
+export const me = async (req, res) => {
+    try {
+        const usuario = await Usuario.findById(req.usuario._id)
+
+        if (!usuario || !usuario.activo) {
+            return res.status(401).json({ mensaje: "Usuario no encontrado" })
+        }
+
+        res.status(200).json({
+            _id: usuario._id,
+            nombre: usuario.nombre,
+            email: usuario.email,
+            rol: usuario.rol
+        })
+    } catch (error) {
+        res.status(500).json({ mensaje: "Error al obtener el usuario", error: error.message })
+    }
+}
