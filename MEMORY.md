@@ -204,7 +204,7 @@ Every model follows the same steps, using the [teaching loop](AGENTS.md#teaching
 2. **Concepts and libraries:** what is new for this model (unique index, embedded object, enum of states, `populate`...), explained from scratch.
 3. **Model** → **controller** (list, get by id, create, update, soft delete, business rules) → **routes** (mounting in `app.js` and protection by role) → **fixtures** → **Postman**.
 4. One step at a time: explain, a small example, the developer writes it, review, test.
-5. Update `memory/<collection>.md` at the end of every session; open the Pull Request when the model is complete.
+5. Update `memory/<collection>.md` at the end of every session; open the Pull Request when the model is complete, with the description drafted from [`.github/pull_request_template.md`](.github/pull_request_template.md) (see [`AGENTS.md → Pull Request description`](AGENTS.md#pull-request-description)).
 
 ### Integrator checklist (after merging a model's Pull Request)
 

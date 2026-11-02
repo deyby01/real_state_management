@@ -128,6 +128,21 @@ Several agents working in parallel cannot write in the same file without creatin
 - **Never commit** `backend/.env`, `node_modules/` or any real password or key. The root `.gitignore` already excludes them.
 - Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/) in English: `feat: add user model`, `fix: ...`, `docs: ...`.
 
+### Pull Request description
+
+Every Pull Request uses the template in [`.github/pull_request_template.md`](.github/pull_request_template.md). GitHub loads it automatically when the PR is opened from the website.
+
+When the model (or the task) is complete, the agent **drafts the full PR description following that template** and gives it to the developer to paste. The developer opens the PR.
+
+- **Title:** Conventional Commits, in English, e.g. `feat: add owner model, controller and routes`.
+- **Description:** two or three lines saying which model or feature it adds and why.
+- **Type of change:** tick the boxes that apply.
+- **Changes made:** the files touched, grouped by layer (model, controller, routes, `app.js`, fixtures, `memory/<collection>.md`).
+- **Screenshots:** for backend work, use Postman evidence: a happy-path request and an error case (`401`, `403`, `409`...). For frontend work, use before/after images.
+- **Checklist:** tick only what was actually done. Items that do not apply (e.g. "checked the site on desktop and mobile" in a backend PR) are left unticked with `(N/A: backend only)`.
+- **Notes for the reviewer:** what to look at closely, pending items, and anything agreed with another model's owner (from *Coordination with other models*) or proposed for `AGENTS.md`.
+- Before drafting it, check that `memory/<collection>.md` is up to date and that the branch was rebased on `origin/development`.
+
 ---
 
 ## Technical conventions

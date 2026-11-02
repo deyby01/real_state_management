@@ -52,7 +52,7 @@ Copy this into `memory/<collection>.md` (for example `memory/propietarios.md`) a
 | 4 | Controller: soft delete (`activo: false`) | Record still in Compass with `activo: false` | ⬜ |
 | 5 | Routes + mounting in `app.js` + protection by role | No token `401`, wrong role `403` | ⬜ |
 | 6 | Fixtures in `backend/src/fixtures/data/` + `seed.js` | `make seed` loads the data | ⬜ |
-| 7 | Full Postman pass + Pull Request | Happy path and error cases | ⬜ |
+| 7 | Full Postman pass + Pull Request (description from `.github/pull_request_template.md`) | Happy path and error cases | ⬜ |
 
 ## Endpoints
 
