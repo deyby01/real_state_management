@@ -7,6 +7,7 @@ import TipoPropiedad from "../models/TipoPropiedad.js"
 import Usuario from "../models/Usuario.js"
 import { tiposPropiedad } from "./data/tiposPropiedad.js"
 import { usuarios, PASSWORD_PRUEBA } from "./data/usuarios.js"
+import Bitacora from "../models/Bitacora.js"
 
 const seed = async () => {
     // This script DELETES all data: never run it against production
@@ -19,6 +20,7 @@ const seed = async () => {
     // 1. Empty the collections, so running the seed twice gives the same result
     await TipoPropiedad.deleteMany({})
     await Usuario.deleteMany({})
+    await Bitacora.deleteMany({})
 
     // 2. Property types
     await TipoPropiedad.insertMany(tiposPropiedad)
