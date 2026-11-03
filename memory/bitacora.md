@@ -12,8 +12,8 @@
 |---|---|---|---|
 | 0 | Context: audit log, insert-only, `entidad` + `entidadId`, compound index, services | — | ✅ |
 | 1 | Model `backend/src/models/Bitacora.js` + compound index | Index visible in Compass | ✅ (index checked with `schema.indexes()`; Compass check in step 2) |
-| 2 | Service `registrarBitacora(...)`: the function other controllers call to insert an entry | Insert one entry from a temporary call; visible in Compass | 🚧 |
-| 3 | Controller: list entries, filtered by `entidad` / `entidadId`, newest first | `200` with the right order and filters | ⬜ |
+| 2 | Service `registrarBitacora(...)`: the function other controllers call to insert an entry | Insert one entry from a temporary call; visible in Compass | ✅ (valid entry saved; `accion: "APROBAR"` rejected by the enum; index visible in Compass) |
+| 3 | Controller: list entries, filtered by `entidad` / `entidadId`, newest first | `200` with the right order and filters | 🚧 |
 | 4 | Routes + mounting in `app.js` + protection by role | No token `401`, wrong role `403` | ⬜ |
 | 5 | Usage guide for teammates (in this file) + Postman pass + Pull Request | Happy path and error cases | ⬜ |
 
@@ -21,7 +21,7 @@
 
 | Method | Route | Who can use it | Responses |
 |---|---|---|---|
-| `GET` | `/api/bitacora` | *To decide (proposal: `ADMIN`)* | `200`; no token `401`; other role `403` |
+| `GET` | `/api/bitacora` | `ADMIN` | `200` (optional filters `?entidad=` and `?entidadId=`, newest first); invalid `entidadId` `400`; no token `401`; other role `403` |
 
 No `POST`, `PUT` or `DELETE` endpoints: entries are only created by the backend itself, through the service.
 
