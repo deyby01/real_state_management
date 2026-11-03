@@ -1,6 +1,6 @@
 # bitacora — Bitacora
 
-> **Owner:** Deyby · **Branch:** `feature/deyby/bitacora` · **Status:** ✅ Complete, PR pending
+> **Owner:** Deyby · **Branch:** `feature/deyby/bitacora` · **Status:** ✅ Merged (PR #22, 2026-11-03)
 > **Specification:** [`docs/DATA_MODEL.md → bitacora`](../docs/DATA_MODEL.md#bitacora-audit-log)
 > **Depends on:** `usuarios` (✅, `usuarioId`) · **Used by:** `propiedades` (Deyby), `visitas` (Ignacio), `solicitudesArriendo` (Roberto): they insert an entry on every state change (RN-13, RNF-12)
 
@@ -15,7 +15,7 @@
 | 2 | Service `registrarBitacora(...)`: the function other controllers call to insert an entry | Insert one entry from a temporary call; visible in Compass | ✅ (valid entry saved; `accion: "APROBAR"` rejected by the enum; index visible in Compass) |
 | 3 | Controller: list entries, filtered by `entidad` / `entidadId`, newest first | `200` with the right order and filters | ✅ |
 | 4 | Routes + mounting in `app.js` + protection by role | No token `401`, wrong role `403` | ✅ (whole router protected with `router.use`; 6 Postman tests passed) |
-| 5 | Usage guide for teammates (in this file) + `Bitacora.deleteMany` in `seed.js` + Pull Request | `make seed` empties `bitacora` | ✅ (collection emptied, index kept); PR pending |
+| 5 | Usage guide for teammates (in this file) + `Bitacora.deleteMany` in `seed.js` + Pull Request | `make seed` empties `bitacora` | ✅ (collection emptied, index kept); merged in PR #22 |
 
 ## How to use it from your controller
 

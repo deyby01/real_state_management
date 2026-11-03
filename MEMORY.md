@@ -2,7 +2,7 @@
 
 > **What it is:** this file is the persistent memory of the project. It stores what the project is, what has been done, what is being done, what comes next and the necessary references.
 > **Agent role and rules:** see [`AGENTS.md`](AGENTS.md). That file defines who the agent is, how it must act and which mistakes not to repeat.
-> **Last updated:** 2026-11-02
+> **Last updated:** 2026-11-03
 > **Who edits this file:** only the integrator (Deyby), after merging a Pull Request. Each model's progress lives in [`memory/`](memory/README.md), one file per model. See [`AGENTS.md → Shared memory`](AGENTS.md#shared-memory-who-edits-what).
 > **Keep:** do not exceed ~1000 lines. Summarize, do not duplicate. Deep technical details live in `docs/DATA_MODEL.md` and in the case specification.
 
@@ -73,17 +73,17 @@ This flow must be demonstrable end to end: **React → Node/Express → MongoDB*
 
 ## PROJECT STATUS
 
-### Current status (2026-11-02)
+### Current status
 
-Authentication is merged into `development` and the team now builds the backend **one model per person**, in the order of `docs/DATA_MODEL.md` (see [Model assignments](#model-assignments)). The React frontend has the pages mocked up but does not consume the API yet.
+*Updated 2026-11-03.* Authentication (PR #20) and the audit log (PR #22) are merged into `development`, and the team now builds the backend **one model per person**, in the order of `docs/DATA_MODEL.md` (see [Model assignments](#model-assignments)). The React frontend has the pages mocked up but does not consume the API yet.
 
 | Area | Status | Detail |
 |---|---|---|
 | UI design | ✅ Done | Landing, Properties, About Us, Contact and Login/Register pages mocked up in React + Tailwind. |
 | Original HTML/CSS frontend | ⏸️ Frozen | `frontend/` remains only as a design reference. No new features are added. |
 | React frontend | 🚧 In progress | Static pages; no API calls yet. |
-| Express backend | 🚧 In progress | `GET /api/health`, `TipoPropiedad` (PR #19) and authentication (PR #20). The server stops if the DB connection or `JWT_SECRET` is missing. |
-| MongoDB data model | 🚧 2 of 8 implemented | `usuarios` and `tiposPropiedad` in code; the other 6 are assigned (see [Model assignments](#model-assignments)). |
+| Express backend | 🚧 In progress | `GET /api/health`, `TipoPropiedad` (PR #19), authentication (PR #20) and audit log (PR #22). The server stops if the DB connection or `JWT_SECRET` is missing. |
+| MongoDB data model | 🚧 3 of 8 implemented | `usuarios`, `tiposPropiedad` and `bitacora` in code; the other 5 are assigned (see [Model assignments](#model-assignments)). |
 | Authentication | ✅ Merged (PR #20) | Register, login (JWT), `GET /api/auth/me`, `verificarToken` and `permitirRoles`; fixtures with one user per role (`make seed`). Details: [`memory/usuarios.md`](memory/usuarios.md). |
 | Postman testing | 🚧 Manual | Endpoints tested by hand; no shared Postman collection in the repo yet. |
 
@@ -122,9 +122,10 @@ real_state_management/
 ├── backend/                 # Express + Mongoose
 │   ├── src/
 │   │   ├── config/db.js     # MongoDB connection
-│   │   ├── models/          # TipoPropiedad.js, Usuario.js
-│   │   ├── controllers/     # tipoPropiedad.controller.js, auth.controller.js
-│   │   ├── routes/          # tipoPropiedad.routes.js, auth.routes.js
+│   │   ├── models/          # TipoPropiedad.js, Usuario.js, Bitacora.js
+│   │   ├── controllers/     # tipoPropiedad.controller.js, auth.controller.js, bitacora.controller.js
+│   │   ├── routes/          # tipoPropiedad.routes.js, auth.routes.js, bitacora.routes.js
+│   │   ├── services/        # bitacora.service.js (registrarBitacora, used by other controllers)
 │   │   ├── middlewares/     # auth.middleware.js (verificarToken), role.middleware.js (permitirRoles)
 │   │   ├── fixtures/        # seed.js + data/ (run with make seed)
 │   │   ├── app.js           # Express app: middlewares and routers
@@ -168,6 +169,7 @@ real_state_management/
 | `POST` | `/api/auth/register` | Public. Creates a `CLIENTE` (`201`); duplicate email → `409`; password < 8 chars → `400` |
 | `POST` | `/api/auth/login` | Public. Returns `{ token, usuario }` (`200`); wrong credentials or inactive user → `401`; missing fields → `400` |
 | `GET` | `/api/auth/me` | Any logged-in user. Returns the current user (`200`); no/invalid/expired token → `401` |
+| `GET` | `/api/bitacora` | **`ADMIN` only.** Audit log entries, newest first; optional `?entidad=` and `?entidadId=` filters (`200`); invalid id → `400`; no token → `401`; other role → `403` |
 
 ---
 
@@ -185,10 +187,10 @@ Each model of [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md) is assigned to **one** 
 | 2 | `propietarios` | `Propietario` | Santiago | ⬜ Assigned | `usuarios` (✅) | `memory/propietarios.md` |
 | 3 | `clientes` | `Cliente` | Jose | ⬜ Assigned | `usuarios` (✅) | `memory/clientes.md` |
 | 4 | `tiposPropiedad` | `TipoPropiedad` | Deyby | ✅ Merged (PR #19) | — | [`memory/tiposPropiedad.md`](memory/tiposPropiedad.md) |
-| 5 | `propiedades` | `Propiedad` | Deyby | ⬜ Assigned | `tiposPropiedad` (✅), `propietarios`, `usuarios` (✅); writes `bitacora` | `memory/propiedades.md` |
+| 5 | `propiedades` | `Propiedad` | Deyby | ⬜ Assigned | `tiposPropiedad` (✅), `propietarios`, `usuarios` (✅); writes `bitacora` (✅) | `memory/propiedades.md` |
 | 6 | `visitas` | `Visita` | Ignacio | ⬜ Assigned | `propiedades`, `clientes`, `usuarios` (✅); writes `bitacora` | `memory/visitas.md` |
 | 7 | `solicitudesArriendo` | `SolicitudArriendo` | Roberto | ⬜ Assigned | `propiedades`, `clientes`, `usuarios` (✅); writes `bitacora` | `memory/solicitudesArriendo.md` |
-| 8 | `bitacora` | `Bitacora` | Deyby | ⬜ Assigned | `usuarios` (✅) | `memory/bitacora.md` |
+| 8 | `bitacora` | `Bitacora` | Deyby | ✅ Merged (PR #22) | `usuarios` (✅) | [`memory/bitacora.md`](memory/bitacora.md) |
 
 > Deyby owns two models (`propiedades` and `bitacora`) besides being the integrator. If a developer's name is not in this table, the agent asks which model they were assigned and tells them to ask Deyby to add it.
 
@@ -208,10 +210,17 @@ Every model follows the same steps, using the [teaching loop](AGENTS.md#teaching
 
 ### Integrator checklist (after merging a model's Pull Request)
 
-1. Update the [Model assignments](#model-assignments) table, the [Current status](#current-status-2026-11-02) table and the [Existing backend endpoints](#existing-backend-endpoints).
-2. Review the *Proposals for AGENTS.md* section of the model's memory file; move the accepted ones to `AGENTS.md`.
-3. Add a line to the [Session log](#session-log).
-4. Tell the team to pull `development` (and `make build` if `package.json` changed, `make seed` if fixtures changed).
+The shared memory must always describe `development`, not someone's branch. So right after merging a model, and **before starting any other task**, the integrator syncs the docs in a **short branch of its own**:
+
+1. `git checkout development && git pull origin development && git checkout -b docs/deyby/sync-pr<N>`.
+2. Update the [Model assignments](#model-assignments) table, the [Current status](#current-status) table, the [repository structure](#current-repository-structure) and the [Existing backend endpoints](#existing-backend-endpoints).
+3. Mark the model as merged in `memory/<collection>.md` and in the files table of [`memory/README.md`](memory/README.md).
+4. Review the *Proposals for AGENTS.md* section of the model's memory file; move the accepted ones to `AGENTS.md`.
+5. Add a line to the [Session log](#session-log).
+6. Commit only these docs (`docs: sync memory after PR #<N>`), open the Pull Request and merge it right away.
+7. Tell the team to pull `development` (and `make build` if `package.json` changed, `make seed` if fixtures changed).
+
+Why a separate branch: a model's next task can take days. If the sync waited inside it, every teammate's agent would read an outdated `MEMORY.md` (for example, a merged model shown as not merged) during all that time.
 
 ### Step 1 — Close the data model (this week)
 
@@ -699,6 +708,7 @@ Test passwords go in the fixtures README, never real passwords.
 | 2026-11-01 | Auth steps 1–5 built by the developer with guidance (JWT_SECRET check, `Usuario` model, register, login, `verificarToken` + `/me`); fixtures created by the agent on request (`make seed`). | Next: role middleware (step 6). |
 | 2026-11-01 | Step 6: `permitirRoles` middleware; `POST /api/tipo-propiedades` restricted to `ADMIN`, `GET` kept public after review. Authentication complete. | Ready for the PR to `development`. |
 | 2026-11-02 | Auth merged (PR #20). Shared memory reorganized: `memory/` folder with one file per model, `MEMORY.md` and `AGENTS.md` edited only by the integrator, model assignments in DATA_MODEL order, model ownership rules for the agents. | Teammates start their models from the updated `development`. |
+| 2026-11-02 / 03 | `bitacora` built by the developer with guidance: insert-only model with compound index, `registrarBitacora` service, admin-only `GET /api/bitacora`, seed empties it. Merged (PR #22). New rule: sync the docs in a short `docs/` branch after every merge. | Next: `propiedades` (Deyby). |
 
 ---
 
