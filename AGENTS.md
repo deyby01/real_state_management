@@ -122,7 +122,7 @@ Several agents working in parallel cannot write in the same file without creatin
 ### Git rules
 
 - **The agent never commits, pushes, merges or opens Pull Requests.** It tells the developer which commands to run and suggests the commit message; the developer runs them. It may create a branch or edit files only when the developer asks.
-- Work on a **branch from `development`**, never directly on `development` or `main`: `feature/<name>/<short-description>` (e.g. `feature/deyby/jwt-auth-setup`), or `fix/<name>/<short-description>` for fixes.
+- Work on a **branch from `development`**, never directly on `development` or `main`: `feature/<name>/<short-description>` (e.g. `feature/deyby/jwt-auth-setup`), `fix/<name>/<short-description>` for fixes, or `docs/<name>/<short-description>` for documentation-only changes (e.g. `docs/deyby/sync-pr22`, the integrator's memory sync after a merge).
 - Before creating a branch: `git checkout development && git pull origin development`.
 - Every change reaches `development` through a **Pull Request**.
 - **Never commit** `backend/.env`, `node_modules/` or any real password or key. The root `.gitignore` already excludes them.
