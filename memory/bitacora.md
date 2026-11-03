@@ -1,6 +1,6 @@
 # bitacora — Bitacora
 
-> **Owner:** Deyby · **Branch:** `feature/deyby/bitacora` · **Status:** 🚧 In progress
+> **Owner:** Deyby · **Branch:** `feature/deyby/bitacora` · **Status:** ✅ Complete, PR pending
 > **Specification:** [`docs/DATA_MODEL.md → bitacora`](../docs/DATA_MODEL.md#bitacora-audit-log)
 > **Depends on:** `usuarios` (✅, `usuarioId`) · **Used by:** `propiedades` (Deyby), `visitas` (Ignacio), `solicitudesArriendo` (Roberto): they insert an entry on every state change (RN-13, RNF-12)
 
@@ -15,7 +15,7 @@
 | 2 | Service `registrarBitacora(...)`: the function other controllers call to insert an entry | Insert one entry from a temporary call; visible in Compass | ✅ (valid entry saved; `accion: "APROBAR"` rejected by the enum; index visible in Compass) |
 | 3 | Controller: list entries, filtered by `entidad` / `entidadId`, newest first | `200` with the right order and filters | ✅ |
 | 4 | Routes + mounting in `app.js` + protection by role | No token `401`, wrong role `403` | ✅ (whole router protected with `router.use`; 6 Postman tests passed) |
-| 5 | Usage guide for teammates (in this file) + `Bitacora.deleteMany` in `seed.js` + Pull Request | `make seed` empties `bitacora` | 🚧 |
+| 5 | Usage guide for teammates (in this file) + `Bitacora.deleteMany` in `seed.js` + Pull Request | `make seed` empties `bitacora` | ✅ (collection emptied, index kept); PR pending |
 
 ## How to use it from your controller
 
@@ -68,3 +68,5 @@ No `POST`, `PUT` or `DELETE` endpoints: entries are only created by the backend 
 | Date | What was done | Result / next step |
 |---|---|---|
 | 2026-11-02 | Created the branch and this file; step 0 (context and concepts). | Step 1: model. |
+| 2026-11-02 | Steps 1–2: model with compound index and `registrarBitacora` service, tested from the container. | Step 3: controller. |
+| 2026-11-03 | Steps 3–5: controller with filters, `sort` and `populate`; admin-only router; 6 Postman tests passed; `seed.js` empties `bitacora`; usage guide for teammates. | Pull Request to `development`. |
