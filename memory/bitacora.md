@@ -13,9 +13,34 @@
 | 0 | Context: audit log, insert-only, `entidad` + `entidadId`, compound index, services | — | ✅ |
 | 1 | Model `backend/src/models/Bitacora.js` + compound index | Index visible in Compass | ✅ (index checked with `schema.indexes()`; Compass check in step 2) |
 | 2 | Service `registrarBitacora(...)`: the function other controllers call to insert an entry | Insert one entry from a temporary call; visible in Compass | ✅ (valid entry saved; `accion: "APROBAR"` rejected by the enum; index visible in Compass) |
-| 3 | Controller: list entries, filtered by `entidad` / `entidadId`, newest first | `200` with the right order and filters | 🚧 |
-| 4 | Routes + mounting in `app.js` + protection by role | No token `401`, wrong role `403` | ⬜ |
-| 5 | Usage guide for teammates (in this file) + Postman pass + Pull Request | Happy path and error cases | ⬜ |
+| 3 | Controller: list entries, filtered by `entidad` / `entidadId`, newest first | `200` with the right order and filters | ✅ |
+| 4 | Routes + mounting in `app.js` + protection by role | No token `401`, wrong role `403` | ✅ (whole router protected with `router.use`; 6 Postman tests passed) |
+| 5 | Usage guide for teammates (in this file) + `Bitacora.deleteMany` in `seed.js` + Pull Request | `make seed` empties `bitacora` | 🚧 |
+
+## How to use it from your controller
+
+For `propiedades`, `visitas` and `solicitudesArriendo`: **every state change inserts one entry** (RN-13).
+
+```js
+import { registrarBitacora } from "../services/bitacora.service.js"
+
+// inside your controller, AFTER saving the state change:
+await registrarBitacora({
+    entidad: "VISITA",                 // "PROPIEDAD" | "VISITA" | "SOLICITUD"
+    entidadId: visita._id,             // the document that changed
+    accion: "CAMBIO_ESTADO",           // "CREACION" | "CAMBIO_ESTADO" | "RESERVA" | "LIBERACION_RESERVA"
+    estadoAnterior: "SOLICITADA",      // empty on CREACION
+    estadoNuevo: "CONFIRMADA",
+    usuarioId: req.usuario._id,        // set by verificarToken: who made the change
+    observacion: req.body.observacion  // optional
+})
+```
+
+- **Always use `await`.** Without it, a failed insert goes unnoticed and the change is left without a record.
+- **Do not catch its errors inside the service call:** your controller's `try/catch` handles them. A `ValidationError` about `entidad` or `accion` means your code has a typo in one of those values: fix the code.
+- **Do not send `fecha`:** it is set automatically.
+- **Need a new `accion`?** Ask Deyby to add it to the `enum` in `Bitacora.js`; do not edit the model yourself.
+- To see the history: `GET /api/bitacora?entidad=VISITA&entidadId=<id>` with an `ADMIN` token.
 
 ## Endpoints
 
