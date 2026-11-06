@@ -1,5 +1,11 @@
 import Cliente from "../models/Cliente.js"
 
+const normalizarRut = (rut) => {
+    if (!rut) return rut
+    // Eliminar puntos y espacios
+    return String(rut).replace(/\./g, "").replace(/\s/g, "").toUpperCase()
+}
+
 export const getClientes = async (req, res) => {
     try {
         // find() siempre devuelve un arreglo (aunque esté vacío)
@@ -29,3 +35,41 @@ export const getClienteById = async (req, res) => {
     }
 }
 
+export const postCliente = async (req, res) => {
+    try {
+        //lista blanca: solo estos campos desde el body
+        const { rut, nombre, email, telefono, ciudad, comuna, estado } = req.body
+
+        const nuevoCliente = await Cliente.create({
+            rut: normalizarRut(rut),
+            nombre,
+            email,
+            telefono,
+            ciudad,
+            comuna,
+            estado,
+        })
+        res.status(201).json(nuevoCliente)
+    } catch (error) {
+        //1) indice unico, MongoDB responde 11000
+        if (error.code === 11000) {
+            const campo = Object.keys(error.keyValue)[0]
+            return res.status(409).json({
+                mensaje: `Ya existe un cliente con ese ${campo}`,
+                error: error.message,
+            })
+
+        }
+        //2) required faltante o enum inválido
+        if (error.name === "ValidationError") {
+            const campos = Object.keys(error.errors).join(", ")
+            return res.status(400).json({ 
+                mensaje: `Datos inválidos: ${campos}`,
+                error: error.message,
+            })
+        }
+        // 3)cualquier otro error
+        res.status(500).json({ mensaje: "Error al crear cliente", error: error.message })
+    }
+
+}
