@@ -71,5 +71,49 @@ export const postCliente = async (req, res) => {
         // 3)cualquier otro error
         res.status(500).json({ mensaje: "Error al crear cliente", error: error.message })
     }
+}
 
+export const putCliente = async (req, res) => {
+    try {
+        const { rut, nombre, email, telefono, ciudad, comuna, estado } = req.body
+
+        const datos = {nombre, email, telefono, ciudad, comuna, estado}
+
+        // el rut solo se toca si vino en el body
+        if (rut !== undefined) {
+            datos.rut = normalizarRut(rut)
+        }
+
+        const cliente = await Cliente.findByIdAndUpdate(req.params.id, datos, {
+            new: true,
+            runValidators: true
+        })
+
+        if (!cliente) {
+            return res.status(404).json({ mensaje: "Cliente no encontrado" })
+        }
+
+        res.status(200).json(cliente)
+    } catch (error) {
+        if (error.code === 11000) {
+            const campo = Object.keys(error.keyValue)[0]
+            return res.status(409).json({
+                mensaje: `Ya existe un cliente con ese ${campo}`,
+                error: error.message,
+            })
+        }
+
+        if (error.name === "ValidationError") {
+            const campos = Object.keys(error.errors).join(", ")
+            return res.status(400).json({
+                mensaje: `Datos inválidos: ${campos}`,
+                error: error.message,
+            })
+        }
+
+        if (error.name === "CastError") {
+            return res.status(400).json({ mensaje: "ID de cliente inválido", error: error.message })
+        }
+        res.status(500).json({ mensaje: "Error al actualizar cliente", error: error.message })
+    }
 }
