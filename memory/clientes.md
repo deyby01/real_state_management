@@ -1,6 +1,6 @@
 # clientes — Cliente
 
-> **Owner:** Jose · **Branch:** `feature/jose/clientes` · **Status:** 🚧 In progress (steps 0–6 done, step 7 next: Postman pass, PR)
+> **Owner:** Jose · **Branch:** `feature/jose/clientes` · **Status:** 🚧 In review — steps 0–7 done, Pull Request [#25](https://github.com/deyby01/real_state_management/pull/25) open, waiting for the integrator to merge
 > **Specification:** [`docs/DATA_MODEL.md → clientes`](../docs/DATA_MODEL.md#clientes-interested-clients-and-tenants)
 > **Depends on:** `usuarios` (✅ merged, linked through `usuarios.clienteId`) · **Used by:** `visitas`, `solicitudesArriendo`
 
@@ -15,7 +15,7 @@
 | 4 | Controller: soft delete (`activo: false`) | Record still in Compass with `activo: false` | ✅ |
 | 5 | Routes + mounting in `app.js` + protection by role | No token `401`, wrong role `403` | ✅ |
 | 6 | Fixtures in `backend/src/fixtures/data/` + `seed.js` | `make seed` loads the data | ✅ |
-| 7 | Full Postman pass + Pull Request (description from `.github/pull_request_template.md`) | Happy path and error cases | 🚧 |
+| 7 | Full Postman pass + Pull Request (description from `.github/pull_request_template.md`) | Happy path and error cases | ✅ PR [#25](https://github.com/deyby01/real_state_management/pull/25) open |
 
 ## Endpoints
 
@@ -89,11 +89,15 @@
 - After the `DELETE`, the list returned 3 active clients out of 4 documents, and the detail still returned the inactive one.
 - Bug found and fixed in this pass: the `500` handler used `error.mensaje` instead of `error.message`, so the response silently lost the cause (`JSON.stringify` drops `undefined`). The `400` of `DELETE` also answered `"ID de cliente invalido"` without the accent used by `GET` and `PUT`. Both were corrected.
 
+Visual evidence: eight Postman screenshots (A–H) attached as a comment in Pull Request #25 — create `201`, duplicate `409`, validation `400`, no token `401`, `CLIENTE` `403`, `DELETE` with `EJECUTIVO` `403`, `DELETE` with `ADMIN` `200` and the list hiding the inactive client.
+
 ## Coordination with other models
 
 - **`usuarios` (Deyby):** public registration should also create the `clientes` record and store its `_id` in `usuarios.clienteId`. This modifies `auth.controller.js`, so it must be agreed with Deyby **before** touching that file (see [`memory/usuarios.md`](usuarios.md)).
 - **`visitas` / `solicitudesArriendo`:** both will reference `clientes` through `clienteId` (`ObjectId` + `ref: "Cliente"`). No action needed from us beyond exposing list/get by id.
 - **Fixtures (step 6, ✅ done):** `data/clientes.js` is inserted **after** `usuarios` in `seed.js`, which also runs `Cliente.deleteMany({})` before `insertMany`. The fixtures do **not** fill `usuarios.clienteId`: doing so means updating the `CLIENTE` user, which belongs to the `usuarios` owner. It stays `null` (`default: null`) until Deyby agrees on the linking rule; the client fixture uses `cliente@gup.cl`, the same email as the `CLIENTE` user, so the link is a one-line `updateOne` when that is decided.
+- **Open PR #24 (`solicitudesArriendo`, Roberto) shares `backend/src/app.js`:** both PRs add an `import` and an `app.use` in the same block. Whichever merges second will show a conflict there, and it is resolved by **keeping both lines** (both routers mounted). Never remove the other teammate's line. No conflict in `seed.js`: PR #24 does not touch it.
+- **Note for the integrator:** PR #24 adds `fixtures/data/solicitudesArriendo.js` but does not wire it in `seed.js`, so `make seed` would not load those documents. It is Roberto's model; we only flag it.
 
 ## Proposals for AGENTS.md
 
@@ -104,6 +108,7 @@
 - **JavaScript lesson (2026-11-09):** `${...}` interpolation only works inside **backticks** (`template literals`). With single or double quotes the value is printed literally (`Clientes: ${clientes.length}`). Whenever a `console.log` shows the placeholder instead of the number, the quotes are the cause.
 - **Code review lesson (2026-11-09):** the property of an `Error` is `error.message`, not `error.mensaje`. With the wrong name the value is `undefined` and `JSON.stringify` **drops the key**, so a `500` answers without its cause and the bug stays hidden until something really fails. Every `catch` that answers `500` deserves a second read.
 - **Process lesson (2026-11-09):** `deleteCliente` went inside the commit *"protect client routes by role"* and the `error.message` fix inside *"add client fixtures"*. One commit per unit of work (feat, fix, docs) keeps the history readable and the PR reviewable. History already pushed is never rewritten with `amend` or `push --force`; the lesson is for the next step.
+- **Testing lesson (2026-11-09):** a "request without token" that answers `403` is not a backend bug: it means a token was actually sent. Postman keeps the Authorization tab per request and can inherit it from the folder or the collection; the header can also be hidden behind the *hidden* counter in the Headers tab. Verify what the client really sends before touching the code.
 
 ## Session log
 
@@ -114,3 +119,5 @@
 | 2026-11-05 | Step 3a: `normalizarRut` + `postCliente` written by the developer and reviewed. Fixed three issues: the helper was removing the hyphen (now only dots/spaces), the whitelist was missing `comuna` (caused `ReferenceError` → `500`), and duplicates answered `400` instead of `409`. Tested live: `201` with normalized `rut` and lowercased `email`, `409` for RUT and email, `400` for missing fields and for the lowercase `estado`; MongoDB ends with exactly one document. Committed `e447a87 feat: add client create endpoint`. | Next: `PUT` (step 3b). |
 | 2026-11-06 | Step 3b: `putCliente` + route written by the developer and reviewed; verified `new: true` and `runValidators: true` are required. Tested live: `200` updating `comuna`, `400` for `estado: "arrendatario"`, `200` for `{ "activo": false }` with the document still active, `409` for a duplicate email, `400` for `abc`, `404` for a valid unknown id. Committed `f05526f feat: add client update endpoint`. Also diagnosed a backend crash: containers were down, `make up` recreated them and the bind mount returned. | Next: step 4, soft delete with `activo: false`. |
 | 2026-11-09 | Steps 4–6. **Step 4:** `deleteCliente` + route written and tested (`200`, list hides the inactive client, detail still shows it, repeated `DELETE` `200`, `400`, `404`). **Step 5:** `verificarToken` + `permitirRoles` on the five routes, `DELETE` restricted to `ADMIN`; the first attempt answered `403` because Postman kept a token in the Authorization tab, not because of the code — after removing it: `401` without token, `403` with `CLIENTE`, `200` with `ADMIN`/`EJECUTIVO`, `403` for `DELETE` with `EJECUTIVO`. **Step 6:** `data/clientes.js` (3 clients), `seed.js` (`deleteMany` + `insertMany` after `usuarios`) and the fixtures README row; fixed the log message that used quotes instead of backticks. **Step 7 (in progress):** full pass of 28 requests run by the agent, all with the expected code; found and fixed `error.mensaje` → `error.message` in the `500` handler and the accent of the `DELETE` `400` message. Commits `2e52764 feat: protect client routes by role` and `d09db62 feat: add client fixtures` (both mixed several steps). | Next: update this file, draft the PR description from `.github/pull_request_template.md` and open the Pull Request. |
+| 2026-11-09 | **Step 7 closed.** `memory/clientes.md` updated with steps 4–6 and committed (`c7883c9 docs: update clientes memory with steps 4-6`); cosmetic fix committed (`15c189a style: fix spacing in the client delete error response`). Branch rebased/up to date with `origin/development` (`0923ba8`) and pushed. Pull Request **#25** opened from `feature/jose/clientes` into `development` with the template description and eight Postman screenshots (A–H) in a comment; GitHub reports no conflicts at opening time. Local database left clean with `make seed` (3 clients). | Waiting for the integrator (Deyby) to review and merge; then pull `development`, `make seed` and verify `GET /api/clientes`. A Word study guide for the presentation was also generated outside the repository. |
+| 2026-11-09 | Presentation support: a 17-page Word document (`Modelo_Clientes_GUP.docx`, on the Desktop, not in the repository) explaining the model, the concepts, the decisions, the test evidence, a 10-minute demo script and the likely professor questions. | Used to prepare the oral defence of the model; the repository and PR #25 were not modified. |
