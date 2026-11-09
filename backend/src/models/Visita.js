@@ -1,5 +1,8 @@
 import mongoose from "mongoose"
 
+// Exportamos la lista de estados para reutilizarla en controladores y tests
+export const ESTADOS_VISITA = ["SOLICITADA", "CONFIRMADA", "REALIZADA", "RECHAZADA", "CANCELADA"]
+
 const visitaSchema = new mongoose.Schema(
     {
         propiedadId: {
@@ -40,7 +43,7 @@ const visitaSchema = new mongoose.Schema(
         estado: {
             type: String,
             required: true,
-            enum: ["SOLICITADA", "CONFIRMADA", "REALIZADA", "RECHAZADA", "CANCELADA"],
+            enum: ESTADOS_VISITA,
             default: "SOLICITADA"
         },
         resultado: {
@@ -62,7 +65,7 @@ visitaSchema.pre("validate", function () {
     }
 })
 
-// Índice compuesto para acelerar la agenda del ejecutivo y chequeo de solapamientos (RN-10)
+// Índice compuesto para acelerar búsquedas de agenda y chequeo de solapamientos (RN-10)
 visitaSchema.index({ ejecutivoId: 1, fechaInicio: 1, fechaFin: 1 })
 
 export default mongoose.model("Visita", visitaSchema)
