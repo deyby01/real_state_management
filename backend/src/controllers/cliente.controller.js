@@ -123,19 +123,19 @@ export const deleteCliente = async (req, res) => {
         const cliente = await Cliente.findByIdAndUpdate(
             req.params.id,
             { activo: false },
-            { new: true}
+            { new: true }
         )
 
         if (!cliente) {
-            return res.status(404).json({ mensaje: "Cliente no encontrado"})
+            return res.status(404).json({ mensaje: "Cliente no encontrado" })
         }
 
         res.status(200).json(cliente)
     } catch (error) {
         if (error.name === "CastError") {
-            return res.status(400).json({ mensaje: "ID de cliente invalido"})
+            return res.status(400).json({ mensaje: "ID de cliente inválido" })
         }
 
-        res.status(500).json({ mensaje: "Error al eliminar cliente", error: error.mensaje})
+        res.status(500).json({ mensaje: "Error al eliminar cliente", error: error.message})
     }
 }
