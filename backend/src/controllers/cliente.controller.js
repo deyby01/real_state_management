@@ -136,6 +136,6 @@ export const deleteCliente = async (req, res) => {
             return res.status(400).json({ mensaje: "ID de cliente inválido" })
         }
 
-        res.status(500).json({ mensaje: "Error al eliminar cliente", error: error.message})
+        res.status(500).json({ mensaje: "Error al eliminar cliente", error: error.message })
     }
 }
