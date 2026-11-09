@@ -1,7 +1,8 @@
 import mongoose from "mongoose"
 
-// Exportamos la lista de estados para reutilizarla en controladores y tests
+// Constantes exportadas para reutilizar en controladores y pruebas
 export const ESTADOS_VISITA = ["SOLICITADA", "CONFIRMADA", "REALIZADA", "RECHAZADA", "CANCELADA"]
+export const DURACION_VISITA_MS = 60 * 60 * 1000 // 1 hora en milisegundos (D8)
 
 const visitaSchema = new mongoose.Schema(
     {
@@ -60,8 +61,8 @@ const visitaSchema = new mongoose.Schema(
 
 // D8: La duración siempre es de 1 hora. El hook calcula fechaFin antes de validar
 visitaSchema.pre("validate", function () {
-    if (this.fechaInicio instanceof Date && !isNaN(this.fechaInicio)) {
-        this.fechaFin = new Date(this.fechaInicio.getTime() + 60 * 60 * 1000)
+    if (this.fechaInicio instanceof Date && !isNaN(this.fechaInicio.getTime())) {
+        this.fechaFin = new Date(this.fechaInicio.getTime() + DURACION_VISITA_MS)
     }
 })
 

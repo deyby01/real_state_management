@@ -1,7 +1,7 @@
 import { Router } from "express"
 import { verificarToken } from "../middlewares/auth.middleware.js"
 import { permitirRoles } from "../middlewares/role.middleware.js"
-import { getVisitas, getVisitaById } from "../controllers/visita.controller.js"
+import { getVisitas, getVisitaById, postVisita } from "../controllers/visita.controller.js"
 
 const visitaRouter = Router()
 
@@ -10,5 +10,6 @@ visitaRouter.use(verificarToken, permitirRoles("ADMIN", "EJECUTIVO"))
 
 visitaRouter.get("/", getVisitas)
 visitaRouter.get("/:id", getVisitaById)
+visitaRouter.post("/", postVisita)
 
 export default visitaRouter
