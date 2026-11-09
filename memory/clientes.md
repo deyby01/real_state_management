@@ -1,6 +1,6 @@
 # clientes — Cliente
 
-> **Owner:** Jose · **Branch:** `feature/jose/clientes` · **Status:** 🚧 In progress (steps 0–3 done, step 4 next)
+> **Owner:** Jose · **Branch:** `feature/jose/clientes` · **Status:** 🚧 In progress (steps 0–6 done, step 7 next: Postman pass, PR)
 > **Specification:** [`docs/DATA_MODEL.md → clientes`](../docs/DATA_MODEL.md#clientes-interested-clients-and-tenants)
 > **Depends on:** `usuarios` (✅ merged, linked through `usuarios.clienteId`) · **Used by:** `visitas`, `solicitudesArriendo`
 
@@ -12,20 +12,20 @@
 | 1 | Model `backend/src/models/Cliente.js` | Fields, validations and unique indexes visible in Compass | ✅ |
 | 2 | Controller: list and get by id | `200`, `404` | ✅ |
 | 3 | Controller: create and update (with business rules) | `201`, `400`, `409` | ✅ |
-| 4 | Controller: soft delete (`activo: false`) | Record still in Compass with `activo: false` | ⬜ |
-| 5 | Routes + mounting in `app.js` + protection by role | No token `401`, wrong role `403` | ⬜ |
-| 6 | Fixtures in `backend/src/fixtures/data/` + `seed.js` | `make seed` loads the data | ⬜ |
-| 7 | Full Postman pass + Pull Request (description from `.github/pull_request_template.md`) | Happy path and error cases | ⬜ |
+| 4 | Controller: soft delete (`activo: false`) | Record still in Compass with `activo: false` | ✅ |
+| 5 | Routes + mounting in `app.js` + protection by role | No token `401`, wrong role `403` | ✅ |
+| 6 | Fixtures in `backend/src/fixtures/data/` + `seed.js` | `make seed` loads the data | ✅ |
+| 7 | Full Postman pass + Pull Request (description from `.github/pull_request_template.md`) | Happy path and error cases | 🚧 |
 
 ## Endpoints
 
 | Method | Route | Who can use it | Responses |
 |---|---|---|---|
-| `GET` | `/api/clientes` | Public **for now** (protection in step 5) | Active clients (`200`) |
-| `GET` | `/api/clientes/:id` | Public **for now** (protection in step 5) | Client (`200`); invalid id `400`; not found `404` |
-| `POST` | `/api/clientes` | Public **for now** (protection in step 5) | Created (`201`); invalid data `400`; duplicate `409` |
-| `PUT` | `/api/clientes/:id` | Public **for now** (protection in step 5) | Updated (`200`); invalid data `400`; not found `404`; duplicate `409` |
-| `DELETE` | `/api/clientes/:id` | Public **for now** (protection in step 5) — *step 4, in progress* | Soft-deleted (`200`); invalid id `400`; not found `404` |
+| `GET` | `/api/clientes` | `ADMIN`, `EJECUTIVO` | Active clients (`200`); no token `401`; other role `403` |
+| `GET` | `/api/clientes/:id` | `ADMIN`, `EJECUTIVO` | Client (`200`); invalid id `400`; not found `404`; no token `401`; other role `403` |
+| `POST` | `/api/clientes` | `ADMIN`, `EJECUTIVO` | Created (`201`); invalid data `400`; duplicate `409`; no token `401`; other role `403` |
+| `PUT` | `/api/clientes/:id` | `ADMIN`, `EJECUTIVO` | Updated (`200`); invalid data `400`; not found `404`; duplicate `409`; no token `401`; other role `403` |
+| `DELETE` | `/api/clientes/:id` | **`ADMIN` only** | Soft-deleted (`200`); invalid id `400`; not found `404`; no token `401`; `EJECUTIVO` → `403` |
 
 ## Decisions
 
@@ -40,7 +40,11 @@
 - `PUT` may change `rut` (a mistyped RUT is a real case), normalized with the same helper; the field is only sent to the update when it appears in the body (`rut !== undefined`), so a partial update does not erase it.
 - `PUT` uses `findByIdAndUpdate` with `new: true` (returns the updated document) and `runValidators: true` (without it Mongoose skips the `enum` on updates and would store `"arrendatario"`).
 - Soft delete is `findByIdAndUpdate(id, { activo: false }, { new: true })`: one query, `null` → `404`. It is idempotent (a second `DELETE` still returns `200`), needs no `runValidators` (only a boolean changes) and no `11000` handling (no unique field is touched).
-- Routes are intentionally unprotected until step 5. Proposal for that step: `verificarToken` + `permitirRoles("ADMIN", "EJECUTIVO")`.
+- All routes are protected with `verificarToken` + `permitirRoles`. `GET`, `POST` and `PUT` allow `ADMIN` and `EJECUTIVO`; **`DELETE` allows `ADMIN` only**, because deactivating a client is more sensitive than editing it. Public users (`CLIENTE`, `PROPIETARIO`) get `403`: the client portfolio is internal data. The middlewares already existed (`usuarios`, PR #20) and are only imported, never rewritten.
+- Middleware order is `verificarToken` **then** `permitirRoles`: the role middleware reads `req.usuario`, which only exists after the token is verified. Reversing them would throw a `TypeError` and answer `500`.
+- `401` vs `403`: `401` means the token is missing, malformed or expired; `403` means the token is valid but the role is not allowed.
+- Fixtures: 3 clients (`data/clientes.js`) — Ana Pérez (`cliente@gup.cl`, the same person as the `CLIENTE` user, same email so the future link is trivial), Luis Soto (registered by an executive, phone only, no account) and Camila Rivas (`ARRENDATARIO`, to cover the second enum value). RUTs are written already normalized (hyphen, no dots) because `insertMany` bypasses the controller normalization. `activo` is omitted on purpose so the schema default applies.
+- `usuarios.clienteId` is **not** filled by the fixtures: that field belongs to `usuarios` (Deyby) and filling it means updating the `CLIENTE` user; it stays `null` until it is agreed (see *Coordination with other models*). Nothing is blocked because the field has `default: null`.
 - Who creates the client record (executive from the admin panel vs. public registration) — *(pending professor validation; affects the controller and `auth.controller.js`)*
 - Is `telefono` required? The model docs mark it optional, but RN-11 mentions phone as a duplicate signal. Proposal: keep it optional in the schema and do not treat it as a unique key for now. *(pending professor validation)*
 
@@ -61,12 +65,35 @@
 | `PUT` duplicate email | `409` |
 | `PUT /api/clientes/abc` | `400` |
 | `PUT /api/clientes/65f000000000000000000000` | `404` |
+| `DELETE /api/clientes/6aed46cc682ed1bedb78fa29` | `200` with `activo: false`; document still in the collection |
+| `GET /api/clientes` after the delete | the inactive client disappears (only active ones are listed) |
+| `GET /api/clientes/:id` of the inactive client | `200`, still returned by the detail |
+| repeated `DELETE` | `200` (idempotent) |
+| `DELETE /api/clientes/abc` | `400 ID de cliente inválido` |
+| `DELETE /api/clientes/65f000000000000000000000` | `404 Cliente no encontrado` |
+| `GET /api/clientes` without token | `401 Token no proporcionado` |
+| `POST` and `DELETE` without token | `401` |
+| `GET` with a `CLIENTE` token | `403 No tienes permiso para realizar esta acción` |
+| `GET` with an `EJECUTIVO` token | `200` |
+| `GET` with an `ADMIN` token | `200` |
+| `GET` with a garbage token (`abc123`) | `401 Token inválido o expirado` (`jwt malformed`) |
+| `DELETE` with an `EJECUTIVO` token | `403` (same user passes `GET` with `200`) |
+| `make seed` | `Tipos de propiedad: 4`, `Usuarios: 5`, `Clientes: 3`, accents and `ñ` preserved, RUTs with hyphen |
+
+### Full pass (2026-11-09, run by the agent against the live backend)
+
+28 requests, all with the expected code: 6 auth/role cases, 5 `POST` (`201`, `409` ×2, `400` ×2), 3 `GET` (`200`, `400`, `404`), 7 `PUT` (`200` ×3, `400`, `409`, `404`), 7 `DELETE` (`200` ×2, `403`, `400`, `404`) plus the list/detail checks. Evidence highlights:
+
+- `POST` with `rut: "19.876.543-2"` and `email: "TEMPORAL@MAIL.CL"` stored `19876543-2` / `temporal@mail.cl`, with `estado: INTERESADO` and `activo: true` by default.
+- `PUT { "activo": false }` on an active client answered `200` and the document kept `activo: true` (whitelist verified at runtime, not only by reading the code).
+- After the `DELETE`, the list returned 3 active clients out of 4 documents, and the detail still returned the inactive one.
+- Bug found and fixed in this pass: the `500` handler used `error.mensaje` instead of `error.message`, so the response silently lost the cause (`JSON.stringify` drops `undefined`). The `400` of `DELETE` also answered `"ID de cliente invalido"` without the accent used by `GET` and `PUT`. Both were corrected.
 
 ## Coordination with other models
 
 - **`usuarios` (Deyby):** public registration should also create the `clientes` record and store its `_id` in `usuarios.clienteId`. This modifies `auth.controller.js`, so it must be agreed with Deyby **before** touching that file (see [`memory/usuarios.md`](usuarios.md)).
 - **`visitas` / `solicitudesArriendo`:** both will reference `clientes` through `clienteId` (`ObjectId` + `ref: "Cliente"`). No action needed from us beyond exposing list/get by id.
-- **Fixtures (step 6):** the client data file must be inserted **after** `usuarios` in `seed.js`, and `seed.js` must add `Cliente.deleteMany({})` before `insertMany`.
+- **Fixtures (step 6, ✅ done):** `data/clientes.js` is inserted **after** `usuarios` in `seed.js`, which also runs `Cliente.deleteMany({})` before `insertMany`. The fixtures do **not** fill `usuarios.clienteId`: doing so means updating the `CLIENTE` user, which belongs to the `usuarios` owner. It stays `null` (`default: null`) until Deyby agrees on the linking rule; the client fixture uses `cliente@gup.cl`, the same email as the `CLIENTE` user, so the link is a one-line `updateOne` when that is decided.
 
 ## Proposals for AGENTS.md
 
@@ -74,6 +101,9 @@
 - **Environment lesson (2026-11-06):** if the backend logs end with `Error: Cannot find module '/app/src/index.js'` (and sometimes `.env not found`), the container was started while the bind mount was not ready — usually because the stack was recreated right after Docker Desktop started, or the containers were down. Check `docker compose ps` first; if it is empty, `make up` recreates the containers and the folder is mounted again. Saving a file does not fix it.
 - **Code review lesson:** in a controller with a field whitelist, the destructuring **must list exactly the fields passed to `create()` / `findByIdAndUpdate()`**. A missing name is not `undefined`: it throws `ReferenceError`, which the `catch` turns into a misleading `500` on every request. Review both lists side by side.
 - **Agent mistake (2026-11-04):** I used `try { ... }` as an expression inside a PowerShell string concatenation; PowerShell 5.1 does not allow that and every request failed. Lesson: in `shell` commands, use a function or explicit `if`/`$LASTEXITCODE` instead of `try` as an expression.
+- **JavaScript lesson (2026-11-09):** `${...}` interpolation only works inside **backticks** (`template literals`). With single or double quotes the value is printed literally (`Clientes: ${clientes.length}`). Whenever a `console.log` shows the placeholder instead of the number, the quotes are the cause.
+- **Code review lesson (2026-11-09):** the property of an `Error` is `error.message`, not `error.mensaje`. With the wrong name the value is `undefined` and `JSON.stringify` **drops the key**, so a `500` answers without its cause and the bug stays hidden until something really fails. Every `catch` that answers `500` deserves a second read.
+- **Process lesson (2026-11-09):** `deleteCliente` went inside the commit *"protect client routes by role"* and the `error.message` fix inside *"add client fixtures"*. One commit per unit of work (feat, fix, docs) keeps the history readable and the PR reviewable. History already pushed is never rewritten with `amend` or `push --force`; the lesson is for the next step.
 
 ## Session log
 
@@ -83,3 +113,4 @@
 | 2026-11-04 | Step 1: `models/Cliente.js` written by the developer and reviewed (fixed `estado` enum to `INTERESADO`/`ARRENDATARIO`). Step 2: `cliente.controller.js` + `cliente.routes.js` + mounting in `app.js`, reviewed with `node --check` and tested live: `GET /api/clientes` `200 []`, invalid id `400`, missing id `404`. Compass shows `clientes` with `rut_1` and `email_1` unique. Committed `31cc145 feat: add client list and detail endpoints` and pushed. Docker Desktop had to be started manually before `make up` / `make seed`. | Next: step 3, `POST /api/clientes` (RUT normalization, whitelist, `409` per duplicated field). |
 | 2026-11-05 | Step 3a: `normalizarRut` + `postCliente` written by the developer and reviewed. Fixed three issues: the helper was removing the hyphen (now only dots/spaces), the whitelist was missing `comuna` (caused `ReferenceError` → `500`), and duplicates answered `400` instead of `409`. Tested live: `201` with normalized `rut` and lowercased `email`, `409` for RUT and email, `400` for missing fields and for the lowercase `estado`; MongoDB ends with exactly one document. Committed `e447a87 feat: add client create endpoint`. | Next: `PUT` (step 3b). |
 | 2026-11-06 | Step 3b: `putCliente` + route written by the developer and reviewed; verified `new: true` and `runValidators: true` are required. Tested live: `200` updating `comuna`, `400` for `estado: "arrendatario"`, `200` for `{ "activo": false }` with the document still active, `409` for a duplicate email, `400` for `abc`, `404` for a valid unknown id. Committed `f05526f feat: add client update endpoint`. Also diagnosed a backend crash: containers were down, `make up` recreated them and the bind mount returned. | Next: step 4, soft delete with `activo: false`. |
+| 2026-11-09 | Steps 4–6. **Step 4:** `deleteCliente` + route written and tested (`200`, list hides the inactive client, detail still shows it, repeated `DELETE` `200`, `400`, `404`). **Step 5:** `verificarToken` + `permitirRoles` on the five routes, `DELETE` restricted to `ADMIN`; the first attempt answered `403` because Postman kept a token in the Authorization tab, not because of the code — after removing it: `401` without token, `403` with `CLIENTE`, `200` with `ADMIN`/`EJECUTIVO`, `403` for `DELETE` with `EJECUTIVO`. **Step 6:** `data/clientes.js` (3 clients), `seed.js` (`deleteMany` + `insertMany` after `usuarios`) and the fixtures README row; fixed the log message that used quotes instead of backticks. **Step 7 (in progress):** full pass of 28 requests run by the agent, all with the expected code; found and fixed `error.mensaje` → `error.message` in the `500` handler and the accent of the `DELETE` `400` message. Commits `2e52764 feat: protect client routes by role` and `d09db62 feat: add client fixtures` (both mixed several steps). | Next: update this file, draft the PR description from `.github/pull_request_template.md` and open the Pull Request. |
