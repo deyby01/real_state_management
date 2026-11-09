@@ -12,9 +12,9 @@ This is the largest model, so it is split into **two phases**, each one with its
 
 | # | Step | What to test in Postman | Status |
 |---|---|---|---|
-| 0 | Context: embedded subdocuments, several references, `estado` vs `activo`, state machine | — | 🚧 |
-| 1 | Model `backend/src/models/Propiedad.js`: embedded `direccion` and `imagenes`, three references, `estado` enum, indexes | Fields and indexes in Compass | ⬜ |
-| 2 | Controller: create (always `DISPONIBLE`, bitacora `CREACION`), list and get by id | `201`, `200`, `404`, invalid id `400` | ⬜ |
+| 0 | Context: embedded subdocuments, several references, `estado` vs `activo`, state machine | — | ✅ |
+| 1 | Model `backend/src/models/Propiedad.js`: embedded `direccion` and `imagenes`, three references, `estado` enum, indexes | Fields and indexes in Compass | ✅ (5 validation tests from the container; 3 indexes) |
+| 2 | Controller: create (always `DISPONIBLE`, bitacora `CREACION`), list and get by id | `201`, `200`, `404`, invalid id `400` | 🚧 |
 | 3 | Controller: update data (never `estado`) and soft delete | `200`; record kept with `activo: false` | ⬜ |
 | 4 | Controller: `PATCH /:id/estado` with the transition table + bitacora `CAMBIO_ESTADO` | Allowed `200`; not allowed `409`; `RESERVADA` as target `409` | ⬜ |
 | 5 | Routes + mounting + protection by role; full Postman pass; Pull Request A | No token `401`, wrong role `403` | ⬜ |
@@ -56,3 +56,4 @@ Phase B steps 7 and 8 need the `Propietario` model merged (Santiago).
 | Date | What was done | Result / next step |
 |---|---|---|
 | 2026-11-03 | Created the branch and this file; plan split in two phases; step 0 (context). | Step 1: model. |
+| 2026-11-08 | Step 1: model with embedded `direccion`/`imagenes`, 6-state enum, `min` rules (0 allowed only where it is a real value), 2 indexes. | Step 2: create property. |
