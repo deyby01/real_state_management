@@ -49,3 +49,49 @@ export const crearPropiedad = async (req, res) => {
         return res.status(500).json({ mensaje: "Error al crear la propiedad", error: error.message })
     }   
 }
+
+
+export const listarPropiedades = async (req, res) => {
+    try {
+        const { estado, ejecutivoId } = req.query
+        const filtro = { activo: true }
+
+        if (estado) filtro.estado = estado
+        if (ejecutivoId) filtro.ejecutivoId = ejecutivoId
+
+        const propiedades = await Propiedad.find(filtro)
+            .sort({ createdAt: -1 })
+            .populate("tipoId", "nombre")
+            .populate("ejecutivoId", "nombre email")
+            // TODO: populate propietarioId when the Propietario model exists (Santiago)
+        
+        res.status(200).json(propiedades)
+
+    } catch (error) {
+        if (error.name === "CastError") {
+            return res.status(400).json({ mensaje: "Filtro ejecutivoId inválido", error: error.message })
+        }
+        return res.status(500).json({ mensaje: "Error al listar propiedades", error: error.message })
+    }
+}
+
+
+export const obtenerPropiedad = async (req, res) => {
+    try {
+        const propiedad = await Propiedad.findOne({ _id: req.params.id, activo: true })
+            .populate("tipoId", "nombre")
+            .populate("ejecutivoId", "nombre email")
+            // TODO: populate propietarioId when the Propietario model exists (Santiago)
+        
+        if (!propiedad) {
+            return res.status(404).json({ mensaje: "Propiedad no encontrada" })
+        }
+
+        res.status(200).json(propiedad)
+    } catch (error) {
+        if (error.name === "CastError") {
+            return res.status(400).json({ mensaje: "ID de propiedad invalido", error: error.message })
+        }
+        return res.status(500).json({ mensaje: "Error al obtener la propiedad", error: error.message })
+    }
+}
