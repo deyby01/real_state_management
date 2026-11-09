@@ -117,3 +117,25 @@ export const putCliente = async (req, res) => {
         res.status(500).json({ mensaje: "Error al actualizar cliente", error: error.message })
     }
 }
+
+export const deleteCliente = async (req, res) => {
+    try {
+        const cliente = await Cliente.findByIdAndUpdate(
+            req.params.id,
+            { activo: false },
+            { new: true}
+        )
+
+        if (!cliente) {
+            return res.status(404).json({ mensaje: "Cliente no encontrado"})
+        }
+
+        res.status(200).json(cliente)
+    } catch (error) {
+        if (error.name === "CastError") {
+            return res.status(400).json({ mensaje: "ID de cliente invalido"})
+        }
+
+        res.status(500).json({ mensaje: "Error al eliminar cliente", error: error.mensaje})
+    }
+}
