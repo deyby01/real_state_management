@@ -211,7 +211,7 @@ Every model follows the same steps, using the [teaching loop](AGENTS.md#teaching
 1. **Context:** read the model in `docs/DATA_MODEL.md` (fields, decisions, business rules, indexes) and the reference implementations (`TipoPropiedad` for the MVC flow, `Usuario` for security and roles).
 2. **Concepts and libraries:** what is new for this model (unique index, embedded object, enum of states, `populate`...), explained from scratch.
 3. **Model** → **controller** (list, get by id, create, update, soft delete, business rules) → **routes** (mounting in `app.js` and protection by role) → **fixtures** → **Postman**.
-4. One step at a time: explain, a small example, the developer writes it, review, test.
+4. One step at a time: explain, a small example, the developer writes it, review, **document it (English JSDoc)**, test, **commit it** (one focused commit per tested step).
 5. Update `memory/<collection>.md` at the end of every session; open the Pull Request when the model is complete, with the description drafted from [`.github/pull_request_template.md`](.github/pull_request_template.md) (see [`AGENTS.md → Pull Request description`](AGENTS.md#pull-request-description)).
 
 ### Integrator checklist (after merging a model's Pull Request)
@@ -650,6 +650,8 @@ Test passwords go in the fixtures README, never real passwords.
 
 - **Git:** branch-based work with Pull Requests against `development`. Never commit directly to `development`.
 - **Branch name:** `feature/user-name/implementation-name` (e.g., `feature/deyby/landing-page-header`).
+- **Documented code:** every exported function has an English JSDoc docstring; comments in English, API messages in Spanish (see [`AGENTS.md → Code documentation`](AGENTS.md#code-documentation)).
+- **Commits:** one focused commit per tested step, never one commit with a whole model (see [`AGENTS.md → Small, focused commits`](AGENTS.md#small-focused-commits)).
 - **One model per person:** the owner works only on their model (see [Model assignments](#model-assignments)) and writes progress only in `memory/<collection>.md`. `MEMORY.md` and `AGENTS.md` are edited only by the integrator (Deyby).
 - **Before working:** `git checkout development && git pull origin development`.
 - **Before the PR:** `git fetch origin && git rebase origin/development`.
@@ -716,6 +718,7 @@ Test passwords go in the fixtures README, never real passwords.
 | 2026-11-02 | Auth merged (PR #20). Shared memory reorganized: `memory/` folder with one file per model, `MEMORY.md` and `AGENTS.md` edited only by the integrator, model assignments in DATA_MODEL order, model ownership rules for the agents. | Teammates start their models from the updated `development`. |
 | 2026-11-02 / 03 | `bitacora` built by the developer with guidance: insert-only model with compound index, `registrarBitacora` service, admin-only `GET /api/bitacora`, seed empties it. Merged (PR #22). New rule: sync the docs in a short `docs/` branch after every merge. | Next: `propiedades` (Deyby). |
 | 2026-11-03 / 10 | `propiedades` phase A built by the developer with guidance: model with embedded objects, CRUD for executives, soft delete, state machine with `TRANSICIONES`; bitacora gets `ELIMINACION`. Reviewed Roberto's `solicitudesArriendo` PR (changes requested). Merged (PR #28). | Next: phase B of `propiedades` (public catalog; owner view and fixtures wait for `propietarios`). |
+| 2026-11-10 | New agent rules for the whole team: English JSDoc docstrings for every exported function and focused commits per tested step (teaching loop now has *document* and *commit* steps). | Teammates' agents pick them up after `git pull`. |
 
 ---
 
