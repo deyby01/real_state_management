@@ -28,7 +28,7 @@ import { registrarBitacora } from "../services/bitacora.service.js"
 await registrarBitacora({
     entidad: "VISITA",                 // "PROPIEDAD" | "VISITA" | "SOLICITUD"
     entidadId: visita._id,             // the document that changed
-    accion: "CAMBIO_ESTADO",           // "CREACION" | "CAMBIO_ESTADO" | "RESERVA" | "LIBERACION_RESERVA"
+    accion: "CAMBIO_ESTADO",           // "CREACION" | "CAMBIO_ESTADO" | "RESERVA" | "LIBERACION_RESERVA" | "ELIMINACION"
     estadoAnterior: "SOLICITADA",      // empty on CREACION
     estadoNuevo: "CONFIRMADA",
     usuarioId: req.usuario._id,        // set by verificarToken: who made the change
@@ -55,7 +55,7 @@ No `POST`, `PUT` or `DELETE` endpoints: entries are only created by the backend 
 - Only `ADMIN` can read the log (demo step 8 of DATA_MODEL). *(pending professor validation)*
 - **No `timestamps`**, a documented exception to the project convention: an insert-only document is never updated, so `updatedAt` would be meaningless. The `fecha` field (default: now) records when the entry was created, as DATA_MODEL defines.
 - **No `activo` field:** entries are never deleted, not even with soft delete (rule 12).
-- `accion` and `entidad` are closed `enum`s, so a typo (`"cambio_estado"`) is rejected instead of being stored. Values: `entidad` = `PROPIEDAD`, `VISITA`, `SOLICITUD`; `accion` = `CREACION`, `CAMBIO_ESTADO`, `RESERVA`, `LIBERACION_RESERVA`. A teammate who needs a new action asks Deyby to add it to the `enum`.
+- `accion` and `entidad` are closed `enum`s, so a typo (`"cambio_estado"`) is rejected instead of being stored. Values: `entidad` = `PROPIEDAD`, `VISITA`, `SOLICITUD`; `accion` = `CREACION`, `CAMBIO_ESTADO`, `RESERVA`, `LIBERACION_RESERVA`, `ELIMINACION` (added 2026-11-09 for soft deletes, RNF-12). A teammate who needs a new action asks Deyby to add it to the `enum`.
 
 ## Coordination with other models
 
