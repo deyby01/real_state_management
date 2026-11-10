@@ -8,6 +8,11 @@ import { crearPropiedad,
     eliminarPropiedad, 
     cambiarEstadoPropiedad } from "../controllers/propiedad.controller.js"
 
+/**
+ * Property management routes, mounted at /api/propiedades.
+ * The whole router is EJECUTIVO only (spec CU3). The public catalog and the
+ * owner's view will live in their own routes.
+ */
 const propiedadRouter = Router()
 
 propiedadRouter.use(verificarToken, permitirRoles("EJECUTIVO"))
