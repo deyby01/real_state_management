@@ -14,7 +14,7 @@ const bitacoraSchema = new mongoose.Schema(
         accion: {
             type: String,
             required: true,
-            enum: ["CREACION", "CAMBIO_ESTADO", "RESERVA", "LIBERACION_RESERVA"]
+            enum: ["CREACION", "CAMBIO_ESTADO", "RESERVA", "LIBERACION_RESERVA", "ELIMINACION"]
         },
         estadoAnterior: {
             type: String,
