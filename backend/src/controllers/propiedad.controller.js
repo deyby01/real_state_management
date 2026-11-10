@@ -129,3 +129,37 @@ export const actualizarPropiedad = async (req, res) => {
         return res.status(500).json({ mensaje: "Error al actualizar la propiedad", error: error.message })
     }
 }
+
+
+export const eliminarPropiedad = async (req, res) => {
+    try {
+        const propiedad = await Propiedad.findOne({ _id: req.params.id, activo: true })
+
+        if (!propiedad) {
+            return res.status(404).json({ mensaje: "Propiedad no encontrada" })
+        }
+
+        if (["RESERVADA", "ARRENDADA"].includes(propiedad.estado)) {
+            return res.status(409).json({ mensaje: "No se puede eliminar una propiedad que está reservada o arrendada" })
+        }
+
+        propiedad.activo = false
+        await propiedad.save()
+
+        await registrarBitacora({
+            entidad: "PROPIEDAD",
+            entidadId: propiedad._id,
+            accion: "ELIMINACION",
+            estadoAnterior: propiedad.estado,
+            estadoNuevo: propiedad.estado,
+            usuarioId: req.usuario._id
+        })
+
+        return res.status(200).json({ mensaje: "Propiedad eliminada exitosamente" })
+    } catch (error) {
+        if (error.name === "CastError") {
+            return res.status(400).json({ mensaje: "ID de propiedad inválido", error: error.message })
+        }
+        return res.status(500).json({ mensaje: "Error al eliminar la propiedad", error: error.message })
+    }
+}
