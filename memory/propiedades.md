@@ -1,6 +1,6 @@
 # propiedades — Propiedad
 
-> **Owner:** Deyby · **Branch:** `feature/deyby/propiedades` · **Status:** 🚧 In progress
+> **Owner:** Deyby · **Branch:** `feature/deyby/propiedades` · **Status:** 🚧 Phase A complete (PR A pending); phase B not started
 > **Specification:** [`docs/DATA_MODEL.md → propiedades`](../docs/DATA_MODEL.md#propiedades-the-center-of-the-model), [state machine 6.1](../docs/DATA_MODEL.md#61-property)
 > **Depends on:** `tiposPropiedad` (✅), `usuarios` (✅, `ejecutivoId`), `bitacora` (✅), `propietarios` (Santiago, not merged yet) · **Used by:** `visitas` (Ignacio), `solicitudesArriendo` (Roberto), the public catalog and the landing page
 
@@ -15,9 +15,9 @@ This is the largest model, so it is split into **two phases**, each one with its
 | 0 | Context: embedded subdocuments, several references, `estado` vs `activo`, state machine | — | ✅ |
 | 1 | Model `backend/src/models/Propiedad.js`: embedded `direccion` and `imagenes`, three references, `estado` enum, indexes | Fields and indexes in Compass | ✅ (5 validation tests from the container; 3 indexes) |
 | 2 | Controller: create (always `DISPONIBLE`, bitacora `CREACION`), list and get by id | `201`, `200`, `404`, invalid id `400` | ✅ Create (8 Postman tests: mass assignment ignored, `CREACION` in bitacora); list and get by id (7 Postman tests) |
-| 3 | Controller: update data (never `estado`) and soft delete | `200`; record kept with `activo: false` | 🚧 3a update ✅ (7 Postman tests: partial update, `runValidators`, whitelist, type check, full `direccion`, `404`); 3b soft delete in progress |
-| 4 | Controller: `PATCH /:id/estado` with the transition table + bitacora `CAMBIO_ESTADO` | Allowed `200`; not allowed `409`; `RESERVADA` as target `409` | ⬜ |
-| 5 | Routes + mounting + protection by role; full Postman pass; Pull Request A | No token `401`, wrong role `403` | ⬜ |
+| 3 | Controller: update data (never `estado`) and soft delete | `200`; record kept with `activo: false` | ✅ 3a update (7 Postman tests); 3b soft delete (7 tests: `404` after delete, still in Compass, `ELIMINACION` in bitacora). The `409` for `RESERVADA`/`ARRENDADA` is tested in step 4 |
+| 4 | Controller: `PATCH /:id/estado` with the transition table + bitacora `CAMBIO_ESTADO` | Allowed `200`; not allowed `409`; `RESERVADA` as target `409` | ✅ (15 Postman tests, including the `409` on delete for `RESERVADA`/`ARRENDADA`, simulated by setting `RESERVADA` in Compass) |
+| 5 | Routes + mounting + protection by role; full Postman pass; Pull Request A | No token `401`, wrong role `403` | ✅ Done; PR A pending |
 
 ### Phase B — Catalog, owner view and fixtures
 
@@ -40,6 +40,8 @@ The whole `/api/propiedades` router is protected with `verificarToken` + `permit
 | `GET` | `/api/propiedades` | `EJECUTIVO` | `200`: all active properties, newest first, `tipoId` and `ejecutivoId` populated; optional `?estado=` and `?ejecutivoId=`; invalid `ejecutivoId` `400` |
 | `GET` | `/api/propiedades/:id` | `EJECUTIVO` | `200`; nonexistent or soft-deleted `404`; invalid id `400` |
 | `PUT` | `/api/propiedades/:id` | `EJECUTIVO` | `200`: only the fields sent change; `estado`, `ejecutivoId`, `propietarioId` and `activo` are ignored; `direccion` must be sent complete; invalid values `400`; nonexistent or inactive type `400`; nonexistent or soft-deleted `404` |
+| `DELETE` | `/api/propiedades/:id` | `EJECUTIVO` | `200`: soft delete (`activo: false`) + bitacora `ELIMINACION`; `RESERVADA` or `ARRENDADA` `409`; nonexistent or already deleted `404`; invalid id `400` |
+| `PATCH` | `/api/propiedades/:id/estado` | `EJECUTIVO` | Body `{ estado, observacion? }`. `200` + bitacora `CAMBIO_ESTADO`; unknown state `400` (lists the valid ones); `RESERVADA` as target `409` (only by approving a request); transition not in `TRANSICIONES` `409` (`No se puede pasar de X a Y`); nonexistent or deleted `404`; invalid id `400` |
 
 ## Decisions
 
@@ -69,7 +71,7 @@ The whole `/api/propiedades` router is protected with `verificarToken` + `permit
 - **`propietarios` (Santiago):** `propietarioId` references `Propietario`. Until his model is merged, **never `populate("propietarioId")`**: it throws `MissingSchemaError` (checked in the container). Three `TODO`s in `propiedad.controller.js` mark where to add the check and the populate. Declared with `ref: "Propietario"` before his model exists; the fixtures (step 8) and the owner view (step 7) wait for his merge. Owner fixtures should be created by him; properties then use their `_id`.
 - **`solicitudesArriendo` (Roberto):** `RESERVADA` is reached **only** by approving a request, and releasing a reservation moves the property back. Those changes happen in his controller; agree on how he updates the property's `estado` (and logs it in `bitacora`).
   - **2026-11-09, review of his PR (`feature/roberto/rental-requests`):** he uses `estado`, `ejecutivoId`, the model name `"Propiedad"` and `PUBLICADA`/`RESERVADA`, all matching this model. He loads `Propiedad` lazily with `mongoose.model("Propiedad")` until this model is merged; after phase A he should switch to a normal `import`. Review asked for: no `clienteId` from the body, no `ADMIN` in CU9 routes, client cancels only from `PENDIENTE`, `activo: true` when reading the property, `required` on `estado`. Suggested to merge after this phase A and `clientes` (Jose), so it can be tested.
-  - **Consequence for step 4:** my `PATCH /:id/estado` must reject `RESERVADA` as a target, and also leave `RESERVADA` → `DISPONIBLE`/`PUBLICADA` to his release flow.
+  - **Consequence for step 4 (done):** `PATCH /:id/estado` rejects `RESERVADA` as a target and does not allow `RESERVADA` → `DISPONIBLE`/`PUBLICADA`; releasing is his flow. After phase A is merged, he should replace `mongoose.model("Propiedad")` with `import Propiedad from "../models/Propiedad.js"`.
 - **`visitas` (Ignacio):** visits only on `PUBLICADA` properties (RN-16); his controller reads the property's `estado` and copies its `ejecutivoId` (D10).
 
 ## Proposals for AGENTS.md
@@ -83,3 +85,5 @@ The whole `/api/propiedades` router is protected with `verificarToken` + `permit
 | 2026-11-08 | Step 2: `crearPropiedad` (whitelist against mass assignment, type check, save **then** bitacora), executive-only router, `listarPropiedades` (filters `estado`/`ejecutivoId`) and `obtenerPropiedad` (`404` vs `400`). Learned: `populate` of a model that does not exist yet throws `MissingSchemaError`. 15 Postman tests passed. | Step 3a: update. |
 | 2026-11-09 | Step 3a explained (PUT vs PATCH, `findOneAndUpdate` options, `runValidators`, embedded objects replaced whole). Paused for a review task. | Resume: answer the `propietarioId` decision and write `actualizarPropiedad`. |
 | 2026-11-09 | Reviewed Roberto's PR. Step 3a done: `propietarioId` not editable; `actualizarPropiedad` with `findOneAndUpdate` + `returnDocument`/`runValidators`; 7 Postman tests passed. | Step 3b: soft delete. |
+| 2026-11-09 | Step 3b: `ELIMINACION` added to the bitacora enum (own commit); `eliminarPropiedad` with `findOne` → checks → `save` → bitacora; 7 Postman tests passed. | Step 4: state machine. |
+| 2026-11-10 | Step 4: `TRANSICIONES` table (DATA_MODEL 6.1 minus the three transitions owned by rental requests) and `cambiarEstadoPropiedad` (code given by the agent on request, explained block by block); 15 Postman tests passed. Phase A complete. | Pull Request A. Then phase B (catalog). |

@@ -2,6 +2,17 @@ import Propiedad from "../models/Propiedad.js"
 import TipoPropiedad from "../models/TipoPropiedad.js"
 import { registrarBitacora } from "../services/bitacora.service.js"
 
+
+const TRANSICIONES = {
+    DISPONIBLE:    ["PUBLICADA", "EN_MANTENCION", "INACTIVA"],
+    PUBLICADA:     ["DISPONIBLE", "EN_MANTENCION", "INACTIVA"],
+    RESERVADA:     ["ARRENDADA"],
+    ARRENDADA:     ["DISPONIBLE", "EN_MANTENCION", "INACTIVA"],
+    EN_MANTENCION: ["DISPONIBLE", "INACTIVA"],
+    INACTIVA:      ["DISPONIBLE"] 
+}
+
+
 export const crearPropiedad = async (req, res) => {
     try {
         const { titulo, tipoId, propietarioId, direccion, superficie, dormitorios, banos, estacionamientos, valorArriendo, gastosComunes, caracteristicas, imagenes, destacada } = req.body
@@ -163,3 +174,52 @@ export const eliminarPropiedad = async (req, res) => {
         return res.status(500).json({ mensaje: "Error al eliminar la propiedad", error: error.message })
     }
 }
+
+
+export const cambiarEstadoPropiedad = async (req, res) => {
+    try {
+        const { estado, observacion } = req.body
+
+        const estadosValidos = Object.keys(TRANSICIONES)
+        if (!estadosValidos.includes(estado)) {
+            return res.status(400).json({ mensaje: "Estado no válido", estadosValidos })
+        }
+
+        if (estado === "RESERVADA") {
+            return res.status(409).json({ mensaje: "Una propiedad solo se reserva aprobando una solicitud de arriendo"})
+        }
+
+        const propiedad = await Propiedad.findOne({ _id: req.params.id, activo: true })
+        if (!propiedad) {
+            return res.status(404).json({ mensaje: "Propiedad no encontrada"})
+        }
+
+        // Save actual state
+        const estadoAnterior = propiedad.estado
+
+        if (!TRANSICIONES[estadoAnterior].includes(estado)) {
+            return res.status(409).json({ mensaje: `No se puede pasar de ${estadoAnterior} a ${estado}` })
+        }
+
+        propiedad.estado = estado
+        await propiedad.save()
+
+        await registrarBitacora({
+            entidad: "PROPIEDAD",
+            entidadId: propiedad._id,
+            accion: "CAMBIO_ESTADO",
+            estadoAnterior,
+            estadoNuevo: estado,
+            usuarioId: req.usuario._id,
+            observacion
+        })
+
+        return res.status(200).json({ mensaje: "Estado actualizado exitosamente", propiedad })
+
+    } catch (error) {
+        if (error.name === "CastError") {
+            return res.status(400).json({ mensaje: "ID de propiedad inválido", error: error.message })
+        }
+        return res.status(500).json({ mensaje: "Error al cambiar el estado de la propiedad", error: error.message })
+    }
+} 
