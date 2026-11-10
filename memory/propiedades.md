@@ -1,6 +1,6 @@
 # propiedades — Propiedad
 
-> **Owner:** Deyby · **Branch:** `feature/deyby/propiedades` · **Status:** 🚧 Phase A complete (PR A pending); phase B not started
+> **Owner:** Deyby · **Branch:** `feature/deyby/propiedades` · **Status:** 🚧 Phase A merged (PR #28, 2026-11-10); phase B not started
 > **Specification:** [`docs/DATA_MODEL.md → propiedades`](../docs/DATA_MODEL.md#propiedades-the-center-of-the-model), [state machine 6.1](../docs/DATA_MODEL.md#61-property)
 > **Depends on:** `tiposPropiedad` (✅), `usuarios` (✅, `ejecutivoId`), `bitacora` (✅), `propietarios` (Santiago, not merged yet) · **Used by:** `visitas` (Ignacio), `solicitudesArriendo` (Roberto), the public catalog and the landing page
 
@@ -17,7 +17,7 @@ This is the largest model, so it is split into **two phases**, each one with its
 | 2 | Controller: create (always `DISPONIBLE`, bitacora `CREACION`), list and get by id | `201`, `200`, `404`, invalid id `400` | ✅ Create (8 Postman tests: mass assignment ignored, `CREACION` in bitacora); list and get by id (7 Postman tests) |
 | 3 | Controller: update data (never `estado`) and soft delete | `200`; record kept with `activo: false` | ✅ 3a update (7 Postman tests); 3b soft delete (7 tests: `404` after delete, still in Compass, `ELIMINACION` in bitacora). The `409` for `RESERVADA`/`ARRENDADA` is tested in step 4 |
 | 4 | Controller: `PATCH /:id/estado` with the transition table + bitacora `CAMBIO_ESTADO` | Allowed `200`; not allowed `409`; `RESERVADA` as target `409` | ✅ (15 Postman tests, including the `409` on delete for `RESERVADA`/`ARRENDADA`, simulated by setting `RESERVADA` in Compass) |
-| 5 | Routes + mounting + protection by role; full Postman pass; Pull Request A | No token `401`, wrong role `403` | ✅ Done; PR A pending |
+| 5 | Routes + mounting + protection by role; full Postman pass; Pull Request A | No token `401`, wrong role `403` | ✅ Merged (PR #28) |
 
 ### Phase B — Catalog, owner view and fixtures
 
