@@ -1,6 +1,6 @@
 # propietarios — Propietario
 
-> **Owner:** Santiago · **Branch:** `feature/santiago/modelo-propietario` · **Status:** Implementation complete; manual evidence and PR pending
+> **Owner:** Santiago · **Branch:** `feature/santiago/modelo-propietario` · **Status:** Implementation complete; PR opened by Santiago, review pending
 > **Specification:** [`docs/DATA_MODEL.md → propietarios`](../docs/DATA_MODEL.md#propietarios-property-owners)
 > **Depends on:** No model references · **Used by:** `usuarios`, `propiedades`
 
@@ -15,11 +15,11 @@
 | 4 | Soft delete | Document retained with `activo: false` | ✅ |
 | 5 | Routes, mounting and role protection | `401`, `403` | ✅ All five routes tested |
 | 6 | Fixtures and seed integration | Test data loads | ✅ Actual seed run in isolated database |
-| 7 | Postman and Pull Request | Happy path and errors | 🚧 Automated HTTP pass complete; manual screenshots and PR pending |
+| 7 | Postman and Pull Request | Happy path and errors | 🚧 Automated HTTP pass complete; PR opened, manual screenshots not confirmed |
 
 ## Current next step
 
-Implementation complete. Santiago should review the controller, capture Postman evidence, commit his work and rebase on freshly fetched origin/development before opening the PR. The agent does not commit, push, rebase or open PRs. Remote freshness/rebase has not been verified; local origin/development was 0923ba8 during review.
+Santiago opened the PR and merged the newer development changes (through 91b3cee) into his feature branch. The app.js conflict was resolved by preserving both propiedad and propietario routers. The feature branch was clean and synchronized with its remote before the current documentation step. English JSDoc now documents all five owner controller functions; the model header links to DATA_MODEL and comments explain RUT normalization and soft deletion. Next: commit and push this focused documentation change, then address PR review feedback.
 
 44 HTTP checks passed against an isolated MongoDB database, including actual seed loading, all route permissions, required fields, invalid/missing IDs, normalized RUT duplicates on create/update, field allowlisting, update validation, soft-delete persistence and exclusion of inactive owners. Three targeted HTTP checks passed after switching to returnDocument: "after". Temporary databases were removed; the developer database was not seeded or reset.
 
@@ -100,6 +100,7 @@ Pending: attach Postman evidence for creation/listing and an error case (duplica
 
 | Date | What was done | Result / next step |
 |---|---|---|
+| 2026-11-10 | Reviewed new development documentation rules, helped resolve the app.js import conflict, and added owner model documentation plus JSDoc for all five exported controller functions at Santiago's request. | Documentation-only change; commit and push it to the existing PR after syntax/diff checks. |
 | 2026-11-09 | Reviewed project concepts with Santiago and his first model field. Ran `node --check backend/src/models/Propietario.js` successfully. | `nombre` is correct; adjust indentation, then add `rut`. Database behavior has not been tested. |
 | 2026-11-09 | Reviewed the added `rut` field and corrected indentation. | Student must change `Unique` to `unique`; normalization and remaining fields are pending. |
 | 2026-11-09 | Verified `unique` correction and reviewed the RUT setter attempt. | Change `replaceALL` to `replaceAll` (JavaScript method names are case-sensitive). Setter behavior and missing/null inputs still need validation. |

@@ -1,6 +1,12 @@
 import mongoose from "mongoose"
 import Propietario from "../models/Propietario.js"
 
+/**
+ * Lists active owner records for owner administration (RF2).
+ * Route: GET /api/propietarios (EJECUTIVO only, enforced by route middleware).
+ * Soft-deleted owners are excluded; an empty result is returned as an empty array.
+ * Responses: 200 list · 401/403 auth · 500 server error.
+ */
 export const getPropietarios = async (req, res) => {
     try {
         const propietarios = await Propietario.find({ activo: true })
@@ -10,6 +16,13 @@ export const getPropietarios = async (req, res) => {
     }
 }
 
+/**
+ * Creates an owner business record, not a login account (RF2, decision D1).
+ * Route: POST /api/propietarios (EJECUTIVO only).
+ * Reads only rut, nombre, email and telefono; activo defaults to true in the model.
+ * The schema normalizes RUTs and the unique index rejects duplicates (DATA_MODEL).
+ * Responses: 201 created · 400 invalid data · 409 duplicate RUT · 401/403 auth · 500 server error.
+ */
 export const postPropietario = async (req, res) => {
     try {
         const { rut, nombre, email, telefono } = req.body ?? {}
@@ -26,6 +39,12 @@ export const postPropietario = async (req, res) => {
     }
 }
 
+/**
+ * Retrieves one active owner for owner administration (RF2).
+ * Route: GET /api/propietarios/:id (EJECUTIVO only).
+ * Validates the ObjectId before querying; missing and soft-deleted records return 404.
+ * Responses: 200 owner · 400 invalid ID · 404 not found · 401/403 auth · 500 server error.
+ */
 export const getPropietarioById = async (req, res) => {
     try {
         if (!mongoose.isObjectIdOrHexString(req.params.id)) {
@@ -41,6 +60,15 @@ export const getPropietarioById = async (req, res) => {
     }
 }
 
+/**
+ * Updates supplied business fields of an active owner (RF2, RNF-06).
+ * Route: PUT /api/propietarios/:id (EJECUTIVO only).
+ * Allows only rut, nombre, email and telefono; omitted fields remain unchanged.
+ * Rejects bodies with no editable fields. Schema validation runs on updates;
+ * neither _id nor activo can be changed through this operation.
+ * Responses: 200 updated · 400 invalid ID/data · 404 not found · 409 duplicate RUT
+ * · 401/403 auth · 500 server error.
+ */
 export const putPropietario = async (req, res) => {
     try {
         if (!mongoose.isObjectIdOrHexString(req.params.id)) {
@@ -75,6 +103,13 @@ export const putPropietario = async (req, res) => {
     }
 }
 
+/**
+ * Soft-deletes an owner by setting activo to false (RNF-10, RN-17).
+ * Route: DELETE /api/propietarios/:id (EJECUTIVO only).
+ * Preserves the document and its historical references; repeated deletion returns 404.
+ * Responses: 200 message and inactive owner · 400 invalid ID · 404 not found
+ * · 401/403 auth · 500 server error.
+ */
 export const deletePropietario = async (req, res) => {
     try {
         if (!mongoose.isObjectIdOrHexString(req.params.id)) {
