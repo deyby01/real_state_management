@@ -719,6 +719,7 @@ Test passwords go in the fixtures README, never real passwords.
 | 2026-11-02 / 03 | `bitacora` built by the developer with guidance: insert-only model with compound index, `registrarBitacora` service, admin-only `GET /api/bitacora`, seed empties it. Merged (PR #22). New rule: sync the docs in a short `docs/` branch after every merge. | Next: `propiedades` (Deyby). |
 | 2026-11-03 / 10 | `propiedades` phase A built by the developer with guidance: model with embedded objects, CRUD for executives, soft delete, state machine with `TRANSICIONES`; bitacora gets `ELIMINACION`. Reviewed Roberto's `solicitudesArriendo` PR (changes requested). Merged (PR #28). | Next: phase B of `propiedades` (public catalog; owner view and fixtures wait for `propietarios`). |
 | 2026-11-10 | New agent rules for the whole team: English JSDoc docstrings for every exported function and focused commits per tested step (teaching loop now has *document* and *commit* steps). | Teammates' agents pick them up after `git pull`. |
+| 2026-11-10 | Documented all the existing backend code (`backend/src/`) with English JSDoc and comments, as the team's reference for the new documentation rule. Comments only, no behaviour change. | Teammates use it as an example; next: properties phase B. |
 
 ---
 

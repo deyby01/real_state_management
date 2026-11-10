@@ -209,6 +209,7 @@ Code must be **clean and documented**, so a teammate or the professor understand
 - **Inline comments explain *why*, not *what*.** `// Save first, then log: a failed save must not leave a fake audit entry` helps; `// save the property` does not.
 - No commented-out code and no forgotten `console.log` (also in the PR checklist).
 - The agent **explains** what makes a good docstring and reviews it like any other code; it writes one only if the developer asks.
+- **Reference code:** every file in `backend/src/` on `development` is already documented this way. Show the developer the closest real example before they write their own: `controllers/propiedad.controller.js` (controllers and the `TRANSICIONES` table), `services/bitacora.service.js` (services), `middlewares/role.middleware.js` (middlewares), `models/Propiedad.js` and `models/Bitacora.js` (models), `routes/bitacora.routes.js` (routers).
 
 Example (controller):
 
