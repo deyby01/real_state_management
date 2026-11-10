@@ -95,3 +95,37 @@ export const obtenerPropiedad = async (req, res) => {
         return res.status(500).json({ mensaje: "Error al obtener la propiedad", error: error.message })
     }
 }
+
+
+export const actualizarPropiedad = async (req, res) => {
+    try {
+        const { titulo, tipoId, direccion, superficie, dormitorios, banos, estacionamientos, valorArriendo, gastosComunes, caracteristicas, imagenes, destacada } = req.body
+
+        if (tipoId) {
+            const tipo = await TipoPropiedad.findOne({ _id: tipoId, activo: true })
+            if (!tipo) {
+                return res.status(400).json({ mensaje: "Tipo de propiedad no válido o inactivo" })
+            }
+        }
+
+        const propiedad = await Propiedad.findOneAndUpdate(
+            { _id: req.params.id, activo: true },
+            { titulo, tipoId, direccion, superficie, dormitorios, banos, estacionamientos, valorArriendo, gastosComunes, caracteristicas, imagenes, destacada },
+            { returnDocument: "after", runValidators: true }
+        )
+            .populate("tipoId", "nombre")
+            .populate("ejecutivoId", "nombre email")
+            // TODO: populate propietarioId when the Propietario model exists (Santiago)
+
+        if (!propiedad) {
+            return res.status(404).json({ mensaje: "Propiedad no encontrada" })
+        }
+
+        return res.status(200).json({ mensaje: "Propiedad actualizada exitosamente", propiedad })
+    } catch (error) {
+        if (error.name === "ValidationError" || error.name === "CastError") {
+            return res.status(400).json({ mensaje: "Error de validación al actualizar la propiedad", error: error.message })
+        }
+        return res.status(500).json({ mensaje: "Error al actualizar la propiedad", error: error.message })
+    }
+}
