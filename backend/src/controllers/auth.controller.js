@@ -2,6 +2,17 @@ import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 import Usuario from "../models/Usuario.js"
 
+/**
+ * Registers a new account from the public sign-up form.
+ *
+ * Route: POST /api/auth/register (public).
+ * - The account is always CLIENTE: `rol` is never read from the body (rule 17).
+ * - The password is hashed with bcryptjs before saving (rule 15) and is never
+ *   returned (rule 16). Password confirmation is validated in the frontend.
+ *
+ * Responses: 201 created · 400 invalid data or password under 8 characters ·
+ * 409 email already registered.
+ */
 export const register = async (req, res) => {
     try {
         // Get data from request body
@@ -33,6 +44,18 @@ export const register = async (req, res) => {
     }
 }
 
+/**
+ * Logs a user in and returns a signed JWT.
+ *
+ * Route: POST /api/auth/login (public).
+ * - A wrong email and a wrong password get the same 401 message, so nobody can
+ *   find out which emails are registered; inactive users cannot log in (rule 18).
+ * - The token payload holds only `_id` and `rol` (rule 19) and expires after
+ *   JWT_EXPIRES_IN.
+ *
+ * Responses: 200 { token, usuario } · 400 missing email or password ·
+ * 401 invalid credentials · 500 server error.
+ */
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body
@@ -76,6 +99,14 @@ export const login = async (req, res) => {
     }
 }
 
+/**
+ * Returns the logged-in user's public data.
+ *
+ * Route: GET /api/auth/me (any logged-in user, after verificarToken).
+ *
+ * Responses: 200 user · 401 no/invalid token, or the user no longer exists or
+ * is inactive · 500 server error.
+ */
 export const me = async (req, res) => {
     try {
         const usuario = await Usuario.findById(req.usuario._id)
