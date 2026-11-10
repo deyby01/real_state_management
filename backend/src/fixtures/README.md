@@ -37,6 +37,7 @@ The owner and client users don't have `propietarioId` / `clienteId` yet: they wi
 | `tiposPropiedad` | 4 | [`data/tiposPropiedad.js`](data/tiposPropiedad.js) |
 | `usuarios` | 5 | [`data/usuarios.js`](data/usuarios.js) |
 | `bitacora` | 0 (only emptied) | — Entries are created by real state changes, never by the fixtures |
+| `propietarios` | 3 (2 active, 1 inactive) | [`data/propietarios.js`](data/propietarios.js); business records, not linked to login accounts yet |
 
 ## Adding data
 

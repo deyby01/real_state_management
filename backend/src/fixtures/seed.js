@@ -8,6 +8,8 @@ import Usuario from "../models/Usuario.js"
 import { tiposPropiedad } from "./data/tiposPropiedad.js"
 import { usuarios, PASSWORD_PRUEBA } from "./data/usuarios.js"
 import Bitacora from "../models/Bitacora.js"
+import Propietario from "../models/Propietario.js"
+import { propietarios } from "./data/propietarios.js"
 
 const seed = async () => {
     // This script DELETES all data: never run it against production
@@ -21,6 +23,7 @@ const seed = async () => {
     await TipoPropiedad.deleteMany({})
     await Usuario.deleteMany({})
     await Bitacora.deleteMany({})
+    await Propietario.deleteMany({})
 
     // 2. Property types
     await TipoPropiedad.insertMany(tiposPropiedad)
@@ -30,6 +33,8 @@ const seed = async () => {
     const passwordHash = await bcrypt.hash(PASSWORD_PRUEBA, 10)
     await Usuario.insertMany(usuarios.map((usuario) => ({ ...usuario, passwordHash })))
     console.log(`Usuarios: ${usuarios.length} (contraseña: ${PASSWORD_PRUEBA})`)
+    await Propietario.insertMany(propietarios)
+    console.log(`Propietarios: ${propietarios.length}`)
 }
 
 try {
