@@ -1,5 +1,14 @@
 import Bitacora from "../models/Bitacora.js"
 
+/**
+ * Lists audit log entries, newest first, with the user who made each change.
+ *
+ * Route: GET /api/bitacora (ADMIN only).
+ * Optional filters: ?entidad=PROPIEDAD|VISITA|SOLICITUD and ?entidadId=<id>.
+ * Only whitelisted query fields are copied to the filter (prevents NoSQL injection).
+ *
+ * Responses: 200 list · 400 invalid entidadId · 401/403 auth · 500 server error.
+ */
 export const getBitacora = async (req, res) => {
     try {
         const { entidad, entidadId } = req.query

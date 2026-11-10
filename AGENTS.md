@@ -25,10 +25,11 @@ Web platform for real estate management, rentals and property administration. Pr
 | **Domain names**: collections, fields, models, states, API routes | **Spanish**, exactly as in [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md) | `propiedades`, `valorArriendo`, `TipoPropiedad`, `EN_MANTENCION`, `/api/tipo-propiedades` |
 | **API messages** returned to the client | Spanish | `{ "mensaje": "Tipo de Propiedad ya existente" }` |
 | **Technical documentation** (`README.md`, `docs/*.md`, `AGENTS.md`, `MEMORY.md`) | English | — |
-| **Code comments** | Either; follow the surrounding file | — |
+| **Code documentation**: docstrings (JSDoc) and comments | **English**, always (see [Code documentation](#code-documentation)) | `/** Creates a property for the logged-in executive... */` |
 
 - The domain is Spanish because the case specification, the professor and the users are Chilean. **Never translate domain names to English** (`properties`, `rentPrice`) and never mix both in the same concept.
-- Spanish and English code written by different teammates is expected. Do not rewrite it just for language consistency; follow the surrounding style.
+- Identifiers follow the domain: functions and variables stay in Spanish (`crearPropiedad`, `estadoAnterior`), while their docstrings and comments are in English.
+- Older code may have Spanish comments. Do not rewrite a teammate's file just to translate them; when a developer edits their **own** file, the agent helps them move its comments to English.
 
 ---
 
@@ -64,8 +65,11 @@ Use this loop for every new feature (a model, an endpoint, a middleware...):
 4. Show where it goes      → which file, which folder, how it connects to existing files
 5. The student writes it   → the agent guides; it writes code only if asked
 6. Review together         → point out mistakes and explain each one
-7. Test it                 → in Postman (backend) or the browser (frontend): happy path AND error cases
-8. Record and continue     → update memory/<collection>.md; next step only when the current one works and is understood
+7. Document it             → JSDoc docstring in English for every new exported function (see Code documentation)
+8. Test it                 → in Postman (backend) or the browser (frontend): happy path AND error cases
+9. Record it               → update memory/<collection>.md
+10. Commit it              → one focused commit for this step; the agent suggests the exact files and message (see Small, focused commits)
+                             Next step only when the current one works, is understood and is committed
 ```
 
 - Keep steps **small**: one file or one function at a time.
@@ -128,6 +132,31 @@ Several agents working in parallel cannot write in the same file without creatin
 - **Never commit** `backend/.env`, `node_modules/` or any real password or key. The root `.gitignore` already excludes them.
 - Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/) in English: `feat: add user model`, `fix: ...`, `docs: ...`.
 
+### Small, focused commits
+
+The goal is a **clear history**: anyone (a teammate, the professor, the developer in a month) should understand how a feature was built by reading `git log --oneline`.
+
+- **One commit per tested step**, not one commit per model. A model is usually 5 to 8 commits: the model, each controller function (or a small group of related ones), the routes and their mounting in `app.js`, the fixtures.
+- **Commit only what works.** The agent suggests the commit **after** the step was tested, never before.
+- **The agent proposes the commit at the end of every step**, without waiting to be asked: the exact `git add <files>` (listing the files, never a blind `git add .`) and the message. The memory file update of that step goes in the same commit.
+- **Do not mix unrelated changes.** A change to another model or a shared file that is not part of the step goes in its own commit (example: adding `ELIMINACION` to the `Bitacora` enum was committed apart from the property soft delete).
+- **Message:** imperative, lowercase, says *what* changed: `feat: add create property controller with audit log`, `fix: return 404 for deleted properties`.
+
+Good history (properties phase A, PR #28):
+
+```
+feat: add property model with embedded address and images
+feat: add create property controller with audit log
+feat: add property routes for executives
+feat: add list and get property endpoints
+feat: add update property endpoint
+feat: add ELIMINACION action to audit log
+feat: add property soft delete with audit log
+feat: add property state machine endpoint
+```
+
+Avoid: `feat: implementing model with all`, `update`, `changes`, `fix stuff`, or a single commit with a whole model.
+
 ### Pull Request description
 
 Every Pull Request uses the template in [`.github/pull_request_template.md`](.github/pull_request_template.md). GitHub loads it automatically when the PR is opened from the website.
@@ -141,7 +170,7 @@ When the model (or the task) is complete, the agent **drafts the full PR descrip
 - **Screenshots:** for backend work, use Postman evidence: a happy-path request and an error case (`401`, `403`, `409`...). For frontend work, use before/after images.
 - **Checklist:** tick only what was actually done. Items that do not apply (e.g. "checked the site on desktop and mobile" in a backend PR) are left unticked with `(N/A: backend only)`.
 - **Notes for the reviewer:** what to look at closely, pending items, and anything agreed with another model's owner (from *Coordination with other models*) or proposed for `AGENTS.md`.
-- Before drafting it, check that `memory/<collection>.md` is up to date and that the branch was rebased on `origin/development`.
+- Before drafting it, check that `memory/<collection>.md` is up to date, that every new exported function has its English docstring, and that the branch was rebased on `origin/development`.
 
 ---
 
@@ -165,6 +194,52 @@ The **`TipoPropiedad` flow is the reference implementation**. New features copy 
 - Every schema uses `timestamps: true` and an explicit `collection` name (rule 13).
 - Controllers are `async` functions with `try/catch`. Errors respond with `{ mensaje, error }`.
 - MongoDB duplicate key error (`error.code === 11000`) responds `409`.
+
+### Code documentation
+
+Code must be **clean and documented**, so a teammate or the professor understands it without asking. All docstrings and comments are in **English**; API messages to the client stay in Spanish.
+
+- **Every exported function** (controllers, services, middlewares) has a **JSDoc** block (`/** ... */`) right above it, saying:
+  - what it does, in one or two lines;
+  - for controllers: the route, who can use it and the main responses (status codes);
+  - the business rules it enforces (with their IDs: `RN-03`, `RNF-07`...);
+  - for services and helpers: `@param` and `@returns`.
+- **Each model file** starts with a short comment: which collection it is and a link to its section in `docs/DATA_MODEL.md`. Non-obvious fields or options get a one-line comment (why there are no `timestamps`, why a reference has no `ref`...).
+- **Constants and tables** (like `TRANSICIONES`) say where their rules come from.
+- **Inline comments explain *why*, not *what*.** `// Save first, then log: a failed save must not leave a fake audit entry` helps; `// save the property` does not.
+- No commented-out code and no forgotten `console.log` (also in the PR checklist).
+- The agent **explains** what makes a good docstring and reviews it like any other code; it writes one only if the developer asks.
+- **Reference code:** every file in `backend/src/` on `development` is already documented this way. Show the developer the closest real example before they write their own: `controllers/propiedad.controller.js` (controllers and the `TRANSICIONES` table), `services/bitacora.service.js` (services), `middlewares/role.middleware.js` (middlewares), `models/Propiedad.js` and `models/Bitacora.js` (models), `routes/bitacora.routes.js` (routers).
+
+Example (controller):
+
+```js
+/**
+ * Creates a property for the logged-in executive.
+ *
+ * Route: POST /api/propiedades (EJECUTIVO only).
+ * - Only whitelisted fields are read from the body (prevents mass assignment):
+ *   `estado`, `ejecutivoId` and `activo` are always set by the server.
+ * - A new property is always DISPONIBLE; `ejecutivoId` comes from the token (RN-15).
+ * - Logs a CREACION entry in the audit log after saving (RN-13).
+ *
+ * Responses: 201 created · 400 invalid data or property type · 401/403 auth · 500 server error.
+ */
+export const crearPropiedad = async (req, res) => { ... }
+```
+
+Example (service):
+
+```js
+/**
+ * Inserts one entry in the audit log. Called by controllers that change a state.
+ * Errors are not caught here: the calling controller handles them.
+ *
+ * @param {Object} entrada - entidad, entidadId, accion, estadoAnterior, estadoNuevo, usuarioId, observacion
+ * @returns {Promise<Document>} The saved entry.
+ */
+export const registrarBitacora = async ({ ... }) => { ... }
+```
 
 ### HTTP status codes
 
@@ -208,6 +283,8 @@ The **`TipoPropiedad` flow is the reference implementation**. New features copy 
 9. **Respect the weekly scope.** Do not get ahead of features the professor has not asked for yet.
 10. **Do not delete or overwrite the team's work.** Investigate before modifying files that appear to have been made by someone else.
 11. **Maintain technical consistency.** Respect the mandatory stack (React + HTML/CSS, Node.js + Express, MongoDB) and the [technical conventions](#technical-conventions).
+12. **Documented code.** Every new exported function gets an English JSDoc docstring before its step is considered done (see [Code documentation](#code-documentation)).
+13. **Constant, focused commits.** At the end of every tested step, propose one commit with the exact files and message (see [Small, focused commits](#small-focused-commits)).
 
 ---
 
