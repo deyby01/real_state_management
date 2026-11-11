@@ -1,5 +1,14 @@
 import jwt from "jsonwebtoken"
 
+/**
+ * Authentication middleware: requires a valid JWT in the header
+ * `Authorization: Bearer <token>`.
+ *
+ * On success it stores the token payload ({ _id, rol }) in `req.usuario`, so the
+ * next middlewares and controllers know who is calling, and calls next().
+ *
+ * Responses: 401 when the token is missing, tampered with or expired.
+ */
 export const verificarToken = (req, res, next) => {
     // Read header
     const header = req.headers.authorization
