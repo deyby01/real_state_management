@@ -34,7 +34,7 @@ const seed = async () => {
     await Usuario.insertMany(usuarios.map((usuario) => ({ ...usuario, passwordHash })))
     console.log(`Usuarios: ${usuarios.length} (contraseña: ${PASSWORD_PRUEBA})`)
 
-    //4. Clients
+    // 4. Clients
     await Cliente.insertMany(clientes)
     console.log(`Clientes: ${clientes.length}`)
 }
@@ -49,4 +49,3 @@ try {
     // Close the connection, or the script would stay open waiting
     await mongoose.disconnect()
 }
-
