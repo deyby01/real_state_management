@@ -26,10 +26,7 @@ app.use("/api/auth", authRouter)
 
 app.use("/api/bitacora", bitacoraRouter)
 
-<<<<<<< HEAD
 app.use("/api/clientes", clienteRouter)
-=======
 app.use("/api/propiedades", propiedadRouter)
->>>>>>> 91b3cee2f70b7c45dc64882e5ebbcfc948fb466f
 
 export default app
