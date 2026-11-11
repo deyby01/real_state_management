@@ -1,14 +1,35 @@
 import Cliente from "../models/Cliente.js"
 
+/**
+ * Normalizes a Chilean RUT before it is stored.
+ *
+ * Removes dots and spaces and uppercases the check digit (`k` → `K`), but keeps the
+ * hyphen: `12.345.678-k` → `12345678-K`. The hyphen is part of the agreed format in
+ * docs/DATA_MODEL.md and is what `propietarios` stores, so removing it would leave
+ * the same client with two different identifiers. Normalization is required because
+ * the unique index compares exact text (RN-11).
+ *
+ * @param {string} rut - RUT as received in the request body.
+ * @returns {string} Normalized RUT, or the received value when it is empty.
+ */
 const normalizarRut = (rut) => {
     if (!rut) return rut
-    // Eliminar puntos y espacios
     return String(rut).replace(/\./g, "").replace(/\s/g, "").toUpperCase()
 }
 
+/**
+ * Lists the active clients.
+ *
+ * Route: GET /api/clientes (ADMIN, EJECUTIVO).
+ * - Only `activo: true` records are returned: a deactivated client stays in the
+ *   collection for its history but does not appear in the operational list.
+ *
+ * Responses: 200 list (an empty array when there are none) · 401/403 auth ·
+ * 500 server error.
+ */
 export const getClientes = async (req, res) => {
     try {
-        // find() siempre devuelve un arreglo (aunque esté vacío)
+        // find() always returns an array, even when it is empty
         const clientes = await Cliente.find({ activo: true })
         res.status(200).json(clientes)
     } catch (error) {
@@ -16,18 +37,28 @@ export const getClientes = async (req, res) => {
     }
 }
 
+/**
+ * Returns one client by its id.
+ *
+ * Route: GET /api/clientes/:id (ADMIN, EJECUTIVO).
+ * - Unlike the list, an inactive client is still returned when its id is known,
+ *   so an administrator can review a deactivated record.
+ *
+ * Responses: 200 client · 400 invalid id · 404 not found · 401/403 auth ·
+ * 500 server error.
+ */
 export const getClienteById = async (req, res) => {
     try {
-        // findById() devuelve UN documento o null
+        // findById() returns one document or null
         const cliente = await Cliente.findById(req.params.id)
-        
+
         if (!cliente) {
             return res.status(404).json({ mensaje: "Cliente no encontrado" })
         }
 
         res.status(200).json(cliente)
     } catch (error) {
-        // "abc" no se puede convertir a ObjectId: Mongoose lanza CastError
+        // "abc" cannot be converted to an ObjectId: Mongoose throws a CastError
         if (error.name === "CastError") {
             return res.status(400).json({ mensaje: "ID de cliente inválido", error: error.message })
         }
@@ -35,9 +66,22 @@ export const getClienteById = async (req, res) => {
     }
 }
 
+/**
+ * Creates a client.
+ *
+ * Route: POST /api/clientes (ADMIN, EJECUTIVO).
+ * - Only whitelisted fields are read from the body (prevents mass assignment):
+ *   `activo`, `_id` and `createdAt` can never be injected by the client.
+ * - The RUT is normalized before saving and the schema lowercases the email.
+ * - A duplicated RUT or email is rejected by the unique indexes (RN-11); the
+ *   response names the field that collided because there are two of them.
+ *
+ * Responses: 201 created · 400 invalid data (ValidationError) · 409 duplicate
+ * RUT/email · 401/403 auth · 500 server error.
+ */
 export const postCliente = async (req, res) => {
     try {
-        //lista blanca: solo estos campos desde el body
+        // Whitelist: only these fields are taken from the body
         const { rut, nombre, email, telefono, ciudad, comuna, estado } = req.body
 
         const nuevoCliente = await Cliente.create({
@@ -51,35 +95,51 @@ export const postCliente = async (req, res) => {
         })
         res.status(201).json(nuevoCliente)
     } catch (error) {
-        //1) indice unico, MongoDB responde 11000
+        // 1) Unique index: MongoDB reports code 11000 and the field that collided
         if (error.code === 11000) {
             const campo = Object.keys(error.keyValue)[0]
             return res.status(409).json({
                 mensaje: `Ya existe un cliente con ese ${campo}`,
                 error: error.message,
             })
-
         }
-        //2) required faltante o enum inválido
+        // 2) Missing required field or value outside the enum
         if (error.name === "ValidationError") {
             const campos = Object.keys(error.errors).join(", ")
-            return res.status(400).json({ 
+            return res.status(400).json({
                 mensaje: `Datos inválidos: ${campos}`,
                 error: error.message,
             })
         }
-        // 3)cualquier otro error
+        // 3) Anything else: unexpected server error
         res.status(500).json({ mensaje: "Error al crear cliente", error: error.message })
     }
 }
 
+/**
+ * Updates a client with the fields received in the body.
+ *
+ * Route: PUT /api/clientes/:id (ADMIN, EJECUTIVO).
+ * - Same whitelist as create, but `activo` is deliberately excluded: the only way
+ *   to deactivate a client is DELETE, so editing data and soft delete keep
+ *   separate permissions.
+ * - `rut` is normalized only when it comes in the body, so a partial update does
+ *   not erase it; a mistyped RUT can be corrected.
+ * - `runValidators: true` is required: Mongoose skips schema validation (including
+ *   the `estado` enum) on updates by default.
+ * - `new: true` returns the updated document instead of the previous one
+ *   (deprecated in Mongoose 9 in favour of `returnDocument: "after"`).
+ *
+ * Responses: 200 updated · 400 invalid data or invalid id · 404 not found ·
+ * 409 duplicate RUT/email · 401/403 auth · 500 server error.
+ */
 export const putCliente = async (req, res) => {
     try {
         const { rut, nombre, email, telefono, ciudad, comuna, estado } = req.body
 
-        const datos = {nombre, email, telefono, ciudad, comuna, estado}
+        const datos = { nombre, email, telefono, ciudad, comuna, estado }
 
-        // el rut solo se toca si vino en el body
+        // Only touch rut when it comes in the body, so a partial update keeps the stored one
         if (rut !== undefined) {
             datos.rut = normalizarRut(rut)
         }
@@ -95,6 +155,7 @@ export const putCliente = async (req, res) => {
 
         res.status(200).json(cliente)
     } catch (error) {
+        // Duplicated rut or email when the client already exists (RN-11)
         if (error.code === 11000) {
             const campo = Object.keys(error.keyValue)[0]
             return res.status(409).json({
@@ -118,6 +179,19 @@ export const putCliente = async (req, res) => {
     }
 }
 
+/**
+ * Deactivates a client (soft delete): sets `activo: false`, never removes it.
+ *
+ * Route: DELETE /api/clientes/:id (ADMIN only).
+ * - The document is kept because visits and rental requests reference it: a
+ *   physical delete would leave orphan records (RNF-10 / RN-17, rule 11).
+ * - Idempotent: repeating the request answers 200 with the same result.
+ * - No `runValidators` (only a boolean changes) and no 11000 handling (no unique
+ *   field is touched).
+ *
+ * Responses: 200 deactivated · 400 invalid id · 404 not found · 401/403 auth
+ * (EJECUTIVO gets 403) · 500 server error.
+ */
 export const deleteCliente = async (req, res) => {
     try {
         const cliente = await Cliente.findByIdAndUpdate(
