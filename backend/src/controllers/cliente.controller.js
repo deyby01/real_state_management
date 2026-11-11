@@ -127,8 +127,8 @@ export const postCliente = async (req, res) => {
  *   not erase it; a mistyped RUT can be corrected.
  * - `runValidators: true` is required: Mongoose skips schema validation (including
  *   the `estado` enum) on updates by default.
- * - `new: true` returns the updated document instead of the previous one
- *   (deprecated in Mongoose 9 in favour of `returnDocument: "after"`).
+ * - `returnDocument: "after"` returns the updated document; by default Mongoose
+ *   returns the previous one, so the client would see stale data.
  *
  * Responses: 200 updated · 400 invalid data or invalid id · 404 not found ·
  * 409 duplicate RUT/email · 401/403 auth · 500 server error.
@@ -145,7 +145,7 @@ export const putCliente = async (req, res) => {
         }
 
         const cliente = await Cliente.findByIdAndUpdate(req.params.id, datos, {
-            new: true,
+            returnDocument: "after",
             runValidators: true
         })
 
@@ -197,7 +197,7 @@ export const deleteCliente = async (req, res) => {
         const cliente = await Cliente.findByIdAndUpdate(
             req.params.id,
             { activo: false },
-            { new: true }
+            { returnDocument: "after" }
         )
 
         if (!cliente) {
