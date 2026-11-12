@@ -5,19 +5,25 @@ import { getClientes, getClienteById, postCliente, putCliente, deleteCliente } f
 
 /**
  * Client routes, mounted at /api/clientes.
- * Every route requires a valid token (RNF-04): the client portfolio is internal
- * data, so public users (CLIENTE, PROPIETARIO) get 403.
- * ADMIN and EJECUTIVO manage clients; DELETE is ADMIN only (least privilege),
- * because deactivating a client is more sensitive than editing one.
+ * The whole router is EJECUTIVO only (spec CU5 "Administrar clientes interesados"):
+ * the use-case matrix does not give the Admin access here, so it gets 403.
+ * Every route also needs a valid token (RNF-04), because the client portfolio is
+ * internal data and public users (CLIENTE, PROPIETARIO) must not read it.
+ *
+ * The role check lives in router.use() instead of on each route: the five routes
+ * share the same rule, so it is declared once and cannot drift, leaked or missed
+ * when a new endpoint is added later.
  */
 const clienteRouter = Router()
 
-clienteRouter.get("/", verificarToken, permitirRoles("ADMIN", "EJECUTIVO"), getClientes)
-clienteRouter.post("/", verificarToken, permitirRoles("ADMIN", "EJECUTIVO"), postCliente)
-clienteRouter.get("/:id", verificarToken, permitirRoles("ADMIN", "EJECUTIVO"), getClienteById)
-clienteRouter.put("/:id", verificarToken, permitirRoles("ADMIN", "EJECUTIVO"), putCliente)
+clienteRouter.use(verificarToken, permitirRoles("EJECUTIVO"))
+
+clienteRouter.get("/", getClientes)
+clienteRouter.post("/", postCliente)
+clienteRouter.get("/:id", getClienteById)
+clienteRouter.put("/:id", putCliente)
 
 // Soft delete: the controller sets activo: false, the document is never removed (rule 11)
-clienteRouter.delete("/:id", verificarToken, permitirRoles("ADMIN"), deleteCliente)
+clienteRouter.delete("/:id", deleteCliente)
 
 export default clienteRouter

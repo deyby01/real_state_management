@@ -20,7 +20,7 @@ const normalizarRut = (rut) => {
 /**
  * Lists the active clients.
  *
- * Route: GET /api/clientes (ADMIN, EJECUTIVO).
+ * Route: GET /api/clientes (EJECUTIVO only).
  * - Only `activo: true` records are returned: a deactivated client stays in the
  *   collection for its history but does not appear in the operational list.
  *
@@ -40,9 +40,9 @@ export const getClientes = async (req, res) => {
 /**
  * Returns one client by its id.
  *
- * Route: GET /api/clientes/:id (ADMIN, EJECUTIVO).
+ * Route: GET /api/clientes/:id (EJECUTIVO only).
  * - Unlike the list, an inactive client is still returned when its id is known,
- *   so an administrator can review a deactivated record.
+ *   so a deactivated record can still be inspected without being editable.
  *
  * Responses: 200 client · 400 invalid id · 404 not found · 401/403 auth ·
  * 500 server error.
@@ -69,7 +69,7 @@ export const getClienteById = async (req, res) => {
 /**
  * Creates a client.
  *
- * Route: POST /api/clientes (ADMIN, EJECUTIVO).
+ * Route: POST /api/clientes (EJECUTIVO only).
  * - Only whitelisted fields are read from the body (prevents mass assignment):
  *   `activo`, `_id` and `createdAt` can never be injected by the client.
  * - The RUT is normalized before saving and the schema lowercases the email.
@@ -119,10 +119,10 @@ export const postCliente = async (req, res) => {
 /**
  * Updates a client with the fields received in the body.
  *
- * Route: PUT /api/clientes/:id (ADMIN, EJECUTIVO).
+ * Route: PUT /api/clientes/:id (EJECUTIVO only).
  * - Same whitelist as create, but `activo` is deliberately excluded: the only way
- *   to deactivate a client is DELETE, so editing data and soft delete keep
- *   separate permissions.
+ *   to deactivate a client is DELETE, so the intent is explicit and a form can
+ *   never deactivate a client by accident.
  * - `rut` is normalized only when it comes in the body, so a partial update does
  *   not erase it; a mistyped RUT can be corrected.
  * - `runValidators: true` is required: Mongoose skips schema validation (including
@@ -182,15 +182,15 @@ export const putCliente = async (req, res) => {
 /**
  * Deactivates a client (soft delete): sets `activo: false`, never removes it.
  *
- * Route: DELETE /api/clientes/:id (ADMIN only).
+ * Route: DELETE /api/clientes/:id (EJECUTIVO only).
  * - The document is kept because visits and rental requests reference it: a
  *   physical delete would leave orphan records (RNF-10 / RN-17, rule 11).
  * - Idempotent: repeating the request answers 200 with the same result.
  * - No `runValidators` (only a boolean changes) and no 11000 handling (no unique
  *   field is touched).
  *
- * Responses: 200 deactivated · 400 invalid id · 404 not found · 401/403 auth
- * (EJECUTIVO gets 403) · 500 server error.
+ * Responses: 200 deactivated · 400 invalid id · 404 not found · 401/403 auth ·
+ * 500 server error.
  */
 export const deleteCliente = async (req, res) => {
     try {
