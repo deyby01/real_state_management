@@ -15,7 +15,7 @@
 | 3 | Controller: create, modify date and state transitions (business rules + bitacora) | `201`, `400`, `409` | ✅ (POST with RN-16/D10, `PUT` reschedule and the four PATCH transitions) |
 | 4 | Soft delete | — | N/A: visits are voided with CANCELADA; DATA_MODEL has no activo |
 | 5 | Routes + mounting in `app.js` + role protection | No token `401`, wrong role `403` | ✅ (mounted in Step 2; matrix closed in step 5: `EJECUTIVO` only, `ADMIN` 403, `CLIENTE` deferred) |
-| 6 | Fixtures in `backend/src/fixtures/data/` + `seed.js` | `make seed` loads sample visits | ⬜ |
+| 6 | Fixtures in `backend/src/fixtures/data/` + `seed.js` | `make seed` loads 6 visits when 2 PUBLICADA props exist; else omitidas; local smoke with a local helper script (not committed) | ✅ |
 | 7 | Full Postman pass + Pull Request (description from `.github/pull_request_template.md`) | Happy path and error cases (`400`, `401`, `403`, `409`) | ⬜ |
 
 ## Endpoints
@@ -56,9 +56,9 @@
 - **Cross-executive management (Decision A):** any `EJECUTIVO` can see and modify any visit; per-owner restrictions were rejected for now, consistent with `propiedades` (all executives manage all properties) and with the demo requirement.
 - **Automatic calculation of `fechaFin` (D8):** Computed via a Mongoose `pre("validate")` hook (`fechaFin = fechaInicio + 1 hour`). Guarantees duration consistency across controllers, fixtures, and scripts.
 - **Document pattern for updates:** Rescheduling (`PUT`) must use `doc = await Visita.findById(); doc.fechaInicio = ...; await doc.save()`. This ensures both the future date validator and the `pre("validate")` hook execute properly without query-context issues (`TypeError: this.isModified`).
-- **Executive visibility (Decision A):** `EJECUTIVO` and `ADMIN` can see all visits by default to facilitate evaluation demos, but can filter by individual agendas using `?ejecutivoId=`.
+- **Executive visibility (Decision A):** any `EJECUTIVO` sees every visit by default; filter with `?ejecutivoId=`. `ADMIN` is not allowed on `/api/visitas` (step 5).
 - **Supported filters for listing (Decision B):** `GET /api/visitas` supports filtering by `estado` (validated against `ESTADOS_VISITA`), `propiedadId`, `ejecutivoId`, and date range (`desde` and `hasta` with `$gte` and `$lte`). Invalid query params return `400 Bad Request`.
-- **Early route mounting (Decision C1):** Mounted `visitaRouter` in `app.js` during Step 2 protected with `verificarToken` and `permitirRoles("ADMIN", "EJECUTIVO")` to enable real HTTP testing in Postman.
+- **Early route mounting (Decision C1):** `visitaRouter` mounted in `app.js` during Step 2; step 5 closed the matrix to `EJECUTIVO` only.
 - **ISO 8601 for date range query (Decision):** Query params `desde` and `hasta` expect ISO 8601 strings (e.g. `?hasta=2026-11-15T23:59:59-03:00`). Parsing simple `YYYY-MM-DD` strings defaults to UTC midnight, which truncates Chilean local time (UTC-3) at 21:00 of the previous day.
 - **Agenda filtering by start time:** `GET /api/visitas` filters by `fechaInicio` (when visits start), which matches standard calendar/agenda expectations. True interval overlap checks are reserved for RN-10 collision detection.
 - **Chronological sorting:** `GET /api/visitas` sorts by `{ fechaInicio: 1 }` (ascending) so executives see upcoming visits first.
@@ -76,6 +76,10 @@
 - **Audit log failure after save (transitions):** if `registrarBitacora` fails after `visita.save()`, the state change is already persisted while the response is an error and the entry is missing. Same save-then-log ordering as `POST`; accepted without multi-document transactions.
 - **Populate on responses (Decision B):** `GET /api/visitas`, `GET /api/visitas/:id` and the `201` of `POST` populate `ejecutivoId` (`nombre email rol`) and `propiedadId` (`titulo direccion estado`), so the frontend receives the same shape everywhere.
 - **Documented code (AGENTS.md rule 12):** every exported function gets an English JSDoc block (route, allowed roles, business rules, responses); the model file starts with a header comment pointing to `docs/DATA_MODEL.md`; comments are in English from now on when this model's files are edited.
+- **Conditional visit fixtures (step 6):** `construirVisitas(propiedades)` in `fixtures/data/visitas.js`; not a static array. `seed.js` loads 6 visits only when there are 2 active `PUBLICADA` properties whose `ejecutivoId` matches a freshly seeded `EJECUTIVO`; otherwise it logs `Visitas: omitidas...`. `Visita.deleteMany` always runs on seed.
+- **Fixture insert (Mongoose 9):** `insertMany(..., { validateBeforeSave: false })` does not skip validation in Mongoose 9+. The seed uses `insertMany(..., { lean: true })` so the historical `REALIZADA` visit (past `fechaInicio`) can load; `lean` skips validation **and casting**, so the fixture provides `ObjectId` instances and `Date`s itself, and `createdAt`/`updatedAt` are set manually because the timestamp middleware does not run.
+- **Fixture ids must be `ObjectId` instances (found in the step 6 review):** with `lean: true` a string `clienteId` was stored as a string; `countDocuments({ clienteId: ObjectId(...) })` returned 0 instead of 5, and a future `populate("clienteId")` would miss those visits. The placeholders are now created with `new mongoose.Types.ObjectId(...)` in `visitas.js`, and the type was re-verified after the fix.
+- **Local helper script (not committed):** `backend/scripts/seed-visitas-only.js` replays the seed visit block after creating properties by hand (until Deyby's properties fixture exists). It stays out of the PR because it duplicates the seed block; delete it when the properties fixture merges. `make seed` does not need it.
 
 ## Coordination with other models
 
@@ -84,7 +88,8 @@
   2. `estado === "PUBLICADA"` is required (RN-16) → `409` with `estadoActual` otherwise.
   3. `ejecutivoId` is copied from the property (D10) and no longer read from the body.
   `populate("propiedadId", "titulo direccion estado")` works; it does not cascade to `propietarioId`, so it is safe even though `Propietario` is not merged.
-- **`clientes` (Jose, not merged):** `clienteId` reference. **Blocking for `CLIENTE` endpoints:** `usuarios.clienteId` currently defaults to `null` because registration does not create a `clientes` document. Until Jose and Deyby agree on linking them, creation is tested/allowed via `EJECUTIVO`/`ADMIN` or by passing `clienteId` in testing. Once `Cliente` and `usuarios.clienteId` are integrated, `clienteId` should be resolved from the authenticated session or validated against existing clients.
+- **Properties fixture (Deyby, pending — step 8 of `propiedades`):** `seed.js` loads no properties yet, so `make seed` skips the visits and logs `Visitas: omitidas...`. The guard (2 active `PUBLICADA` properties whose `ejecutivoId` belongs to an executive of the current seed run) will insert the 6 visits automatically once that fixture merges, without touching `visitas.js`.
+- **`clientes` (Jose, not merged):** `clienteId` reference. **Blocking for `CLIENTE` endpoints:** `usuarios.clienteId` currently defaults to `null` because registration does not create a `clientes` document. Until Jose and Deyby agree on linking them, creation is tested with an `EJECUTIVO` token and a `clienteId` sent in the body (step 5: `ADMIN` gets `403`). Once `Cliente` and `usuarios.clienteId` are integrated, `clienteId` should be resolved from the authenticated session or validated against existing clients.
 - **`bitacora` (Deyby, merged ✅):** call `registrarBitacora` with `entidad: "VISITA"` on every state transition (RN-13). The enum now also has `ELIMINACION` (added for properties). **Open question:** it still has no `REPROGRAMACION`, and rescheduling (`PUT`) is not a state change, so ask Deyby to add it or accept not logging the reschedule and document why.
 
 ## Proposals for AGENTS.md
@@ -94,19 +99,29 @@
 
 ## Local test data (working database, not in git)
 
-`make seed` still clears only `tiposPropiedad`, `usuarios` and `bitacora` (step 6 adds `visitas` and `propiedades`), so the 3c/3d tests left documents in the local `real_estate` database:
+`make seed` clears `tiposPropiedad`, `usuarios`, `bitacora` and `visitas`. Visit rows are inserted only when 2 `PUBLICADA` properties with a current executive exist. The properties collection is **not** emptied by the seed yet (Deyby, step 8), so old properties survive every run while their `ejecutivoId` points to users deleted by the previous seed.
 
-- Property `6af518d723479ad04a506214` — "Depto prueba RN16 A", `PUBLICADA`, `activo: true` (reusable for steps 5–7).
-- Property `6af518d723479ad04a506216` — "Depto prueba RN16 B", `PUBLICADA`, `activo: false` (soft-delete case).
-- Visits created for 3c: `6af518d723479ad04a506219` (2027-10-05), `6af518d723479ad04a50621b` (2027-10-06), `6af518e423479ad04a50621f` (2027-10-10), all `SOLICITADA`; older visits from steps 2–3 remain in 2026-11-15 and 2027-06/08/09/10-15.
-- Visits created for 3d (my test runs and the developer's): December 2027 and January–February 2028, in every state, including `REALIZADA` ones with `resultado`. One of them (`6af522c67b2b83679c53ae9d`, 2027-12-14) is `REALIZADA` **without** a bitacora entry: it is the evidence of the pre-fix `observacion` bug (state saved, audit log failed).
-- Visits created for the step 5 role matrix: March–May 2028, in every state (some cancelled by `ejecutivo2` to prove Decision A).
-- Their `bitacora` entries (`entidad: "VISITA"`) cannot be deleted (rule 12).
+State after the step 6 verification (2026-11-12):
 
-Optional cleanup before the fixtures step (local test documents only; the date filter also covers the 2028 visits):
+- `visitas` = **6**, all on "Fixture paso 6 C/D", one per state (`SOLICITADA`×2), 1 h duration, `ejecutivoId` matching the property, `clienteId` stored as `ObjectId`. They were loaded with the local helper, not by `make seed`.
+- `usuarios` = 5; current executives: `6af5e91ead04ea53ef9b098c` and `6af5e91ead04ea53ef9b098d` (they change on every `make seed`).
+- `propiedades` = 9. Only C/D belong to a current executive; the other 7 have a stale `ejecutivoId`:
+  - `6af5ec0ce1785f1ab4da4206` — "Fixture paso 6 C", `PUBLICADA`, `activo: true` (current executive).
+  - `6af5ec0ce1785f1ab4da4209` — "Fixture paso 6 D", `PUBLICADA`, `activo: true` (current executive).
+  - `6af5ebbde1785f1ab4da4200` / `...203` — "Fixture paso 6 A/B", `PUBLICADA`, stale (first test run).
+  - `6af518d723479ad04a506214` — "Depto prueba RN16 A", `PUBLICADA`, stale.
+  - `6af518d723479ad04a506216` — "Depto prueba RN16 B", `PUBLICADA`, `activo: false`, stale (soft-delete case).
+  - `6af5e067a16ca1e3405e89d6` — "Fixture visitas A", `PUBLICADA`, stale.
+  - `6af5e26aa16ca1e3405e89d9` — "Fixture visitas B", `DISPONIBLE`, stale.
+  - `6af5e3d2a16ca1e3405e89db` — "Fixture visitas B" (duplicate title), `PUBLICADA`, stale.
+- `bitacora` = 4 entries (`PROPIEDAD`: creations and state changes made through the API during the tests). No `VISITA` entries: fixtures insert documents directly and do not simulate real operations.
+
+To repeat the verification: create 2 `PUBLICADA` properties with `ejecutivo1` (`POST /api/propiedades` + `PATCH /:id/estado`), then run `docker compose exec backend node scripts/seed-visitas-only.js` (local helper). Running `make seed` deletes the visits and, because it recreates the users, leaves every property with a stale executive, so the next `make seed` skips the visits again.
+
+Optional cleanup of the stale manual properties (local test documents only):
 
 ```bash
-docker compose exec mongo mongosh real_estate --quiet --eval "db.visitas.deleteMany({ fechaInicio: { \$gte: new Date('2027-01-01') } }); db.propiedades.deleteMany({ titulo: /Depto prueba RN16/ })"
+docker compose exec mongo mongosh real_estate --quiet --eval "db.propiedades.deleteMany({ titulo: { \$in: ['Depto prueba RN16 A', 'Depto prueba RN16 B', 'Fixture visitas A', 'Fixture visitas B', 'Fixture paso 6 A', 'Fixture paso 6 B'] } })"
 ```
 
 ## Session log
@@ -123,3 +138,6 @@ docker compose exec mongo mongosh real_estate --quiet --eval "db.visitas.deleteM
 | 2026-11-11 | Step 3d: `TRANSICIONES`, `transicionarVisita`, the four PATCH endpoints and `PUT` reschedule | PATCH verified: 200/409/400/401/403/404, bitacora `CAMBIO_ESTADO` with `estadoAnterior`/`estadoNuevo`. PUT verified: 200 on SOLICITADA and CONFIRMADA, `$ne` self-exclusion, 409 on overlap/terminal, 400 on bad date/whitelist, extra fields ignored. Next: step 5 role matrix. |
 | 2026-11-11 | Step 3d fixes after review | Two `500` bugs found by the agent: `resultado` non-string crashed on `.trim()`, and a non-string `observacion` failed the Bitacora cast after the visit was saved (state changed, no audit entry). Fixed with a string type check, `observacion` sanitization and a `ValidationError` handler in `putVisita`; re-tested (`400` for `resultado: 123`, `200` + bitacora entry with empty `observacion`). |
 | 2026-11-12 | Step 5: role matrix | Router restricted to `EJECUTIVO`; controller docstrings updated. Verified the full matrix (8 endpoints × EJECUTIVO/ADMIN/CLIENTE/PROPIETARIO/no token): `200/201` for the executive, `403` for the other roles, `401` without a token; `403` also with a malformed id (authorization runs before validation). `ejecutivo2` cancelled a visit created by `ejecutivo1` → `200` (Decision A). Next: step 6 (fixtures). |
+| 2026-11-12 | Step 6: conditional visit fixtures + Mongoose 9 insert | Added `fixtures/data/visitas.js`, `seed.js` block (guard + `lean: true`), README row. Tested omitidas on `make seed`, 6 visits via `seed-visitas-only.js` + 2 Postman props, `GET /api/visitas` 200 with populate. Next: step 7 (full Postman + PR). |
+| 2026-11-12 | Memory sync after step 6 | Recorded the real DB state (`visitas` = 0, 5 properties with stale `ejecutivoId`), fixed the Coordination section and the `clientes`/`ADMIN` note. Branch `feature/ignacio/visitas` is **9 commits ahead** of `origin/feature/ignacio/visitas` (`19f585a`) and nothing is pushed; step 6 is still uncommitted (`data/visitas.js`, `seed.js`, `fixtures/README.md`, the `PUT` docstring fix and this file, plus the untracked `scripts/seed-visitas-only.js`). |
+| 2026-11-12 | Step 6 verification before the commit | `make seed` twice: `Visitas: omitidas...`, `visitas` = 0, and the second run deleted the 6 loaded visits (guard + `deleteMany`). With 2 fresh `PUBLICADA` properties and the local helper: 6 visits, one per state, 1 h duration, D10 match, timestamps, no RN-10 overlaps, `bitacora VISITA` = 0; API `200`/6 with populate, `400`/`401`/`403` on the error cases. Found `clienteId` stored as a string (`lean: true` skips casting; query by `ObjectId` returned 0), fixed with `mongoose.Types.ObjectId` placeholders and re-verified (query by `ObjectId` = 5, by string = 0). Pending: comment/whitespace nits, then the commit. |

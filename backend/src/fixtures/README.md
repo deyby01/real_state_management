@@ -40,6 +40,9 @@ The owner user `propietario@gup.cl` is linked to the owner record Jorge Muñoz (
 | `bitacora` | 0 (only emptied) | — Entries are created by real state changes, never by the fixtures |
 | `propietarios` | 3 (2 active, 1 inactive) | [`data/propietarios.js`](data/propietarios.js); business records, not linked to login accounts yet |
 | `propiedades` | 11 (5 `PUBLICADA` and active, one in each other state, 1 soft-deleted) | [`data/propiedades.js`](data/propiedades.js); 6 belong to Jorge Muñoz and 5 to María Torres, split between both executives. They refer to their type, owner and executive by name, RUT and email; `seed.js` translates those into `_id` values |
+| `visitas` | 6 (when the guard finds 2 active `PUBLICADA` properties with a current executive) | [`data/visitas.js`](data/visitas.js) |
+
+After properties load (step 6), the seed inserts 6 sample visits from the first two matching `PUBLICADA` properties. If the guard fails, it logs `Visitas: omitidas...` without stopping the seed.
 
 ## Adding data
 

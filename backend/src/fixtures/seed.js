@@ -14,6 +14,8 @@ import Propietario from "../models/Propietario.js"
 import { propietarios } from "./data/propietarios.js"
 import Propiedad from "../models/Propiedad.js"
 import { propiedades } from "./data/propiedades.js"
+import Visita from "../models/Visita.js"
+import { construirVisitas } from "./data/visitas.js"
 
 /**
  * Builds a lookup table { readable key → _id } from documents already in the database.
@@ -60,6 +62,7 @@ const seed = async () => {
     await Cliente.deleteMany({})
     await Bitacora.deleteMany({})
     await Propietario.deleteMany({})
+    await Visita.deleteMany({})
     // Properties point to types and owners whose _id changes on every seed:
     // keeping them would leave references to documents that no longer exist
     await Propiedad.deleteMany({})
@@ -114,6 +117,32 @@ const seed = async () => {
         { clienteId: buscarId(clientesPorEmail, "cliente@gup.cl", "el cliente con email") }
     )
     console.log("Cuenta cliente@gup.cl vinculada a su cliente")
+
+    // 9. Visits: built from PUBLICADA properties loaded in step 6 (see data/visitas.js)
+    const idsEjecutivos = new Set(
+        (await Usuario.find({ rol: "EJECUTIVO" })).map((usuario) => usuario._id.toString())
+    )
+
+    const propiedadesParaVisitas = (
+        await Propiedad.find({ estado: "PUBLICADA", activo: true }).sort({ titulo: 1 })
+    )
+        .filter((propiedad) => idsEjecutivos.has(propiedad.ejecutivoId.toString()))
+        .slice(0, 2)
+
+    if (propiedadesParaVisitas.length === 2) {
+        const ahora = new Date()
+        const visitas = construirVisitas(propiedadesParaVisitas).map((v) => ({
+            ...v,
+            createdAt: ahora,
+            updatedAt: ahora
+        }))
+        // Mongoose 9+: insertMany validates and casts by default; lean: true skips both.
+        // The fixture supplies ObjectIds, Dates and timestamps (REALIZADA in the past).
+        await Visita.insertMany(visitas, { lean: true })
+        console.log(`Visitas: ${visitas.length}`)
+    } else {
+        console.log("Visitas: omitidas (faltan 2 propiedades PUBLICADA con ejecutivo vigente)")
+    }
 }
 
 try {
