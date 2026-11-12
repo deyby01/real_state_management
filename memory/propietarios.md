@@ -1,6 +1,6 @@
 # propietarios — Propietario
 
-> **Owner:** Santiago · **Branch:** `feature/santiago/modelo-propietario` · **Status:** PR #27 open; RUT uppercase fix tested, router.use pending
+> **Owner:** Santiago · **Branch:** `feature/santiago/modelo-propietario` · **Status:** PR #27 open; both mandatory review fixes implemented and tested
 > **Specification:** [`docs/DATA_MODEL.md → propietarios`](../docs/DATA_MODEL.md#propietarios-property-owners)
 > **Depends on:** No model references · **Used by:** `usuarios`, `propiedades`
 
@@ -18,6 +18,8 @@
 | 7 | Postman and Pull Request | Happy path and errors | 🚧 Automated HTTP pass complete; PR opened, manual screenshots not confirmed |
 
 ## Current next step
+
+RUT fix committed as 0cdf21b. Santiago replaced repeated route middleware with a single propietarioRouter.use(verificarToken, permitirRoles("EJECUTIVO")); all five routes remain below it with no repeated middleware. 25 isolated HTTP checks passed: each route rejects missing tokens (401) and ADMIN/CLIENTE/PROPIETARIO (403), while EJECUTIVO can create (201), list, read, update and soft-delete (200). Temporary database removed. Next: commit the router and memory, integrate updated development, collect Postman screenshots and push for re-review.
 
 Review checked on 2026-11-12 against GitHub PR #27 and the local files. Santiago added toUpperCase() to the RUT setter. Five isolated HTTP checks passed: lowercase k creates a canonical uppercase K (201), uppercase duplicate returns 409, another owner creates successfully (201), updating it to the same lowercase-k RUT returns 409, and null RUT still returns 400. Temporary database removed. Next: commit the model and this memory, then protect the whole router with router.use and remove per-route middleware repetition in a separate tested commit. Add successful/error Postman screenshots and request re-review. Optional format validation and semicolon style are not merge blockers; do not rewrite published history.
 
@@ -106,6 +108,7 @@ Pending: attach Postman evidence for creation/listing and an error case (duplica
 
 | Date | What was done | Result / next step |
 |---|---|---|
+| 2026-11-12 | Confirmed RUT commit 0cdf21b, reviewed Santiago's saved router.use refactor, and ran 25 isolated HTTP permission/CRUD checks. | All passed; commit router and memory separately, then integrate development and submit review evidence. |
 | 2026-11-12 | Reviewed Santiago's toUpperCase() setter change and ran five isolated HTTP checks, including k/K duplicates in POST and PUT. | All passed; commit the RUT fix and memory before the router refactor. |
 | 2026-11-12 | Fetched development updates and read all PR #27 inline/general comments and reviews via GitHub API (gh is unavailable). Verified both requested changes remain absent locally. | Apply RUT uppercase and router.use in separate tested commits; integrate development, attach screenshots and request re-review. |
 | 2026-11-10 | Reviewed new development documentation rules, helped resolve the app.js import conflict, and added owner model documentation plus JSDoc for all five exported controller functions at Santiago's request. | Documentation-only change; commit and push it to the existing PR after syntax/diff checks. |

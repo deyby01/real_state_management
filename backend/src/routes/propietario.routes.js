@@ -5,22 +5,13 @@ import { getPropietarios, postPropietario, getPropietarioById, putPropietario, d
 
 const propietarioRouter = Router()
 
-propietarioRouter.get(
-    "/",
-    verificarToken,
-    permitirRoles("EJECUTIVO"),
-    getPropietarios
-)
+// Every owner route is for executives only (CU2).
+propietarioRouter.use(verificarToken, permitirRoles("EJECUTIVO"))
 
-propietarioRouter.post(
-    "/",
-    verificarToken,
-    permitirRoles("EJECUTIVO"),
-    postPropietario
-)
-
-propietarioRouter.get("/:id", verificarToken, permitirRoles("EJECUTIVO"), getPropietarioById)
-propietarioRouter.put("/:id", verificarToken, permitirRoles("EJECUTIVO"), putPropietario)
-propietarioRouter.delete("/:id", verificarToken, permitirRoles("EJECUTIVO"), deletePropietario)
+propietarioRouter.get("/", getPropietarios)
+propietarioRouter.post("/", postPropietario)
+propietarioRouter.get("/:id", getPropietarioById)
+propietarioRouter.put("/:id", putPropietario)
+propietarioRouter.delete("/:id", deletePropietario)
 
 export default propietarioRouter
