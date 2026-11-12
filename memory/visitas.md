@@ -50,7 +50,7 @@
 - **`fechaInicio` must be in the future:** Validated on creation and date rescheduling.
 - **Visits only on `PUBLICADA` properties (RN-16):** the property is read with `findOne({ _id, activo: true })` before the overlap check. Missing or soft-deleted → `400`; exists but not `PUBLICADA` → `409` with `estadoActual`.
 - **No `DELETE` and no `activo` field:** `visitas` does not have an `activo` field in `DATA_MODEL.md`. A visit is voided using the `CANCELADA` status. *(pending professor validation)*
-- **Roles per endpoint are a proposal:** *(pending professor validation)*
+- **Roles per endpoint are a proposal:** *(pending professor validation)* Open question for step 5: `ADMIN` currently sees and operates every visit (list, create, reschedule, transitions). If the case limits `ADMIN` to supervision (read-only) and leaves the operation to the assigned `EJECUTIVO`, the matrix has to move to per-route `permitirRoles` plus an ownership check. Confirm with the professor before closing step 5.
 - **Automatic calculation of `fechaFin` (D8):** Computed via a Mongoose `pre("validate")` hook (`fechaFin = fechaInicio + 1 hour`). Guarantees duration consistency across controllers, fixtures, and scripts.
 - **Document pattern for updates:** Rescheduling (`PUT`) must use `doc = await Visita.findById(); doc.fechaInicio = ...; await doc.save()`. This ensures both the future date validator and the `pre("validate")` hook execute properly without query-context issues (`TypeError: this.isModified`).
 - **Executive visibility (Decision A):** `EJECUTIVO` and `ADMIN` can see all visits by default to facilitate evaluation demos, but can filter by individual agendas using `?ejecutivoId=`.
@@ -80,6 +80,21 @@
 
 - **Validate soft delete against `DATA_MODEL.md`:** Do not assume `activo` or a `DELETE` endpoint exists on every model. Check `docs/DATA_MODEL.md` explicitly: collections like `visitas` manage lifecycle via domain states (`CANCELADA`), not soft delete.
 
+## Local test data (working database, not in git)
+
+`make seed` still clears only `tiposPropiedad`, `usuarios` and `bitacora` (step 6 adds `visitas` and `propiedades`), so the step 3c tests left documents in the local `real_estate` database:
+
+- Property `6af518d723479ad04a506214` — "Depto prueba RN16 A", `PUBLICADA`, `activo: true` (still usable for step 3d).
+- Property `6af518d723479ad04a506216` — "Depto prueba RN16 B", `PUBLICADA`, `activo: false` (soft-delete case).
+- Visits created for 3c: `6af518d723479ad04a506219` (2027-10-05), `6af518d723479ad04a50621b` (2027-10-06), `6af518e423479ad04a50621f` (2027-10-10), all `SOLICITADA`; older visits from steps 2–3 remain in 2026-11-15 and 2027-06/08/09/10-15.
+- Their `bitacora` entries (`entidad: "VISITA"`) cannot be deleted (rule 12).
+
+Optional cleanup before the fixtures step (local test documents only):
+
+```bash
+docker compose exec mongo mongosh real_estate --quiet --eval "db.visitas.deleteMany({ fechaInicio: { \$gte: new Date('2027-01-01') } }); db.propiedades.deleteMany({ titulo: /Depto prueba RN16/ })"
+```
+
 ## Session log
 
 | Date | What was done | Result / next step |
@@ -90,3 +105,4 @@
 | 2026-11-11 | Context re-entry after merging `development` into the branch (`e64e3aa`) | `propiedades` phase A (PR #28) is merged, so RN-16 and D10 are unblocked. New team rules: English JSDoc on every exported function and one focused commit per tested step. Next: document the visit files, then refactor `POST` against `Propiedad` (RN-16/D10), then `PUT` + PATCH transitions. |
 | 2026-11-11 | Step 3b: JSDoc documentation across model, controller and routes | Documented `Visita`, `getVisitas`, `getVisitaById`, `postVisita` and the router following PR #30 standards; diff verified as comments-only. Smoke tests passed (`200`, `400`, `201`). Ready for Step 3c (Propiedad integration). |
 | 2026-11-11 | Step 3c: `POST` validates the merged `Propiedad` (RN-16) and copies its executive (D10) | Property read with `activo: true`; missing/deleted `400`, not `PUBLICADA` `409` with `estadoActual`; `ejecutivoId` removed from the whitelist and copied from the property; `propiedadId` populated in `GET` and in the `201`. Verified 8/8 cases plus the whitelist and bitacora checks (`estado`/`resultado`/`fechaFin` ignored, `CREACION` without `estadoAnterior`). Next: step 3d (`PUT` + PATCH transitions). |
+| 2026-11-11 | Memory sync before step 3d | Recorded the local test data left in the database (properties A/B and the 2027 visits) and the `ADMIN` role-matrix question to resolve in step 5. Branch is 6 commits ahead of `origin/feature/ignacio/visitas` and has not been pushed yet. |
