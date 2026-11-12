@@ -307,7 +307,7 @@ export const postVisita = async (req, res) => {
 /**
  * Reschedules a visit's start date and recalculates its end date (RF7).
  *
- * Route: PUT /api/visitas/:id (EJECUTIVO; CLIENTE own visit once clientes is merged).
+ * Route: PUT /api/visitas/:id (EJECUTIVO).
  * Body: { fechaInicio, observaciones? }.
  * - Whitelist: only `fechaInicio` and `observaciones` are updated. `ejecutivoId`,
  *   `propiedadId`, `clienteId`, `estado`, and `resultado` are ignored.
