@@ -44,8 +44,8 @@ export const getClientes = async (req, res) => {
  * - Unlike the list, an inactive client is still returned when its id is known,
  *   so a deactivated record can still be inspected without being editable.
  *
- * Responses: 200 client · 400 invalid id · 404 not found or inactive · 401/403 auth ·
- * 500 server error.
+ * Responses: 200 client (also when inactive) · 400 invalid id · 404 not found ·
+ * 401/403 auth · 500 server error.
  */
 export const getClienteById = async (req, res) => {
     try {
@@ -78,6 +78,9 @@ export const getClienteById = async (req, res) => {
  * - The RUT is normalized before saving and the schema lowercases the email.
  * - A duplicated RUT or email is rejected by the unique indexes (RN-11); the
  *   response names the field that collided because there are two of them.
+ *
+ * Responses: 201 created · 400 invalid data (ValidationError) · 409 duplicate
+ * RUT/email · 401/403 auth · 500 server error.
  */
 export const postCliente = async (req, res) => {
     try {
@@ -118,7 +121,7 @@ export const postCliente = async (req, res) => {
 /**
  * Updates a client with the fields received in the body.
  *
-* Route: PUT /api/clientes/:id (EJECUTIVO only).
+ * Route: PUT /api/clientes/:id (EJECUTIVO only).
  * - Same whitelist as create, but `activo` is deliberately excluded: the only way
  *   to deactivate a client is DELETE, so the intent is explicit and a form can
  *   never deactivate a client by accident.
@@ -132,6 +135,9 @@ export const postCliente = async (req, res) => {
  *   by default, so a `required` field sent empty would be stored as an empty string.
  * - `returnDocument: "after"` returns the updated document; by default Mongoose
  *   returns the previous one, so the client would see stale data.
+ *
+ * Responses: 200 updated · 400 invalid data or invalid id · 404 not found or
+ * inactive · 409 duplicate RUT/email · 401/403 auth · 500 server error.
  */
 export const putCliente = async (req, res) => {
     try {
