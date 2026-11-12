@@ -12,7 +12,7 @@
 | 0 | Context: read DATA_MODEL, state machine, overlap rule and libraries | — | ✅ |
 | 1 | Model `backend/src/models/Visita.js` | Fields, validations, future date check, compound index visible in Compass | ✅ |
 | 2 | Controller: list and get by id | `200`, `404` | ✅ |
-| 3 | Controller: create, modify date and state transitions (business rules + bitacora) | `201`, `400`, `409` | 🚧 (POST done with RN-16/D10 against the merged `Propiedad`; pending `PUT` and the PATCH transitions) |
+| 3 | Controller: create, modify date and state transitions (business rules + bitacora) | `201`, `400`, `409` | ✅ (POST with RN-16/D10, `PUT` reschedule and the four PATCH transitions) |
 | 4 | Soft delete | — | N/A: visits are voided with CANCELADA; DATA_MODEL has no activo |
 | 5 | Routes + mounting in `app.js` + role protection | No token `401`, wrong role `403` | 🚧 (Partially mounted in Step 2; pending full role matrix for POST/PUT/PATCH) |
 | 6 | Fixtures in `backend/src/fixtures/data/` + `seed.js` | `make seed` loads sample visits | ⬜ |
@@ -63,6 +63,14 @@
 - **Whitelist of fields on creation:** only `propiedadId`, `clienteId`, `fechaInicio` and `observaciones` are read. `estado`, `resultado`, `fechaFin` and `ejecutivoId` are ignored; visits always start as `SOLICITADA`.
 - **Informative 409 Conflict:** Overlap responses return `{ mensaje, visitaEnConflicto }` detailing the conflicting visit ID, interval, and status for clear debugging and UI feedback.
 - **Concurrency limitation (Known race condition):** Two simultaneous `POST` requests for the same executive and interval could pass the overlap query before either writes. MongoDB lacks native interval exclusion constraints (unlike RN-14's partial unique index). Documented as an acceptable design limitation without multi-document transactions.
+- **Transition table in the controller:** `TRANSICIONES` maps each state to its allowed targets (`SOLICITADA → CONFIRMADA | RECHAZADA | CANCELADA`, `CONFIRMADA → REALIZADA | CANCELADA`). Terminal states have no entry, so the helper uses `TRANSICIONES[estado] || []` and answers `409` instead of throwing a `TypeError`.
+- **One transition helper:** `transicionarVisita` centralizes find → validate transition → save → bitacora → populate. The four `PATCH` handlers only pick the target state; an invalid transition returns `409` with `estadoActual` and `transicionesPermitidas`.
+- **`resultado` must be a string:** `PATCH /resultado` rejects missing, blank or non-string values with `400` before the transition. Mongoose would otherwise cast a number to text and store it as a valid result.
+- **`observacion` is sanitized before the audit log:** only strings reach `registrarBitacora`. A non-string body value would fail the cast after the visit was already saved, leaving a state change without an audit entry (verified: it returned `500` and the visit stayed `REALIZADA`).
+- **Reschedule whitelist (`PUT`):** only `fechaInicio` and `observaciones` (string) are updated; `ejecutivoId`, `propiedadId`, `clienteId`, `estado` and `resultado` are ignored.
+- **Reschedule does not re-check RN-16:** it adjusts the time of an existing agreement; if the property is no longer marketable the visit should be cancelled (`CANCELADA`). RN-16 applies when the visit is created.
+- **Self-exclusion in the reschedule overlap check:** `_id: { $ne: visita._id }`, so moving a visit to the same hour (or shifting it slightly) does not collide with its own previous slot.
+- **Audit log failure after save (transitions):** if `registrarBitacora` fails after `visita.save()`, the state change is already persisted while the response is an error and the entry is missing. Same save-then-log ordering as `POST`; accepted without multi-document transactions.
 - **Populate on responses (Decision B):** `GET /api/visitas`, `GET /api/visitas/:id` and the `201` of `POST` populate `ejecutivoId` (`nombre email rol`) and `propiedadId` (`titulo direccion estado`), so the frontend receives the same shape everywhere.
 - **Documented code (AGENTS.md rule 12):** every exported function gets an English JSDoc block (route, allowed roles, business rules, responses); the model file starts with a header comment pointing to `docs/DATA_MODEL.md`; comments are in English from now on when this model's files are edited.
 
@@ -82,14 +90,15 @@
 
 ## Local test data (working database, not in git)
 
-`make seed` still clears only `tiposPropiedad`, `usuarios` and `bitacora` (step 6 adds `visitas` and `propiedades`), so the step 3c tests left documents in the local `real_estate` database:
+`make seed` still clears only `tiposPropiedad`, `usuarios` and `bitacora` (step 6 adds `visitas` and `propiedades`), so the 3c/3d tests left documents in the local `real_estate` database:
 
-- Property `6af518d723479ad04a506214` — "Depto prueba RN16 A", `PUBLICADA`, `activo: true` (still usable for step 3d).
+- Property `6af518d723479ad04a506214` — "Depto prueba RN16 A", `PUBLICADA`, `activo: true` (reusable for steps 5–7).
 - Property `6af518d723479ad04a506216` — "Depto prueba RN16 B", `PUBLICADA`, `activo: false` (soft-delete case).
 - Visits created for 3c: `6af518d723479ad04a506219` (2027-10-05), `6af518d723479ad04a50621b` (2027-10-06), `6af518e423479ad04a50621f` (2027-10-10), all `SOLICITADA`; older visits from steps 2–3 remain in 2026-11-15 and 2027-06/08/09/10-15.
+- Visits created for 3d (my test runs and the developer's): December 2027 and January–February 2028, in every state, including `REALIZADA` ones with `resultado`. One of them (`6af522c67b2b83679c53ae9d`, 2027-12-14) is `REALIZADA` **without** a bitacora entry: it is the evidence of the pre-fix `observacion` bug (state saved, audit log failed).
 - Their `bitacora` entries (`entidad: "VISITA"`) cannot be deleted (rule 12).
 
-Optional cleanup before the fixtures step (local test documents only):
+Optional cleanup before the fixtures step (local test documents only; the date filter also covers the 2028 visits):
 
 ```bash
 docker compose exec mongo mongosh real_estate --quiet --eval "db.visitas.deleteMany({ fechaInicio: { \$gte: new Date('2027-01-01') } }); db.propiedades.deleteMany({ titulo: /Depto prueba RN16/ })"
@@ -106,3 +115,5 @@ docker compose exec mongo mongosh real_estate --quiet --eval "db.visitas.deleteM
 | 2026-11-11 | Step 3b: JSDoc documentation across model, controller and routes | Documented `Visita`, `getVisitas`, `getVisitaById`, `postVisita` and the router following PR #30 standards; diff verified as comments-only. Smoke tests passed (`200`, `400`, `201`). Ready for Step 3c (Propiedad integration). |
 | 2026-11-11 | Step 3c: `POST` validates the merged `Propiedad` (RN-16) and copies its executive (D10) | Property read with `activo: true`; missing/deleted `400`, not `PUBLICADA` `409` with `estadoActual`; `ejecutivoId` removed from the whitelist and copied from the property; `propiedadId` populated in `GET` and in the `201`. Verified 8/8 cases plus the whitelist and bitacora checks (`estado`/`resultado`/`fechaFin` ignored, `CREACION` without `estadoAnterior`). Next: step 3d (`PUT` + PATCH transitions). |
 | 2026-11-11 | Memory sync before step 3d | Recorded the local test data left in the database (properties A/B and the 2027 visits) and the `ADMIN` role-matrix question to resolve in step 5. Branch is 6 commits ahead of `origin/feature/ignacio/visitas` and has not been pushed yet. |
+| 2026-11-11 | Step 3d: `TRANSICIONES`, `transicionarVisita`, the four PATCH endpoints and `PUT` reschedule | PATCH verified: 200/409/400/401/403/404, bitacora `CAMBIO_ESTADO` with `estadoAnterior`/`estadoNuevo`. PUT verified: 200 on SOLICITADA and CONFIRMADA, `$ne` self-exclusion, 409 on overlap/terminal, 400 on bad date/whitelist, extra fields ignored. Next: step 5 role matrix. |
+| 2026-11-11 | Step 3d fixes after review | Two `500` bugs found by the agent: `resultado` non-string crashed on `.trim()`, and a non-string `observacion` failed the Bitacora cast after the visit was saved (state changed, no audit entry). Fixed with a string type check, `observacion` sanitization and a `ValidationError` handler in `putVisita`; re-tested (`400` for `resultado: 123`, `200` + bitacora entry with empty `observacion`). |

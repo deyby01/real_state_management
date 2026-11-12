@@ -3,6 +3,73 @@ import Propiedad from "../models/Propiedad.js"
 import { registrarBitacora } from "../services/bitacora.service.js"
 
 /**
+ * Allowed visit state transitions (§6.3).
+ * Terminal states (REALIZADA, RECHAZADA, CANCELADA) have no transitions out.
+ * Handled with fallback `TRANSICIONES[estado] || []` to avoid runtime TypeError.
+ */
+const TRANSICIONES = {
+    SOLICITADA: ["CONFIRMADA", "RECHAZADA", "CANCELADA"],
+    CONFIRMADA: ["REALIZADA", "CANCELADA"]
+}
+
+/**
+ * Helper to execute a state transition consistently across endpoints.
+ * Validates against TRANSICIONES, applies extra updates, saves the document,
+ * logs a CAMBIO_ESTADO entry in the audit log (RN-13) and populates the response.
+ */
+const transicionarVisita = async (req, res, estadoNuevo, { observacion, cambios = {} } = {}) => {
+    try {
+        const visita = await Visita.findById(req.params.id)
+        if (!visita) {
+            return res.status(404).json({ mensaje: "Visita no encontrada" })
+        }
+
+        const estadoAnterior = visita.estado
+        const permitidos = TRANSICIONES[estadoAnterior] || []
+
+        if (!permitidos.includes(estadoNuevo)) {
+            return res.status(409).json({
+                mensaje: `No se puede pasar de ${estadoAnterior} a ${estadoNuevo}`,
+                estadoActual: estadoAnterior,
+                transicionesPermitidas: permitidos
+            })
+        }
+
+        // Apply extra fields (such as resultado) and update status
+        Object.assign(visita, cambios)
+        visita.estado = estadoNuevo
+
+        // Document save pattern triggers pre("validate") hook if necessary
+        const visitaGuardada = await visita.save()
+
+        const observacionTexto = typeof observacion === "string" ? observacion.trim() : undefined
+
+        await registrarBitacora({
+            entidad: "VISITA",
+            entidadId: visitaGuardada._id,
+            accion: "CAMBIO_ESTADO",
+            estadoAnterior,
+            estadoNuevo,
+            usuarioId: req.usuario._id,
+            observacion: observacionTexto
+        })
+
+        await visitaGuardada.populate("ejecutivoId", "nombre email rol")
+        await visitaGuardada.populate("propiedadId", "titulo direccion estado")
+
+        return res.status(200).json(visitaGuardada)
+    } catch (error) {
+        if (error.name === "CastError") {
+            return res.status(400).json({ mensaje: "ID de visita inválido", error: error.message })
+        }
+        if (error.name === "ValidationError") {
+            return res.status(400).json({ mensaje: "Datos inválidos", error: error.message })
+        }
+        return res.status(500).json({ mensaje: "Error al actualizar el estado de la visita", error: error.message })
+    }
+}
+
+/**
  * Lists visits with optional filters (agenda view).
  *
  * Route: GET /api/visitas (ADMIN, EJECUTIVO).
@@ -235,4 +302,165 @@ export const postVisita = async (req, res) => {
         }
         res.status(500).json({ mensaje: "Error al crear la visita", error: error.message })
     }
+}
+
+/**
+ * Reschedules a visit's start date and recalculates its end date (RF7).
+ *
+ * Route: PUT /api/visitas/:id (ADMIN, EJECUTIVO).
+ * Body: { fechaInicio, observaciones? }.
+ * - Whitelist: only `fechaInicio` and `observaciones` are updated. `ejecutivoId`,
+ *   `propiedadId`, `clienteId`, `estado`, and `resultado` are ignored.
+ * - Allowed only while visit is in SOLICITADA or CONFIRMADA (409 if terminal).
+ * - Validates that new `fechaInicio` is valid and strictly in the future (400).
+ * - Enforces RN-10 overlap check excluding this visit itself (_id: { $ne: visita._id }).
+ * - Does not re-check RN-16: rescheduling adjusts the time of an existing agreement;
+ *   if the property is unmarketable, the executive should cancel it (CANCELADA).
+ * - Document save pattern triggers pre("validate") hook recalculating `fechaFin`.
+ * - Audit log: Bitacora has no REPROGRAMACION action yet (requested to Deyby); not logged
+ *   to avoid logging a fake CAMBIO_ESTADO where previous equals new state.
+ *
+ * Responses: 200 rescheduled · 400 invalid date/id · 401/403 auth · 404 not found ·
+ * 409 terminal state or overlap conflict · 500 server error.
+ */
+export const putVisita = async (req, res) => {
+    try {
+        const { id } = req.params
+        const { fechaInicio, observaciones } = req.body
+
+        const visita = await Visita.findById(id)
+        if (!visita) {
+            return res.status(404).json({ mensaje: "Visita no encontrada" })
+        }
+
+        // Validate presence and future constraint before state check
+        if (!fechaInicio) {
+            return res.status(400).json({ mensaje: "El campo fechaInicio es obligatorio para reprogramar" })
+        }
+
+        const fechaInicioDate = new Date(fechaInicio)
+        if (isNaN(fechaInicioDate.getTime())) {
+            return res.status(400).json({ mensaje: "La fecha de inicio no es válida" })
+        }
+        if (fechaInicioDate <= new Date()) {
+            return res.status(400).json({ mensaje: "La fecha de inicio debe ser futura" })
+        }
+
+        // Only active requests can be rescheduled
+        if (!["SOLICITADA", "CONFIRMADA"].includes(visita.estado)) {
+            return res.status(409).json({
+                mensaje: `No se puede reprogramar una visita en estado ${visita.estado}`,
+                estadoActual: visita.estado
+            })
+        }
+
+        const fechaFinDate = new Date(fechaInicioDate.getTime() + DURACION_VISITA_MS)
+
+        // Overlap check (RN-10): exclude this visit itself so it does not collide with its own previous slot
+        const solapada = await Visita.findOne({
+            _id: { $ne: visita._id },
+            ejecutivoId: visita.ejecutivoId,
+            estado: { $nin: ["CANCELADA", "RECHAZADA"] },
+            fechaInicio: { $lt: fechaFinDate },
+            fechaFin: { $gt: fechaInicioDate }
+        })
+
+        if (solapada) {
+            return res.status(409).json({
+                mensaje: "El ejecutivo ya tiene una visita agendada en ese horario",
+                visitaEnConflicto: {
+                    id: solapada._id,
+                    fechaInicio: solapada.fechaInicio,
+                    fechaFin: solapada.fechaFin,
+                    estado: solapada.estado
+                }
+            })
+        }
+
+        visita.fechaInicio = fechaInicioDate
+
+        if (observaciones !== undefined) {
+            if (typeof observaciones !== "string") {
+                return res.status(400).json({ mensaje: "El campo observaciones debe ser texto" })
+            }
+            visita.observaciones = observaciones
+        }
+        
+        
+
+        const visitaGuardada = await visita.save()
+
+        await visitaGuardada.populate("ejecutivoId", "nombre email rol")
+        await visitaGuardada.populate("propiedadId", "titulo direccion estado")
+
+        return res.status(200).json(visitaGuardada)
+    } catch (error) {
+        if (error.name === "CastError") {
+            return res.status(400).json({ mensaje: "ID de visita inválido", error: error.message })
+        }
+        if (error.name === "ValidationError") {
+            return res.status(400).json({ mensaje: "Error de validación", error: error.message })
+        }
+        return res.status(500).json({ mensaje: "Error al reprogramar la visita", error: error.message })
+    }
+}
+
+/**
+ * Confirms a visit request (SOLICITADA → CONFIRMADA).
+ *
+ * Route: PATCH /api/visitas/:id/confirmar (ADMIN, EJECUTIVO).
+ * Body: { observacion? }.
+ * Responses: 200 confirmed · 400 invalid id · 401/403 auth · 404 not found · 409 transition not allowed · 500 server error.
+ */
+export const confirmarVisita = (req, res) =>
+    transicionarVisita(req, res, "CONFIRMADA", {
+        observacion: req.body?.observacion || "Visita confirmada por el ejecutivo"
+    })
+
+/**
+ * Rejects a visit request (SOLICITADA → RECHAZADA).
+ *
+ * Route: PATCH /api/visitas/:id/rechazar (ADMIN, EJECUTIVO).
+ * Body: { observacion? }.
+ * Responses: 200 rejected · 400 invalid id · 401/403 auth · 404 not found · 409 transition not allowed · 500 server error.
+ */
+export const rechazarVisita = (req, res) =>
+    transicionarVisita(req, res, "RECHAZADA", {
+        observacion: req.body?.observacion || "Visita rechazada por el ejecutivo"
+    })
+
+/**
+ * Cancels a visit (SOLICITADA or CONFIRMADA → CANCELADA).
+ *
+ * Route: PATCH /api/visitas/:id/cancelar (ADMIN, EJECUTIVO).
+ * Body: { observacion? }.
+ * Responses: 200 cancelled · 400 invalid id · 401/403 auth · 404 not found · 409 transition not allowed · 500 server error.
+ */
+export const cancelarVisita = (req, res) =>
+    transicionarVisita(req, res, "CANCELADA", {
+        observacion: req.body?.observacion || "Visita cancelada"
+    })
+
+/**
+ * Registers visit outcome and marks it as completed (CONFIRMADA → REALIZADA).
+ *
+ * Route: PATCH /api/visitas/:id/resultado (ADMIN, EJECUTIVO).
+ * Body: { resultado, observacion? }.
+ * - Validates that `resultado` is present and non-empty (400) before triggering transition.
+ * Responses: 200 completed · 400 missing resultado or invalid id · 401/403 auth · 404 not found ·
+ * 409 transition not allowed · 500 server error.
+ */
+export const registrarResultadoVisita = (req, res) => {
+    const { resultado, observacion } = req.body || {}
+
+    if (typeof resultado !== "string" || !resultado.trim()) {
+        return res.status(400).json({
+            mensaje: "El campo resultado es obligatorio para marcar la visita como realizada"
+        })
+    }
+
+    return transicionarVisita(req, res, "REALIZADA", {
+        observacion: observacion || "Resultado de visita registrado",
+        cambios: { resultado: resultado.trim() }
+    })
 }
