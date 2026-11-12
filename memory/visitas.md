@@ -2,7 +2,7 @@
 
 > **Owner:** Ignacio · **Branch:** `feature/ignacio/visitas` · **Status:** 🚧 In progress  
 > **Specification:** [`docs/DATA_MODEL.md → visitas`](../docs/DATA_MODEL.md#visitas-visit-requests)  
-> **Depends on:** `propiedades` (Deyby, not merged), `clientes` (Jose, not merged), `usuarios` (merged ✅); writes to `bitacora` (merged ✅)  
+> **Depends on:** `propiedades` (Deyby, merged ✅ phase A, PR #28), `clientes` (Jose, not merged), `usuarios` (merged ✅); writes to `bitacora` (merged ✅)  
 > **Used by:** — (nothing references `visitas` yet; it feeds the visit reports, RF12)
 
 ## Plan
@@ -12,7 +12,7 @@
 | 0 | Context: read DATA_MODEL, state machine, overlap rule and libraries | — | ✅ |
 | 1 | Model `backend/src/models/Visita.js` | Fields, validations, future date check, compound index visible in Compass | ✅ |
 | 2 | Controller: list and get by id | `200`, `404` | ✅ |
-| 3 | Controller: create, modify date and state transitions (business rules + bitacora) | `201`, `400`, `409` | 🚧 (POST completed with RN-10 overlap check & RN-13 bitacora; pending PUT and PATCH transitions) |
+| 3 | Controller: create, modify date and state transitions (business rules + bitacora) | `201`, `400`, `409` | 🚧 (POST done with the temporary contract; pending RN-16/D10 refactor against the merged `Propiedad`, `PUT` and the PATCH transitions) |
 | 4 | Soft delete | — | N/A: visits are voided with CANCELADA; DATA_MODEL has no activo |
 | 5 | Routes + mounting in `app.js` + role protection | No token `401`, wrong role `403` | 🚧 (Partially mounted in Step 2; pending full role matrix for POST/PUT/PATCH) |
 | 6 | Fixtures in `backend/src/fixtures/data/` + `seed.js` | `make seed` loads sample visits | ⬜ |
@@ -24,8 +24,8 @@
 |---|---|---|---|
 | `GET` | `/api/visitas?estado=&propiedadId=&ejecutivoId=&desde=&hasta=` | `EJECUTIVO`, `ADMIN` | `200`, `400`, `401`, `403` |
 | `GET` | `/api/visitas/:id` | `EJECUTIVO`, `ADMIN` | `200`, `400`, `401`, `403`, `404` |
-| `POST` | `/api/visitas` | `CLIENTE`*, `EJECUTIVO`, `ADMIN` | `201`, `400`, `401`, `409` |
-| `PUT` | `/api/visitas/:id` | `CLIENTE`*, `EJECUTIVO`, `ADMIN` (reschedule dates while `SOLICITADA` or `CONFIRMADA`) | `200`, `400`, `401`, `403`, `404`, `409` |
+| `POST` | `/api/visitas` | `EJECUTIVO`, `ADMIN` (`CLIENTE`* once linked) | `201`, `400`, `401`, `403`, `409` |
+| `PUT` | `/api/visitas/:id` | `EJECUTIVO`, `ADMIN` (`CLIENTE`* once linked; reschedule dates while `SOLICITADA` or `CONFIRMADA`) | `200`, `400`, `401`, `403`, `404`, `409` |
 | `PATCH` | `/api/visitas/:id/confirmar` | `EJECUTIVO`, `ADMIN` | `200`, `401`, `403`, `404`, `409` |
 | `PATCH` | `/api/visitas/:id/rechazar` | `EJECUTIVO`, `ADMIN` | `200`, `401`, `403`, `404`, `409` |
 | `PATCH` | `/api/visitas/:id/cancelar` | `CLIENTE`*, `EJECUTIVO`, `ADMIN` | `200`, `401`, `403`, `404`, `409` |
@@ -59,22 +59,22 @@
 - **ISO 8601 for date range query (Decision):** Query params `desde` and `hasta` expect ISO 8601 strings (e.g. `?hasta=2026-11-15T23:59:59-03:00`). Parsing simple `YYYY-MM-DD` strings defaults to UTC midnight, which truncates Chilean local time (UTC-3) at 21:00 of the previous day.
 - **Agenda filtering by start time:** `GET /api/visitas` filters by `fechaInicio` (when visits start), which matches standard calendar/agenda expectations. True interval overlap checks are reserved for RN-10 collision detection.
 - **Chronological sorting:** `GET /api/visitas` sorts by `{ fechaInicio: 1 }` (ascending) so executives see upcoming visits first.
-- **Temporary contract for `POST /api/visitas` (Option A):** Accepts `propiedadId`, `clienteId`, and `ejecutivoId` in the body. Once `propiedades` is merged, `ejecutivoId` will be copied from the property (D10) and removed from the body.
-- **Whitelist of fields on creation:** Only `propiedadId`, `clienteId`, `ejecutivoId`, `fechaInicio`, and `observaciones` are accepted. Manipulations like sending `"estado": "CONFIRMADA"` are ignored; visits always start as `SOLICITADA`.
+- **Temporary contract for `POST /api/visitas` (Option A):** accepts `propiedadId`, `clienteId`, and `ejecutivoId` in the body. `propiedades` is merged now (PR #28), so this contract is being retired: `ejecutivoId` is copied from the property (D10), the property must be `activo: true` and `PUBLICADA` (RN-16), and `ejecutivoId` leaves the body whitelist. `clienteId` stays in the body until `clientes` is merged.
+- **Whitelist of fields on creation:** Only `propiedadId`, `clienteId`, `ejecutivoId`, `fechaInicio`, and `observaciones` are accepted. Manipulations like sending `"estado": "CONFIRMADA"` are ignored; visits always start as `SOLICITADA`. (`ejecutivoId` leaves the whitelist in the RN-16/D10 refactor.)
 - **Informative 409 Conflict:** Overlap responses return `{ mensaje, visitaEnConflicto }` detailing the conflicting visit ID, interval, and status for clear debugging and UI feedback.
 - **Concurrency limitation (Known race condition):** Two simultaneous `POST` requests for the same executive and interval could pass the overlap query before either writes. MongoDB lacks native interval exclusion constraints (unlike RN-14's partial unique index). Documented as an acceptable design limitation without multi-document transactions.
 - **Populate on POST response:** `postVisita` populates `ejecutivoId` before responding 201 so the frontend receives identical data shape as `GET`.
+- **Documented code (AGENTS.md rule 12):** every exported function gets an English JSDoc block (route, allowed roles, business rules, responses); the model file starts with a header comment pointing to `docs/DATA_MODEL.md`; comments are in English from now on when this model's files are edited.
 
 ## Coordination with other models
 
-- **`propiedades` (Deyby, not merged):** Read `ejecutivoId` and verify `estado === "PUBLICADA"` (RN-16). `populate` can only be used once `Propiedad` is merged into `development`.
-- **`clientes` (Jose, not merged):** `clienteId` reference. **Blocking for `CLIENTE` endpoints:** `usuarios.clienteId` currently defaults to `null` because registration does not create a `clientes` document. Until Jose and Deyby agree on linking them, creation will be tested/allowed via `EJECUTIVO`/`ADMIN` or passing `clienteId` in testing.
-- **`bitacora` (Deyby, merged ✅):** Call `registrarBitacora` with `entidad: "VISITA"` on every state transition (RN-13).
-- **`propiedades` (Deyby, not merged):** Currently using a temporary contract where `ejecutivoId` is received in the body. When `Propiedad` is merged:
-  1. Verify the property exists and is `PUBLICADA` (RN-16) → `409 Conflict`.
-  2. Copy `ejecutivoId` directly from the property document (D10).
-  3. Remove `ejecutivoId` from the request body whitelist.
-- **`clientes` (Jose, not merged):** Currently accepts raw `clienteId` in the body. When `Cliente` and `usuarios.clienteId` are integrated, `clienteId` should be resolved from authenticated session or validated against existing clients.
+- **`propiedades` (Deyby, merged ✅ phase A, PR #28):** the model now exists, so the temporary contract can be replaced:
+  1. Read the property with `findOne({ _id: propiedadId, activo: true })`; not found or soft-deleted → `400`.
+  2. Require `estado === "PUBLICADA"` (RN-16) → `409` otherwise.
+  3. Copy `ejecutivoId` from the property document (D10) and remove `ejecutivoId` from the request body whitelist.
+  `populate("propiedadId")` is now possible; it does not cascade to `propietarioId`, so it is safe even though `Propietario` is not merged.
+- **`clientes` (Jose, not merged):** `clienteId` reference. **Blocking for `CLIENTE` endpoints:** `usuarios.clienteId` currently defaults to `null` because registration does not create a `clientes` document. Until Jose and Deyby agree on linking them, creation is tested/allowed via `EJECUTIVO`/`ADMIN` or by passing `clienteId` in testing. Once `Cliente` and `usuarios.clienteId` are integrated, `clienteId` should be resolved from the authenticated session or validated against existing clients.
+- **`bitacora` (Deyby, merged ✅):** call `registrarBitacora` with `entidad: "VISITA"` on every state transition (RN-13). The enum now also has `ELIMINACION` (added for properties). **Open question:** it still has no `REPROGRAMACION`, and rescheduling (`PUT`) is not a state change, so ask Deyby to add it or accept not logging the reschedule and document why.
 
 ## Proposals for AGENTS.md
 
@@ -87,3 +87,5 @@
 | 2026-11-09 | Step 0 & Step 1: Model creation, pre-validate hook for D8, validations and compound index | Model verified via temp script and Compass. Ready for Step 2 (read controllers). |
 | 2026-11-09 | Step 2: Read controllers, routes and Postman test suite | Created `getVisitas` and `getVisitaById`, mounted in `app.js`. Verified all 9 Postman test cases (200, 400, 401, 403, 404). Step 2 completed. |
 | 2026-11-09 | Step 3 (Part 1): POST /api/visitas with RN-10 overlap detection and RN-13 bitacora | Implemented whitelist, duration constant (DURACION_VISITA_MS), overlap query with $nin, bitacora logging on creation, and consistent populate on 201. Passed all Postman test cases (201, 409 conflict, 400 validation, whitelist check). |
+| 2026-11-11 | Context re-entry after merging `development` into the branch (`e64e3aa`) | `propiedades` phase A (PR #28) is merged, so RN-16 and D10 are unblocked. New team rules: English JSDoc on every exported function and one focused commit per tested step. Next: document the visit files, then refactor `POST` against `Propiedad` (RN-16/D10), then `PUT` + PATCH transitions. |
+| 2026-11-11 | Step 3b: JSDoc documentation across model, controller and routes | Documented `Visita`, `getVisitas`, `getVisitaById`, `postVisita` and the router following PR #30 standards; diff verified as comments-only. Smoke tests passed (`200`, `400`, `201`). Ready for Step 3c (Propiedad integration). |

@@ -1,8 +1,22 @@
 import mongoose from "mongoose"
 
-// Constantes exportadas para reutilizar en controladores y pruebas
+/**
+ * Visita model: real estate visit requests (collection `visitas`).
+ * Spec: docs/DATA_MODEL.md → `visitas` and state machine §6.3.
+ * Related requirements: RN-10 (overlap check, controller), RN-13 (audit log),
+ * D8 (fixed duration). RN-16 (published property) and D10 (executive copy)
+ * are enforced by the controller after the property refactor.
+ *
+ * The state machine (§6.3) defines the allowed transitions; a new visit
+ * always starts as SOLICITADA. No `activo` field is used: per DATA_MODEL,
+ * visits are voided using CANCELADA status rather than soft deletion.
+ */
+
+// Allowed visit states (§6.3); transitions live in TRANSICIONES in visita.controller.js
 export const ESTADOS_VISITA = ["SOLICITADA", "CONFIRMADA", "REALIZADA", "RECHAZADA", "CANCELADA"]
-export const DURACION_VISITA_MS = 60 * 60 * 1000 // 1 hora en milisegundos (D8)
+
+// Decision D8: fixed duration of 1 hour for all visits (in milliseconds)
+export const DURACION_VISITA_MS = 60 * 60 * 1000
 
 const visitaSchema = new mongoose.Schema(
     {
@@ -11,6 +25,7 @@ const visitaSchema = new mongoose.Schema(
             ref: "Propiedad",
             required: true
         },
+        // Cliente model is unmerged (Jose); declared as ObjectId reference without populate
         clienteId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Cliente",
@@ -26,12 +41,15 @@ const visitaSchema = new mongoose.Schema(
             required: true,
             validate: {
                 validator: function (valor) {
+                    // Guard: only validate future date on creation or rescheduling.
+                    // Allows saving past visits when updating status (e.g. marking REALIZADA).
                     if (!this.isNew && !this.isModified("fechaInicio")) return true
                     return valor > new Date()
                 },
                 message: "La fecha de inicio debe ser futura"
             }
         },
+        // Set by the pre-validate hook below; never accepted from the client
         fechaFin: {
             type: Date,
             required: true
@@ -41,12 +59,14 @@ const visitaSchema = new mongoose.Schema(
             required: false,
             trim: true
         },
+        // A new visit always starts as SOLICITADA; transitions will be enforced by controller endpoints (step 3d)
         estado: {
             type: String,
             required: true,
             enum: ESTADOS_VISITA,
             default: "SOLICITADA"
         },
+        // Written by the executive after the visit; setting it will move CONFIRMADA → REALIZADA (step 3d)
         resultado: {
             type: String,
             required: false,
@@ -59,14 +79,15 @@ const visitaSchema = new mongoose.Schema(
     }
 )
 
-// D8: La duración siempre es de 1 hora. El hook calcula fechaFin antes de validar
+// D8: overwrites any fechaFin sent by the client, so every visit lasts exactly
+// DURACION_VISITA_MS. Runs before validation because fechaFin is required.
 visitaSchema.pre("validate", function () {
     if (this.fechaInicio instanceof Date && !isNaN(this.fechaInicio.getTime())) {
         this.fechaFin = new Date(this.fechaInicio.getTime() + DURACION_VISITA_MS)
     }
 })
 
-// Índice compuesto para acelerar búsquedas de agenda y chequeo de solapamientos (RN-10)
+// Compound index supporting chronological agenda queries and overlap detection (RN-10)
 visitaSchema.index({ ejecutivoId: 1, fechaInicio: 1, fechaFin: 1 })
 
 export default mongoose.model("Visita", visitaSchema)
