@@ -44,7 +44,7 @@ export const getClientes = async (req, res) => {
  * - Unlike the list, an inactive client is still returned when its id is known,
  *   so a deactivated record can still be inspected without being editable.
  *
- * Responses: 200 client · 400 invalid id · 404 not found · 401/403 auth ·
+ * Responses: 200 client · 400 invalid id · 404 not found or inactive · 401/403 auth ·
  * 500 server error.
  */
 export const getClienteById = async (req, res) => {
@@ -118,12 +118,14 @@ export const postCliente = async (req, res) => {
 /**
  * Updates a client with the fields received in the body.
  *
- * Route: PUT /api/clientes/:id (EJECUTIVO only).
+* Route: PUT /api/clientes/:id (EJECUTIVO only).
  * - Same whitelist as create, but `activo` is deliberately excluded: the only way
  *   to deactivate a client is DELETE, so the intent is explicit and a form can
  *   never deactivate a client by accident.
  * - `estado` is excluded as well: ARRENDATARIO is a business fact written by the
  *   rental request flow, never by an edit form, so the value is silently ignored.
+ * - Only active clients can be updated: the filter is `{ _id, activo: true }`, so a
+ *   client that was already deactivated answers 404 instead of being edited back.
  * - `rut` is normalized only when it comes in the body, so a partial update does
  *   not erase it; a mistyped RUT can be corrected.
  * - `runValidators: true` is required: Mongoose skips schema validation on updates
@@ -142,10 +144,11 @@ export const putCliente = async (req, res) => {
             datos.rut = normalizarRut(rut)
         }
 
-        const cliente = await Cliente.findByIdAndUpdate(req.params.id, datos, {
-            returnDocument: "after",
-            runValidators: true
-        })
+        const cliente = await Cliente.findOneAndUpdate(
+            { _id: req.params.id, activo: true },
+            datos,
+            { returnDocument: "after", runValidators: true }
+        )
 
         if (!cliente) {
             return res.status(404).json({ mensaje: "Cliente no encontrado" })
@@ -181,19 +184,21 @@ export const putCliente = async (req, res) => {
  * Deactivates a client (soft delete): sets `activo: false`, never removes it.
  *
  * Route: DELETE /api/clientes/:id (EJECUTIVO only).
+ * - Only active clients can be deactivated (`{ _id, activo: true }`): a second
+ *   DELETE on the same id answers 404, the same behaviour as `propiedades` and
+ *   `propietarios`, instead of pretending to delete twice.
  * - The document is kept because visits and rental requests reference it: a
  *   physical delete would leave orphan records (RNF-10 / RN-17, rule 11).
- * - Idempotent: repeating the request answers 200 with the same result.
  * - No `runValidators` (only a boolean changes) and no 11000 handling (no unique
  *   field is touched).
  *
- * Responses: 200 deactivated · 400 invalid id · 404 not found · 401/403 auth ·
- * 500 server error.
+ * Responses: 200 deactivated · 400 invalid id · 404 not found or already inactive ·
+ * 401/403 auth · 500 server error.
  */
 export const deleteCliente = async (req, res) => {
     try {
-        const cliente = await Cliente.findByIdAndUpdate(
-            req.params.id,
+        const cliente = await Cliente.findOneAndUpdate(
+            { _id: req.params.id, activo: true },
             { activo: false },
             { returnDocument: "after" }
         )
