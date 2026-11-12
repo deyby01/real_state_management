@@ -1,6 +1,6 @@
 # propietarios — Propietario
 
-> **Owner:** Santiago · **Branch:** `feature/santiago/modelo-propietario` · **Status:** Implementation complete; PR opened by Santiago, review pending
+> **Owner:** Santiago · **Branch:** `feature/santiago/modelo-propietario` · **Status:** PR #27 open; RUT uppercase fix tested, router.use pending
 > **Specification:** [`docs/DATA_MODEL.md → propietarios`](../docs/DATA_MODEL.md#propietarios-property-owners)
 > **Depends on:** No model references · **Used by:** `usuarios`, `propiedades`
 
@@ -18,6 +18,10 @@
 | 7 | Postman and Pull Request | Happy path and errors | 🚧 Automated HTTP pass complete; PR opened, manual screenshots not confirmed |
 
 ## Current next step
+
+Review checked on 2026-11-12 against GitHub PR #27 and the local files. Santiago added toUpperCase() to the RUT setter. Five isolated HTTP checks passed: lowercase k creates a canonical uppercase K (201), uppercase duplicate returns 409, another owner creates successfully (201), updating it to the same lowercase-k RUT returns 409, and null RUT still returns 400. Temporary database removed. Next: commit the model and this memory, then protect the whole router with router.use and remove per-route middleware repetition in a separate tested commit. Add successful/error Postman screenshots and request re-review. Optional format validation and semicolon style are not merge blockers; do not rewrite published history.
+
+Fetched origin/development at 245a85b: clients PR #25 and documentation PR #31 are merged. New AGENTS rules require router-wide protection for uniform permissions, use-case-based roles, business states outside body whitelists, and active-only updates/deletes. The developer must merge the new development into this branch, preserving both owner and client additions in app.js, seed.js and fixture documentation. Fetch alone did not change the working branch.
 
 Santiago opened the PR and merged the newer development changes (through 91b3cee) into his feature branch. The app.js conflict was resolved by preserving both propiedad and propietario routers. The feature branch was clean and synchronized with its remote before the current documentation step. English JSDoc now documents all five owner controller functions; the model header links to DATA_MODEL and comments explain RUT normalization and soft deletion. Next: commit and push this focused documentation change, then address PR review feedback.
 
@@ -50,6 +54,8 @@ All routes return `401` without a token, `403` for CLIENTE, PROPIETARIO or ADMIN
 - Deyby owns `usuarios`: account creation and linking through `usuarios.propietarioId` must be coordinated with him. Owner business records are separate from login accounts.
 
 ## Proposals for AGENTS.md
+
+- 2026-11-12: The owner normalization and tests covered punctuation but missed the k/K check digit variants. Normalize letter case before unique-index enforcement and include case variants in duplicate tests, as identified by Deyby's PR #27 review.
 
 
 - 2026-11-09: A PowerShell `node -e` check lost embedded quotes. Use a single-quoted here-string piped to `node --input-type=module` for multiline JavaScript checks on Windows.
@@ -100,6 +106,8 @@ Pending: attach Postman evidence for creation/listing and an error case (duplica
 
 | Date | What was done | Result / next step |
 |---|---|---|
+| 2026-11-12 | Reviewed Santiago's toUpperCase() setter change and ran five isolated HTTP checks, including k/K duplicates in POST and PUT. | All passed; commit the RUT fix and memory before the router refactor. |
+| 2026-11-12 | Fetched development updates and read all PR #27 inline/general comments and reviews via GitHub API (gh is unavailable). Verified both requested changes remain absent locally. | Apply RUT uppercase and router.use in separate tested commits; integrate development, attach screenshots and request re-review. |
 | 2026-11-10 | Reviewed new development documentation rules, helped resolve the app.js import conflict, and added owner model documentation plus JSDoc for all five exported controller functions at Santiago's request. | Documentation-only change; commit and push it to the existing PR after syntax/diff checks. |
 | 2026-11-09 | Reviewed project concepts with Santiago and his first model field. Ran `node --check backend/src/models/Propietario.js` successfully. | `nombre` is correct; adjust indentation, then add `rut`. Database behavior has not been tested. |
 | 2026-11-09 | Reviewed the added `rut` field and corrected indentation. | Student must change `Unique` to `unique`; normalization and remaining fields are pending. |

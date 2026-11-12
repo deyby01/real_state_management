@@ -20,7 +20,7 @@ const propietarioSchema = new mongoose.Schema(
             trim: true,
             // Normalize before uniqueness checks; missing values reach the required validator.
             set: valor => typeof valor === "string"
-                ? valor.replaceAll(".", "")
+                ? valor.replaceAll(".", "").toUpperCase()
                 : valor
         },
 
