@@ -28,7 +28,7 @@ All of them use the password **`Password123`**.
 
 These are fake accounts for local development only. Never add real passwords here.
 
-The owner and client users don't have `propietarioId` / `clienteId` yet: they will be linked when the `Propietario` and `Cliente` models exist.
+The owner and client users don't have `propietarioId` / `clienteId` yet: they will be linked when the `Propietario` model exists and the client-linking rule is agreed.
 
 ## What it loads
 
@@ -36,6 +36,7 @@ The owner and client users don't have `propietarioId` / `clienteId` yet: they wi
 |---|---|---|
 | `tiposPropiedad` | 4 | [`data/tiposPropiedad.js`](data/tiposPropiedad.js) |
 | `usuarios` | 5 | [`data/usuarios.js`](data/usuarios.js) |
+| `clientes` | 3 | [`data/clientes.js`](data/clientes.js) |
 | `bitacora` | 0 (only emptied) | — Entries are created by real state changes, never by the fixtures |
 | `propietarios` | 3 (2 active, 1 inactive) | [`data/propietarios.js`](data/propietarios.js); business records, not linked to login accounts yet |
 

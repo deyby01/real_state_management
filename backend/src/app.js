@@ -9,6 +9,7 @@ import tipoRouter from "./routes/tipoPropiedad.routes.js"
 import authRouter from "./routes/auth.routes.js"
 import bitacoraRouter from "./routes/bitacora.routes.js"
 import propietarioRouter from "./routes/propietario.routes.js"
+import clienteRouter from "./routes/cliente.routes.js"
 import propiedadRouter from "./routes/propiedad.routes.js"
 
 const app = express()
@@ -27,6 +28,7 @@ app.use("/api/auth", authRouter)
 app.use("/api/bitacora", bitacoraRouter)
 app.use("/api/propietarios", propietarioRouter)
 
+app.use("/api/clientes", clienteRouter)
 app.use("/api/propiedades", propiedadRouter)
 
 export default app

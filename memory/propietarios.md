@@ -19,6 +19,8 @@
 
 ## Current next step
 
+Latest integration check (2026-11-12): Santiago started merging updated development; conflicts in app.js and seed.js were resolved by preserving both owner and client contributions. Real seed execution in a temporary database loaded 3 owners and 3 clients; six HTTP checks passed for owner/client/property listing (401 without token, 200 as executive). Temporary database removed. Next: developer stages the two resolutions and this memory, completes the merge commit, pushes, attaches Postman evidence and requests re-review. The merge has not yet been committed by the agent.
+
 RUT fix committed as 0cdf21b. Santiago replaced repeated route middleware with a single propietarioRouter.use(verificarToken, permitirRoles("EJECUTIVO")); all five routes remain below it with no repeated middleware. 25 isolated HTTP checks passed: each route rejects missing tokens (401) and ADMIN/CLIENTE/PROPIETARIO (403), while EJECUTIVO can create (201), list, read, update and soft-delete (200). Temporary database removed. Next: commit the router and memory, integrate updated development, collect Postman screenshots and push for re-review.
 
 Review checked on 2026-11-12 against GitHub PR #27 and the local files. Santiago added toUpperCase() to the RUT setter. Five isolated HTTP checks passed: lowercase k creates a canonical uppercase K (201), uppercase duplicate returns 409, another owner creates successfully (201), updating it to the same lowercase-k RUT returns 409, and null RUT still returns 400. Temporary database removed. Next: commit the model and this memory, then protect the whole router with router.use and remove per-route middleware repetition in a separate tested commit. Add successful/error Postman screenshots and request re-review. Optional format validation and semicolon style are not merge blockers; do not rewrite published history.
@@ -108,6 +110,7 @@ Pending: attach Postman evidence for creation/listing and an error case (duplica
 
 | Date | What was done | Result / next step |
 |---|---|---|
+| 2026-11-12 | Resolved app.js and seed.js merge conflicts keeping both owner/client modules. Verified combined seed and six listing/auth HTTP checks in an isolated database; git diff --check passed. | Developer must stage resolutions and complete merge, then push and request re-review with screenshots. |
 | 2026-11-12 | Confirmed RUT commit 0cdf21b, reviewed Santiago's saved router.use refactor, and ran 25 isolated HTTP permission/CRUD checks. | All passed; commit router and memory separately, then integrate development and submit review evidence. |
 | 2026-11-12 | Reviewed Santiago's toUpperCase() setter change and ran five isolated HTTP checks, including k/K duplicates in POST and PUT. | All passed; commit the RUT fix and memory before the router refactor. |
 | 2026-11-12 | Fetched development updates and read all PR #27 inline/general comments and reviews via GitHub API (gh is unavailable). Verified both requested changes remain absent locally. | Apply RUT uppercase and router.use in separate tested commits; integrate development, attach screenshots and request re-review. |

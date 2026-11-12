@@ -194,6 +194,10 @@ The **`TipoPropiedad` flow is the reference implementation**. New features copy 
 - Every schema uses `timestamps: true` and an explicit `collection` name (rule 13).
 - Controllers are `async` functions with `try/catch`. Errors respond with `{ mensaje, error }`.
 - MongoDB duplicate key error (`error.code === 11000`) responds `409`.
+- **Who can use a route comes from the use-case matrix** of the case specification (`docs/Caso3_GestionInmobiliaria_Especificaciones.md`, section of use cases by actor), not from intuition. `ADMIN` is not "the role that can do everything": for example, CU2 (owners), CU3 (properties) and CU5 (clients) belong to the executive only. Look up the route's CU before protecting it.
+- **When every route of a router has the same protection, declare it once** with `router.use(verificarToken, permitirRoles(...))` (see `propiedad.routes.js`, `bitacora.routes.js`, `cliente.routes.js`). A route added later is protected automatically. When converting a router, **delete** the old per-route middlewares: a leftover route with different roles is dead code that misleads the reviewer.
+- Every business-state field that the system changes (`estado`, `rol`, `activo`, `ejecutivoId`) stays **out of the body whitelist**: a new property is always `DISPONIBLE`, a new client always `INTERESADO`, a new user always `CLIENTE`.
+- `PUT` and `DELETE` filter `{ _id, activo: true }`, so a soft-deleted record answers `404` and cannot be edited or deleted twice.
 
 ### Code documentation
 

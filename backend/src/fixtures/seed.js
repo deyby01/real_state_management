@@ -5,6 +5,8 @@ import bcrypt from "bcryptjs"
 import { connectDB } from "../config/db.js"
 import TipoPropiedad from "../models/TipoPropiedad.js"
 import Usuario from "../models/Usuario.js"
+import Cliente from "../models/Cliente.js"
+import { clientes } from "./data/clientes.js"
 import { tiposPropiedad } from "./data/tiposPropiedad.js"
 import { usuarios, PASSWORD_PRUEBA } from "./data/usuarios.js"
 import Bitacora from "../models/Bitacora.js"
@@ -22,6 +24,7 @@ const seed = async () => {
     // 1. Empty the collections, so running the seed twice gives the same result
     await TipoPropiedad.deleteMany({})
     await Usuario.deleteMany({})
+    await Cliente.deleteMany({})
     await Bitacora.deleteMany({})
     await Propietario.deleteMany({})
 
@@ -33,6 +36,12 @@ const seed = async () => {
     const passwordHash = await bcrypt.hash(PASSWORD_PRUEBA, 10)
     await Usuario.insertMany(usuarios.map((usuario) => ({ ...usuario, passwordHash })))
     console.log(`Usuarios: ${usuarios.length} (contraseña: ${PASSWORD_PRUEBA})`)
+
+    // 4. Clients
+    await Cliente.insertMany(clientes)
+    console.log(`Clientes: ${clientes.length}`)
+
+    // 5. Owners
     await Propietario.insertMany(propietarios)
     console.log(`Propietarios: ${propietarios.length}`)
 }

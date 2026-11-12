@@ -2,7 +2,7 @@
 
 > **What it is:** this file is the persistent memory of the project. It stores what the project is, what has been done, what is being done, what comes next and the necessary references.
 > **Agent role and rules:** see [`AGENTS.md`](AGENTS.md). That file defines who the agent is, how it must act and which mistakes not to repeat.
-> **Last updated:** 2026-11-10
+> **Last updated:** 2026-11-12
 > **Who edits this file:** only the integrator (Deyby), after merging a Pull Request. Each model's progress lives in [`memory/`](memory/README.md), one file per model. See [`AGENTS.md → Shared memory`](AGENTS.md#shared-memory-who-edits-what).
 > **Keep:** do not exceed ~1000 lines. Summarize, do not duplicate. Deep technical details live in `docs/DATA_MODEL.md` and in the case specification.
 
@@ -75,15 +75,15 @@ This flow must be demonstrable end to end: **React → Node/Express → MongoDB*
 
 ### Current status
 
-*Updated 2026-11-10.* Authentication (PR #20), the audit log (PR #22) and the property management API, phase A (PR #28), are merged into `development`, and the team now builds the backend **one model per person**, in the order of `docs/DATA_MODEL.md` (see [Model assignments](#model-assignments)). The React frontend has the pages mocked up but does not consume the API yet.
+*Updated 2026-11-12.* Authentication (PR #20), the audit log (PR #22), the property management API, phase A (PR #28), and clients (PR #25) are merged into `development`, and the team now builds the backend **one model per person**, in the order of `docs/DATA_MODEL.md` (see [Model assignments](#model-assignments)). The React frontend has the pages mocked up but does not consume the API yet.
 
 | Area | Status | Detail |
 |---|---|---|
 | UI design | ✅ Done | Landing, Properties, About Us, Contact and Login/Register pages mocked up in React + Tailwind. |
 | Original HTML/CSS frontend | ⏸️ Frozen | `frontend/` remains only as a design reference. No new features are added. |
 | React frontend | 🚧 In progress | Static pages; no API calls yet. |
-| Express backend | 🚧 In progress | `GET /api/health`, `TipoPropiedad` (PR #19), authentication (PR #20), audit log (PR #22) and properties phase A (PR #28). The server stops if the DB connection or `JWT_SECRET` is missing. |
-| MongoDB data model | 🚧 4 of 8 implemented | `usuarios`, `tiposPropiedad`, `bitacora` and `propiedades` in code; the other 4 are assigned (see [Model assignments](#model-assignments)). |
+| Express backend | 🚧 In progress | `GET /api/health`, `TipoPropiedad` (PR #19), authentication (PR #20), audit log (PR #22), properties phase A (PR #28) and clients (PR #25). The server stops if the DB connection or `JWT_SECRET` is missing. |
+| MongoDB data model | 🚧 5 of 8 implemented | `usuarios`, `tiposPropiedad`, `bitacora`, `propiedades` and `clientes` in code; the other 3 are assigned (see [Model assignments](#model-assignments)). |
 | Authentication | ✅ Merged (PR #20) | Register, login (JWT), `GET /api/auth/me`, `verificarToken` and `permitirRoles`; fixtures with one user per role (`make seed`). Details: [`memory/usuarios.md`](memory/usuarios.md). |
 | Postman testing | 🚧 Manual | Endpoints tested by hand; no shared Postman collection in the repo yet. |
 
@@ -122,9 +122,9 @@ real_state_management/
 ├── backend/                 # Express + Mongoose
 │   ├── src/
 │   │   ├── config/db.js     # MongoDB connection
-│   │   ├── models/          # TipoPropiedad.js, Usuario.js, Bitacora.js, Propiedad.js
-│   │   ├── controllers/     # tipoPropiedad.controller.js, auth.controller.js, bitacora.controller.js, propiedad.controller.js
-│   │   ├── routes/          # tipoPropiedad.routes.js, auth.routes.js, bitacora.routes.js, propiedad.routes.js
+│   │   ├── models/          # TipoPropiedad.js, Usuario.js, Bitacora.js, Propiedad.js, Cliente.js
+│   │   ├── controllers/     # tipoPropiedad.controller.js, auth.controller.js, bitacora.controller.js, propiedad.controller.js, cliente.controller.js
+│   │   ├── routes/          # tipoPropiedad.routes.js, auth.routes.js, bitacora.routes.js, propiedad.routes.js, cliente.routes.js
 │   │   ├── services/        # bitacora.service.js (registrarBitacora, used by other controllers)
 │   │   ├── middlewares/     # auth.middleware.js (verificarToken), role.middleware.js (permitirRoles)
 │   │   ├── fixtures/        # seed.js + data/ (run with make seed)
@@ -176,6 +176,11 @@ real_state_management/
 | `PUT` | `/api/propiedades/:id` | `EJECUTIVO`. Partial update (`200`); `estado`, `ejecutivoId`, `propietarioId`, `activo` not editable; `direccion` sent complete |
 | `DELETE` | `/api/propiedades/:id` | `EJECUTIVO`. Soft delete (`200`); `RESERVADA`/`ARRENDADA` → `409`. Logs `ELIMINACION` |
 | `PATCH` | `/api/propiedades/:id/estado` | `EJECUTIVO`. State change by the transition table (`200`); unknown state → `400`; not allowed or `RESERVADA` → `409`. Logs `CAMBIO_ESTADO` |
+| `GET` | `/api/clientes` | **`EJECUTIVO` only** (whole router, CU5). Active clients (`200`) |
+| `GET` | `/api/clientes/:id` | `EJECUTIVO`. One client, also when inactive (`200`); not found → `404`; invalid id → `400` |
+| `POST` | `/api/clientes` | `EJECUTIVO`. Creates a client (`201`), always `INTERESADO` (`estado` in the body ignored), RUT normalized; invalid data → `400`; duplicate RUT or email → `409` |
+| `PUT` | `/api/clientes/:id` | `EJECUTIVO`. Partial update (`200`); `estado` and `activo` not editable; inactive or not found → `404`; duplicate → `409` |
+| `DELETE` | `/api/clientes/:id` | `EJECUTIVO`. Soft delete (`200`); already inactive or not found → `404` |
 
 ---
 
@@ -190,12 +195,12 @@ Each model of [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md) is assigned to **one** 
 | # | Collection | Model | Owner | Status | Depends on | Memory file |
 |---|---|---|---|---|---|---|
 | 1 | `usuarios` | `Usuario` + auth | Deyby | ✅ Merged (PR #20) | — | [`memory/usuarios.md`](memory/usuarios.md) |
-| 2 | `propietarios` | `Propietario` | Santiago | ⬜ Assigned | `usuarios` (✅) | `memory/propietarios.md` |
-| 3 | `clientes` | `Cliente` | Jose | ⬜ Assigned | `usuarios` (✅) | `memory/clientes.md` |
+| 2 | `propietarios` | `Propietario` | Santiago | 🚧 PR open, changes requested (RUT `k`/`K`, `router.use`); must merge `development` and keep both sides in `app.js` and `seed.js` | `usuarios` (✅) | `memory/propietarios.md` |
+| 3 | `clientes` | `Cliente` | Jose | ✅ Merged (PR #25) | `usuarios` (✅) | [`memory/clientes.md`](memory/clientes.md) |
 | 4 | `tiposPropiedad` | `TipoPropiedad` | Deyby | ✅ Merged (PR #19) | — | [`memory/tiposPropiedad.md`](memory/tiposPropiedad.md) |
 | 5 | `propiedades` | `Propiedad` | Deyby | 🚧 Phase A merged (PR #28); phase B (catalog, owner view, fixtures) pending | `tiposPropiedad` (✅), `propietarios`, `usuarios` (✅); writes `bitacora` (✅) | [`memory/propiedades.md`](memory/propiedades.md) |
-| 6 | `visitas` | `Visita` | Ignacio | ⬜ Assigned | `propiedades` (✅ phase A), `clientes`, `usuarios` (✅); writes `bitacora` (✅) | `memory/visitas.md` |
-| 7 | `solicitudesArriendo` | `SolicitudArriendo` | Roberto | ⬜ Assigned (PR open, changes requested) | `propiedades` (✅ phase A), `clientes`, `usuarios` (✅); writes `bitacora` (✅) | `memory/solicitudesArriendo.md` |
+| 6 | `visitas` | `Visita` | Ignacio | ⬜ Assigned | `propiedades` (✅ phase A), `clientes` (✅), `usuarios` (✅); writes `bitacora` (✅) | `memory/visitas.md` |
+| 7 | `solicitudesArriendo` | `SolicitudArriendo` | Roberto | ⬜ Assigned (PR open, changes requested) | `propiedades` (✅ phase A), `clientes` (✅), `usuarios` (✅); writes `bitacora` (✅) | `memory/solicitudesArriendo.md` |
 | 8 | `bitacora` | `Bitacora` | Deyby | ✅ Merged (PR #22) | `usuarios` (✅) | [`memory/bitacora.md`](memory/bitacora.md) |
 
 > Deyby owns two models (`propiedades` and `bitacora`) besides being the integrator. If a developer's name is not in this table, the agent asks which model they were assigned and tells them to ask Deyby to add it.
@@ -720,6 +725,7 @@ Test passwords go in the fixtures README, never real passwords.
 | 2026-11-03 / 10 | `propiedades` phase A built by the developer with guidance: model with embedded objects, CRUD for executives, soft delete, state machine with `TRANSICIONES`; bitacora gets `ELIMINACION`. Reviewed Roberto's `solicitudesArriendo` PR (changes requested). Merged (PR #28). | Next: phase B of `propiedades` (public catalog; owner view and fixtures wait for `propietarios`). |
 | 2026-11-10 | New agent rules for the whole team: English JSDoc docstrings for every exported function and focused commits per tested step (teaching loop now has *document* and *commit* steps). | Teammates' agents pick them up after `git pull`. |
 | 2026-11-10 | Documented all the existing backend code (`backend/src/`) with English JSDoc and comments, as the team's reference for the new documentation rule. Comments only, no behaviour change. | Teammates use it as an example; next: properties phase B. |
+| 2026-11-11 / 12 | Reviewer mode: reviewed Santiago's `propietarios` (changes requested: RUT `k`/`K` duplicates, `router.use`) and Jose's `clientes` (changes requested: `EJECUTIVO` only per CU5, `estado` out of the body, `activo: true` filter on `PUT`/`DELETE`, JSDoc responses). Jose applied everything in focused commits; `clientes` merged (PR #25). Accepted lessons moved to `AGENTS.md → Backend structure` (roles from the use-case matrix, `router.use`, state fields out of the whitelist, active-only updates). | Next: Santiago merges `development` into his branch, then re-review and merge; then Ignacio and Roberto. Pending proposal: `req.body ?? {}` so a `PUT` without a JSON body answers `400` instead of `500`. |
 
 ---
 
