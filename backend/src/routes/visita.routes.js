@@ -16,15 +16,17 @@ import {
  * Visit routes: list, detail, creation, rescheduling and state machine transitions.
  *
  * Mount: app.use("/api/visitas", visitaRouter) in backend/src/app.js.
- * Protection: all routes currently require authentication (verificarToken) and
- * allow only ADMIN and EJECUTIVO roles (permitirRoles).
- *
- * Note: CLIENTE endpoints are deferred until usuarios.clienteId is linked with
- * the Clientes model (Jose).
+ * Protection: every route requires authentication and the EJECUTIVO role (RF7).
+ * - ADMIN has no visit use case in this module; visit reporting will use
+ *   GET /api/reportes/visitas when implemented (RF12).
+ * - CLIENTE is deferred until usuarios.clienteId is linked with Clientes (Jose):
+ *   POST (own request), GET (own visits) and PATCH cancelar (own visit only).
+ * - Any EJECUTIVO may manage any visit (Decision A); per-executive-only restrictions
+ *   remain a proposal pending professor validation.
  */
 const visitaRouter = Router()
 
-visitaRouter.use(verificarToken, permitirRoles("ADMIN", "EJECUTIVO"))
+visitaRouter.use(verificarToken, permitirRoles("EJECUTIVO"))
 
 // Reading and creation
 visitaRouter.get("/", getVisitas)

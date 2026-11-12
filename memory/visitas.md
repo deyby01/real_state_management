@@ -14,7 +14,7 @@
 | 2 | Controller: list and get by id | `200`, `404` | ✅ |
 | 3 | Controller: create, modify date and state transitions (business rules + bitacora) | `201`, `400`, `409` | ✅ (POST with RN-16/D10, `PUT` reschedule and the four PATCH transitions) |
 | 4 | Soft delete | — | N/A: visits are voided with CANCELADA; DATA_MODEL has no activo |
-| 5 | Routes + mounting in `app.js` + role protection | No token `401`, wrong role `403` | 🚧 (Partially mounted in Step 2; pending full role matrix for POST/PUT/PATCH) |
+| 5 | Routes + mounting in `app.js` + role protection | No token `401`, wrong role `403` | ✅ (mounted in Step 2; matrix closed in step 5: `EJECUTIVO` only, `ADMIN` 403, `CLIENTE` deferred) |
 | 6 | Fixtures in `backend/src/fixtures/data/` + `seed.js` | `make seed` loads sample visits | ⬜ |
 | 7 | Full Postman pass + Pull Request (description from `.github/pull_request_template.md`) | Happy path and error cases (`400`, `401`, `403`, `409`) | ⬜ |
 
@@ -22,16 +22,17 @@
 
 | Method | Route | Who can use it | Responses |
 |---|---|---|---|
-| `GET` | `/api/visitas?estado=&propiedadId=&ejecutivoId=&desde=&hasta=` | `EJECUTIVO`, `ADMIN` | `200`, `400`, `401`, `403` |
-| `GET` | `/api/visitas/:id` | `EJECUTIVO`, `ADMIN` | `200`, `400`, `401`, `403`, `404` |
-| `POST` | `/api/visitas` | `EJECUTIVO`, `ADMIN` (`CLIENTE`* once linked) | `201`, `400`, `401`, `403`, `409` |
-| `PUT` | `/api/visitas/:id` | `EJECUTIVO`, `ADMIN` (`CLIENTE`* once linked; reschedule dates while `SOLICITADA` or `CONFIRMADA`) | `200`, `400`, `401`, `403`, `404`, `409` |
-| `PATCH` | `/api/visitas/:id/confirmar` | `EJECUTIVO`, `ADMIN` | `200`, `401`, `403`, `404`, `409` |
-| `PATCH` | `/api/visitas/:id/rechazar` | `EJECUTIVO`, `ADMIN` | `200`, `401`, `403`, `404`, `409` |
-| `PATCH` | `/api/visitas/:id/cancelar` | `CLIENTE`*, `EJECUTIVO`, `ADMIN` | `200`, `401`, `403`, `404`, `409` |
-| `PATCH` | `/api/visitas/:id/resultado` | `EJECUTIVO`, `ADMIN` | `200`, `400`, `401`, `403`, `404`, `409` |
+| `GET` | `/api/visitas?estado=&propiedadId=&ejecutivoId=&desde=&hasta=` | `EJECUTIVO` | `200`, `400`, `401`, `403` |
+| `GET` | `/api/visitas/:id` | `EJECUTIVO` | `200`, `400`, `401`, `403`, `404` |
+| `POST` | `/api/visitas` | `EJECUTIVO` (`CLIENTE`* once linked) | `201`, `400`, `401`, `403`, `409` |
+| `PUT` | `/api/visitas/:id` | `EJECUTIVO` (reschedule dates while `SOLICITADA` or `CONFIRMADA`) | `200`, `400`, `401`, `403`, `404`, `409` |
+| `PATCH` | `/api/visitas/:id/confirmar` | `EJECUTIVO` | `200`, `401`, `403`, `404`, `409` |
+| `PATCH` | `/api/visitas/:id/rechazar` | `EJECUTIVO` | `200`, `401`, `403`, `404`, `409` |
+| `PATCH` | `/api/visitas/:id/cancelar` | `EJECUTIVO` (`CLIENTE`* own visit once linked) | `200`, `401`, `403`, `404`, `409` |
+| `PATCH` | `/api/visitas/:id/resultado` | `EJECUTIVO` | `200`, `400`, `401`, `403`, `404`, `409` |
 
-> `*`: Pending resolution of `usuarios.clienteId` linkage with `clientes`.
+> `*`: `CLIENTE` endpoints are deferred until `usuarios.clienteId` is linked with `clientes` (Jose).
+> `ADMIN` has no access to any visit route: per the case, its visit use case is CU10 (reports), through `/api/reportes/visitas`, which is not implemented yet.
 
 ## Decisions
 
@@ -50,7 +51,9 @@
 - **`fechaInicio` must be in the future:** Validated on creation and date rescheduling.
 - **Visits only on `PUBLICADA` properties (RN-16):** the property is read with `findOne({ _id, activo: true })` before the overlap check. Missing or soft-deleted → `400`; exists but not `PUBLICADA` → `409` with `estadoActual`.
 - **No `DELETE` and no `activo` field:** `visitas` does not have an `activo` field in `DATA_MODEL.md`. A visit is voided using the `CANCELADA` status. *(pending professor validation)*
-- **Roles per endpoint are a proposal:** *(pending professor validation)* Open question for step 5: `ADMIN` currently sees and operates every visit (list, create, reschedule, transitions). If the case limits `ADMIN` to supervision (read-only) and leaves the operation to the assigned `EJECUTIVO`, the matrix has to move to per-route `permitirRoles` plus an ownership check. Confirm with the professor before closing step 5.
+- **Role matrix (step 5, closed):** every visit route requires `EJECUTIVO`. The case assigns CU6 (request a visit) to `CLIENTE` and CU7 (manage visits) to `EJECUTIVO`; `ADMIN` only has CU10 (reports), so it gets `403` on visits and will read them through `/reportes/visitas` (not implemented yet). The endpoint table in the case also lists visits as "Cliente / Ejecutivo", never Admin.
+- **Temporary bridge for creation:** `POST /visitas` stays `EJECUTIVO` until `clientes` is merged, because the case assigns it to `CLIENTE`. Once linked, `CLIENTE` (own request) joins and `EJECUTIVO` remains for visits requested by phone *(pending professor validation)*.
+- **Cross-executive management (Decision A):** any `EJECUTIVO` can see and modify any visit; per-owner restrictions were rejected for now, consistent with `propiedades` (all executives manage all properties) and with the demo requirement.
 - **Automatic calculation of `fechaFin` (D8):** Computed via a Mongoose `pre("validate")` hook (`fechaFin = fechaInicio + 1 hour`). Guarantees duration consistency across controllers, fixtures, and scripts.
 - **Document pattern for updates:** Rescheduling (`PUT`) must use `doc = await Visita.findById(); doc.fechaInicio = ...; await doc.save()`. This ensures both the future date validator and the `pre("validate")` hook execute properly without query-context issues (`TypeError: this.isModified`).
 - **Executive visibility (Decision A):** `EJECUTIVO` and `ADMIN` can see all visits by default to facilitate evaluation demos, but can filter by individual agendas using `?ejecutivoId=`.
@@ -87,6 +90,7 @@
 ## Proposals for AGENTS.md
 
 - **Validate soft delete against `DATA_MODEL.md`:** Do not assume `activo` or a `DELETE` endpoint exists on every model. Check `docs/DATA_MODEL.md` explicitly: collections like `visitas` manage lifecycle via domain states (`CANCELADA`), not soft delete.
+- **Check the actor × use case matrix before assigning roles:** `ADMIN` is not a superuser in this case; it only manages users/parameters and reads reports (CU10). Assigning it every endpoint "for convenience" contradicts the spec and is hard to defend. Read the matrix in §3.1 of the case and the endpoint table in §9.
 
 ## Local test data (working database, not in git)
 
@@ -96,6 +100,7 @@
 - Property `6af518d723479ad04a506216` — "Depto prueba RN16 B", `PUBLICADA`, `activo: false` (soft-delete case).
 - Visits created for 3c: `6af518d723479ad04a506219` (2027-10-05), `6af518d723479ad04a50621b` (2027-10-06), `6af518e423479ad04a50621f` (2027-10-10), all `SOLICITADA`; older visits from steps 2–3 remain in 2026-11-15 and 2027-06/08/09/10-15.
 - Visits created for 3d (my test runs and the developer's): December 2027 and January–February 2028, in every state, including `REALIZADA` ones with `resultado`. One of them (`6af522c67b2b83679c53ae9d`, 2027-12-14) is `REALIZADA` **without** a bitacora entry: it is the evidence of the pre-fix `observacion` bug (state saved, audit log failed).
+- Visits created for the step 5 role matrix: March–May 2028, in every state (some cancelled by `ejecutivo2` to prove Decision A).
 - Their `bitacora` entries (`entidad: "VISITA"`) cannot be deleted (rule 12).
 
 Optional cleanup before the fixtures step (local test documents only; the date filter also covers the 2028 visits):
@@ -117,3 +122,4 @@ docker compose exec mongo mongosh real_estate --quiet --eval "db.visitas.deleteM
 | 2026-11-11 | Memory sync before step 3d | Recorded the local test data left in the database (properties A/B and the 2027 visits) and the `ADMIN` role-matrix question to resolve in step 5. Branch is 6 commits ahead of `origin/feature/ignacio/visitas` and has not been pushed yet. |
 | 2026-11-11 | Step 3d: `TRANSICIONES`, `transicionarVisita`, the four PATCH endpoints and `PUT` reschedule | PATCH verified: 200/409/400/401/403/404, bitacora `CAMBIO_ESTADO` with `estadoAnterior`/`estadoNuevo`. PUT verified: 200 on SOLICITADA and CONFIRMADA, `$ne` self-exclusion, 409 on overlap/terminal, 400 on bad date/whitelist, extra fields ignored. Next: step 5 role matrix. |
 | 2026-11-11 | Step 3d fixes after review | Two `500` bugs found by the agent: `resultado` non-string crashed on `.trim()`, and a non-string `observacion` failed the Bitacora cast after the visit was saved (state changed, no audit entry). Fixed with a string type check, `observacion` sanitization and a `ValidationError` handler in `putVisita`; re-tested (`400` for `resultado: 123`, `200` + bitacora entry with empty `observacion`). |
+| 2026-11-12 | Step 5: role matrix | Router restricted to `EJECUTIVO`; controller docstrings updated. Verified the full matrix (8 endpoints × EJECUTIVO/ADMIN/CLIENTE/PROPIETARIO/no token): `200/201` for the executive, `403` for the other roles, `401` without a token; `403` also with a malformed id (authorization runs before validation). `ejecutivo2` cancelled a visit created by `ejecutivo1` → `200` (Decision A). Next: step 6 (fixtures). |

@@ -72,7 +72,7 @@ const transicionarVisita = async (req, res, estadoNuevo, { observacion, cambios 
 /**
  * Lists visits with optional filters (agenda view).
  *
- * Route: GET /api/visitas (ADMIN, EJECUTIVO).
+ * Route: GET /api/visitas (EJECUTIVO).
  * - Optional query filters:
  *   - `estado`: validated against ESTADOS_VISITA (400 if invalid).
  *   - `propiedadId`, `ejecutivoId`: filtered by ObjectId.
@@ -145,7 +145,7 @@ export const getVisitas = async (req, res) => {
 /**
  * Retrieves a single visit by its ObjectId.
  *
- * Route: GET /api/visitas/:id (ADMIN, EJECUTIVO).
+ * Route: GET /api/visitas/:id (EJECUTIVO).
  * - Distinguishes between malformed ID format (400 CastError) and valid format
  *   that does not exist in the database (404 Not Found).
  * - Populates executive (`nombre email rol`) and property (`titulo direccion estado`).
@@ -180,7 +180,7 @@ export const getVisitaById = async (req, res) => {
 /**
  * Creates a visit request validating property publication and executive schedule.
  *
- * Route: POST /api/visitas (ADMIN, EJECUTIVO).
+ * Route: POST /api/visitas (EJECUTIVO; CLIENTE once clientes is merged).
  * - Whitelist: only `propiedadId`, `clienteId`, `fechaInicio`, and `observaciones`
  *   are read from the body; `estado`, `resultado`, and `fechaFin` are ignored.
  * - Enforces RN-16: property must exist, be active (`activo: true`), and be `PUBLICADA`.
@@ -307,7 +307,7 @@ export const postVisita = async (req, res) => {
 /**
  * Reschedules a visit's start date and recalculates its end date (RF7).
  *
- * Route: PUT /api/visitas/:id (ADMIN, EJECUTIVO).
+ * Route: PUT /api/visitas/:id (EJECUTIVO; CLIENTE own visit once clientes is merged).
  * Body: { fechaInicio, observaciones? }.
  * - Whitelist: only `fechaInicio` and `observaciones` are updated. `ejecutivoId`,
  *   `propiedadId`, `clienteId`, `estado`, and `resultado` are ignored.
@@ -408,7 +408,7 @@ export const putVisita = async (req, res) => {
 /**
  * Confirms a visit request (SOLICITADA → CONFIRMADA).
  *
- * Route: PATCH /api/visitas/:id/confirmar (ADMIN, EJECUTIVO).
+ * Route: PATCH /api/visitas/:id/confirmar (EJECUTIVO).
  * Body: { observacion? }.
  * Responses: 200 confirmed · 400 invalid id · 401/403 auth · 404 not found · 409 transition not allowed · 500 server error.
  */
@@ -420,7 +420,7 @@ export const confirmarVisita = (req, res) =>
 /**
  * Rejects a visit request (SOLICITADA → RECHAZADA).
  *
- * Route: PATCH /api/visitas/:id/rechazar (ADMIN, EJECUTIVO).
+ * Route: PATCH /api/visitas/:id/rechazar (EJECUTIVO).
  * Body: { observacion? }.
  * Responses: 200 rejected · 400 invalid id · 401/403 auth · 404 not found · 409 transition not allowed · 500 server error.
  */
@@ -432,7 +432,7 @@ export const rechazarVisita = (req, res) =>
 /**
  * Cancels a visit (SOLICITADA or CONFIRMADA → CANCELADA).
  *
- * Route: PATCH /api/visitas/:id/cancelar (ADMIN, EJECUTIVO).
+ * Route: PATCH /api/visitas/:id/cancelar (EJECUTIVO; CLIENTE own visit once clientes is merged).
  * Body: { observacion? }.
  * Responses: 200 cancelled · 400 invalid id · 401/403 auth · 404 not found · 409 transition not allowed · 500 server error.
  */
@@ -444,7 +444,7 @@ export const cancelarVisita = (req, res) =>
 /**
  * Registers visit outcome and marks it as completed (CONFIRMADA → REALIZADA).
  *
- * Route: PATCH /api/visitas/:id/resultado (ADMIN, EJECUTIVO).
+ * Route: PATCH /api/visitas/:id/resultado (EJECUTIVO).
  * Body: { resultado, observacion? }.
  * - Validates that `resultado` is present and non-empty (400) before triggering transition.
  * Responses: 200 completed · 400 missing resultado or invalid id · 401/403 auth · 404 not found ·
