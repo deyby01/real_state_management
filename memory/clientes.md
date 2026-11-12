@@ -1,6 +1,6 @@
 # clientes — Cliente
 
-> **Owner:** Jose · **Branch:** `feature/jose/clientes` · **Status:** 🚧 In review — steps 0–9 done (step 9 = the three changes requested in the review: roles, `estado` and the `activo` filter); Pull Request [#25](https://github.com/deyby01/real_state_management/pull/25) is up to date with `development` and waiting for the integrator to re-review
+> **Owner:** Jose · **Branch:** `feature/jose/clientes` · **Status:** ✅ Merged (PR [#25](https://github.com/deyby01/real_state_management/pull/25), 2026-11-12). Pending follow-ups: RUT normalization as a schema setter once `propietarios` is merged; `usuarios.clienteId` link agreed with Deyby
 > **Specification:** [`docs/DATA_MODEL.md → clientes`](../docs/DATA_MODEL.md#clientes-interested-clients-and-tenants)
 > **Depends on:** `usuarios` (✅ merged, linked through `usuarios.clienteId`) · **Used by:** `visitas`, `solicitudesArriendo`
 
