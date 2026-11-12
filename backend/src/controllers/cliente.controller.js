@@ -71,18 +71,18 @@ export const getClienteById = async (req, res) => {
  *
  * Route: POST /api/clientes (EJECUTIVO only).
  * - Only whitelisted fields are read from the body (prevents mass assignment):
- *   `activo`, `_id` and `createdAt` can never be injected by the client.
+ *   `estado`, `activo`, `_id` and `createdAt` can never be injected by the client.
+ * - `estado` is not a form field: a new client is always INTERESADO by the schema
+ *   default. It becomes ARRENDATARIO only when the rental request flow processes a
+ *   signed contract, the same rule that keeps `rol` out of the user body (rule 17).
  * - The RUT is normalized before saving and the schema lowercases the email.
  * - A duplicated RUT or email is rejected by the unique indexes (RN-11); the
  *   response names the field that collided because there are two of them.
- *
- * Responses: 201 created · 400 invalid data (ValidationError) · 409 duplicate
- * RUT/email · 401/403 auth · 500 server error.
  */
 export const postCliente = async (req, res) => {
     try {
         // Whitelist: only these fields are taken from the body
-        const { rut, nombre, email, telefono, ciudad, comuna, estado } = req.body
+        const { rut, nombre, email, telefono, ciudad, comuna } = req.body
 
         const nuevoCliente = await Cliente.create({
             rut: normalizarRut(rut),
@@ -91,7 +91,6 @@ export const postCliente = async (req, res) => {
             telefono,
             ciudad,
             comuna,
-            estado,
         })
         res.status(201).json(nuevoCliente)
     } catch (error) {
@@ -123,21 +122,20 @@ export const postCliente = async (req, res) => {
  * - Same whitelist as create, but `activo` is deliberately excluded: the only way
  *   to deactivate a client is DELETE, so the intent is explicit and a form can
  *   never deactivate a client by accident.
+ * - `estado` is excluded as well: ARRENDATARIO is a business fact written by the
+ *   rental request flow, never by an edit form, so the value is silently ignored.
  * - `rut` is normalized only when it comes in the body, so a partial update does
  *   not erase it; a mistyped RUT can be corrected.
- * - `runValidators: true` is required: Mongoose skips schema validation (including
- *   the `estado` enum) on updates by default.
+ * - `runValidators: true` is required: Mongoose skips schema validation on updates
+ *   by default, so a `required` field sent empty would be stored as an empty string.
  * - `returnDocument: "after"` returns the updated document; by default Mongoose
  *   returns the previous one, so the client would see stale data.
- *
- * Responses: 200 updated · 400 invalid data or invalid id · 404 not found ·
- * 409 duplicate RUT/email · 401/403 auth · 500 server error.
  */
 export const putCliente = async (req, res) => {
     try {
-        const { rut, nombre, email, telefono, ciudad, comuna, estado } = req.body
+        const { rut, nombre, email, telefono, ciudad, comuna } = req.body
 
-        const datos = { nombre, email, telefono, ciudad, comuna, estado }
+        const datos = { nombre, email, telefono, ciudad, comuna }
 
         // Only touch rut when it comes in the body, so a partial update keeps the stored one
         if (rut !== undefined) {
