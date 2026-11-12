@@ -1,4 +1,5 @@
 import Visita, { ESTADOS_VISITA, DURACION_VISITA_MS } from "../models/Visita.js"
+import Propiedad from "../models/Propiedad.js"
 import { registrarBitacora } from "../services/bitacora.service.js"
 
 /**
@@ -12,7 +13,7 @@ import { registrarBitacora } from "../services/bitacora.service.js"
  *     with offset (e.g. ?desde=2026-11-15T00:00:00-03:00); bare YYYY-MM-DD parses
  *     as UTC midnight and truncates Chilean local time at 21:00 of the previous day.
  * - Chronological order: sorted by `fechaInicio` ascending (upcoming visits first).
- * - Populates executive details (`nombre email rol`).
+ * - Populates executive (`nombre email rol`) and property (`titulo direccion estado`).
  *
  * Responses: 200 list · 400 invalid filter/date/id · 401/403 auth · 500 server error.
  */
@@ -60,6 +61,7 @@ export const getVisitas = async (req, res) => {
         const visitas = await Visita.find(filtro)
             .sort({ fechaInicio: 1 })
             .populate("ejecutivoId", "nombre email rol")
+            .populate("propiedadId", "titulo direccion estado")
 
         res.status(200).json(visitas)
     } catch (error) {
@@ -79,7 +81,7 @@ export const getVisitas = async (req, res) => {
  * Route: GET /api/visitas/:id (ADMIN, EJECUTIVO).
  * - Distinguishes between malformed ID format (400 CastError) and valid format
  *   that does not exist in the database (404 Not Found).
- * - Populates executive details (`nombre email rol`).
+ * - Populates executive (`nombre email rol`) and property (`titulo direccion estado`).
  *
  * Responses: 200 visit details · 400 malformed id · 401/403 auth · 404 not found · 500 server error.
  */
@@ -87,7 +89,9 @@ export const getVisitaById = async (req, res) => {
     try {
         const { id } = req.params
 
-        const visita = await Visita.findById(id).populate("ejecutivoId", "nombre email rol")
+        const visita = await Visita.findById(id)
+            .populate("ejecutivoId", "nombre email rol")
+            .populate("propiedadId", "titulo direccion estado")
 
         if (!visita) {
             return res.status(404).json({ mensaje: "Visita no encontrada" })
@@ -107,39 +111,40 @@ export const getVisitaById = async (req, res) => {
 }
 
 /**
- * Creates a visit request with collision/overlap check.
+ * Creates a visit request validating property publication and executive schedule.
  *
  * Route: POST /api/visitas (ADMIN, EJECUTIVO).
- * - Whitelist: only `propiedadId`, `clienteId`, `ejecutivoId`, `fechaInicio`, and `observaciones`
- *   are read from the body; `estado`, `resultado`, and `fechaFin` are ignored. A new visit
- *   always starts as SOLICITADA.
- * - Validates that `fechaInicio` is a valid date and strictly in the future.
- * - Prevents executive schedule overlap (RN-10): cross-interval check ($lt/$gt) excludes
- *   CANCELADA and RECHAZADA visits; returns 409 with conflicting visit details.
+ * - Whitelist: only `propiedadId`, `clienteId`, `fechaInicio`, and `observaciones`
+ *   are read from the body; `estado`, `resultado`, and `fechaFin` are ignored.
+ * - Enforces RN-16: property must exist, be active (`activo: true`), and be `PUBLICADA`.
+ *   Returns 400 if property does not exist or was deleted; 409 if not in PUBLICADA status.
+ * - Enforces D10: `ejecutivoId` is copied directly from the property to preserve historical
+ *   traceability (never accepted from client).
+ * - Validates that `fechaInicio` is a valid date and strictly in the future (400).
+ * - Enforces RN-10: prevents executive schedule overlap using a cross-interval check
+ *   ($lt/$gt) against all properties (excluding CANCELADA/RECHAZADA visits) → 409 with conflict details.
  * - Logs a CREACION entry in the audit log after saving (RN-13).
- * - Temporary contract (Option A): `ejecutivoId` is received in the body until step 3c,
- *   where it will be copied from the property (D10) and removed from the whitelist.
- * - Not verified yet: `propiedadId` existence/state (RN-16, step 3c) and `clienteId`
- *   (Clientes model not merged, Jose).
+ * - Populates executive (`nombre email rol`) and property (`titulo direccion estado`) on 201 response.
+ * - Not verified yet: `clienteId` reference (Clientes model not merged, Jose).
  * - Known limitation: concurrent requests for the same executive and interval may both pass
  *   overlap check without MongoDB exclusion constraints (acceptable without transactions).
  *
- * Responses: 201 created · 400 missing fields, malformed id or invalid/past date · 401/403 auth ·
- * 409 executive overlap conflict · 500 server error.
+ * Responses: 201 created · 400 missing fields, invalid/deleted property, malformed id or past date ·
+ * 401/403 auth · 409 property not published (RN-16) or executive overlap (RN-10) · 500 server error.
  */
 export const postVisita = async (req, res) => {
     try {
-        // Whitelist fields to prevent mass assignment (client cannot set estado or resultado)
-        const { propiedadId, clienteId, ejecutivoId, fechaInicio, observaciones } = req.body
+        // Whitelist: ejecutivoId is excluded (copied from property, D10)
+        const { propiedadId, clienteId, fechaInicio, observaciones } = req.body
 
-        if (!propiedadId || !clienteId || !ejecutivoId || !fechaInicio) {
+        if (!propiedadId || !clienteId || !fechaInicio) {
             return res.status(400).json({
-                mensaje: "Los campos propiedadId, clienteId, ejecutivoId y fechaInicio son obligatorios"
+                mensaje: "Los campos propiedadId, clienteId y fechaInicio son obligatorios"
             })
         }
 
-        // Validate date format and future constraint before checking overlap to avoid returning
-        // a misleading 409 Conflict when the date is actually invalid or in the past (400 Bad Request)
+        // Validate date format and future constraint before checking property to avoid returning
+        // a misleading 409 when the date is fundamentally invalid (400 Bad Request)
         const fechaInicioDate = new Date(fechaInicio)
         if (isNaN(fechaInicioDate.getTime())) {
             return res.status(400).json({ mensaje: "La fecha de inicio no es válida" })
@@ -148,11 +153,27 @@ export const postVisita = async (req, res) => {
             return res.status(400).json({ mensaje: "La fecha de inicio debe ser futura" })
         }
 
+        // RN-16: Property must exist, be active, and currently in PUBLICADA status
+        const propiedad = await Propiedad.findOne({ _id: propiedadId, activo: true })
+        if (!propiedad) {
+            return res.status(400).json({ mensaje: "Propiedad no válida o eliminada" })
+        }
+        if (propiedad.estado !== "PUBLICADA") {
+            return res.status(409).json({
+                mensaje: "Solo se pueden agendar visitas en propiedades publicadas",
+                estadoActual: propiedad.estado
+            })
+        }
+
+        // D10: Executive is copied from the property to preserve visit history even if
+        // the property is later reassigned to another executive (never taken from the body)
+        const ejecutivoId = propiedad.ejecutivoId
+
         // Fixed duration (D8): calculate end time for the overlap query
         const fechaFinDate = new Date(fechaInicioDate.getTime() + DURACION_VISITA_MS)
 
         // Overlap check (RN-10): two intervals intersect if (existing.start < new.end && existing.end > new.start).
-        // Checked globally across all properties because an executive cannot attend two places at once.
+        // Evaluated using the property's executive, globally across all properties.
         const solapada = await Visita.findOne({
             ejecutivoId,
             estado: { $nin: ["CANCELADA", "RECHAZADA"] },
@@ -194,8 +215,9 @@ export const postVisita = async (req, res) => {
             observacion: "Visita solicitada"
         })
 
-        // Populate executive details on 201 response to match the shape returned by GET endpoints
+        // Populate both executive and property to match the GET response shape
         await visitaGuardada.populate("ejecutivoId", "nombre email rol")
+        await visitaGuardada.populate("propiedadId", "titulo direccion estado")
 
         res.status(201).json(visitaGuardada)
     } catch (error) {
