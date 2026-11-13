@@ -1,5 +1,6 @@
 import Propiedad from "../models/Propiedad.js"
 import TipoPropiedad from "../models/TipoPropiedad.js"
+import Propietario from "../models/Propietario.js"
 import { registrarBitacora } from "../services/bitacora.service.js"
 
 /**
@@ -26,9 +27,10 @@ const TRANSICIONES = {
  *   `estado`, `ejecutivoId` and `activo` are always set by the server.
  * - A new property is always DISPONIBLE; `ejecutivoId` comes from the token (RN-15).
  * - The property type must exist and be active (MongoDB does not check references).
+ * - The owner (`propietarioId`) must exist and be active, for the same reason.
  * - Logs a CREACION entry after saving (RN-13).
  *
- * Responses: 201 created · 400 invalid data or property type · 401/403 auth ·
+ * Responses: 201 created · 400 invalid data, property type or owner · 401/403 auth ·
  * 500 server error.
  */
 export const crearPropiedad = async (req, res) => {
@@ -40,7 +42,10 @@ export const crearPropiedad = async (req, res) => {
             return res.status(400).json({ mensaje: "Tipo de propiedad no válido o inactivo" })
         }
 
-        // TODO: Verify propietarioId when the Propietario model exists (Santiago)
+        const propietario = await Propietario.findOne({ _id: propietarioId, activo: true })
+        if (!propietario) {
+            return res.status(400).json({ mensaje: "Propietario no válido o inactivo" })
+        }
 
         const propiedad = new Propiedad({
             titulo,
@@ -102,7 +107,7 @@ export const listarPropiedades = async (req, res) => {
             .sort({ createdAt: -1 })
             .populate("tipoId", "nombre")
             .populate("ejecutivoId", "nombre email")
-            // TODO: populate propietarioId when the Propietario model exists (Santiago)
+            .populate("propietarioId", "nombre email telefono")
         
         res.status(200).json(propiedades)
 
@@ -129,7 +134,7 @@ export const obtenerPropiedad = async (req, res) => {
         const propiedad = await Propiedad.findOne({ _id: req.params.id, activo: true })
             .populate("tipoId", "nombre")
             .populate("ejecutivoId", "nombre email")
-            // TODO: populate propietarioId when the Propietario model exists (Santiago)
+            .populate("propietarioId", "nombre email telefono")
         
         if (!propiedad) {
             return res.status(404).json({ mensaje: "Propiedad no encontrada" })
@@ -176,7 +181,7 @@ export const actualizarPropiedad = async (req, res) => {
         )
             .populate("tipoId", "nombre")
             .populate("ejecutivoId", "nombre email")
-            // TODO: populate propietarioId when the Propietario model exists (Santiago)
+            .populate("propietarioId", "nombre email telefono")
 
         if (!propiedad) {
             return res.status(404).json({ mensaje: "Propiedad no encontrada" })

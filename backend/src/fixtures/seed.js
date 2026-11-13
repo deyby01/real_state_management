@@ -12,6 +12,39 @@ import { usuarios, PASSWORD_PRUEBA } from "./data/usuarios.js"
 import Bitacora from "../models/Bitacora.js"
 import Propietario from "../models/Propietario.js"
 import { propietarios } from "./data/propietarios.js"
+import Propiedad from "../models/Propiedad.js"
+import { propiedades } from "./data/propiedades.js"
+
+/**
+ * Builds a lookup table { readable key → _id } from documents already in the database.
+ * Fixtures refer to other documents by name, RUT or email because the real _id
+ * values only exist after the seed inserts them.
+ *
+ * @param {Array<Object>} documentos - Documents read from the database.
+ * @param {string} campo - Field used as the key (e.g. "nombre", "rut", "email").
+ * @returns {Map<string, ObjectId>} Map from the field value to the document _id.
+ */
+const mapaDeIds = (documentos, campo) =>
+    new Map(documentos.map((documento) => [documento[campo], documento._id]))
+
+/**
+ * Returns the _id for a readable reference, or stops the seed with a clear message.
+ * A typo in a fixture (e.g. "Depto" instead of "Departamento") would otherwise
+ * end as a generic "required" validation error that is hard to trace.
+ *
+ * @param {Map<string, ObjectId>} mapa - Table built with mapaDeIds.
+ * @param {string} valor - Readable reference written in the fixture.
+ * @param {string} descripcion - What is being looked up, for the error message.
+ * @returns {ObjectId} The referenced document _id.
+ * @throws {Error} If the reference does not exist.
+ */
+const buscarId = (mapa, valor, descripcion) => {
+    const id = mapa.get(valor)
+    if (!id) {
+        throw new Error(`Fixture inválido: no existe ${descripcion} "${valor}"`)
+    }
+    return id
+}
 
 const seed = async () => {
     // This script DELETES all data: never run it against production
@@ -27,6 +60,9 @@ const seed = async () => {
     await Cliente.deleteMany({})
     await Bitacora.deleteMany({})
     await Propietario.deleteMany({})
+    // Properties point to types and owners whose _id changes on every seed:
+    // keeping them would leave references to documents that no longer exist
+    await Propiedad.deleteMany({})
 
     // 2. Property types
     await TipoPropiedad.insertMany(tiposPropiedad)
@@ -44,6 +80,40 @@ const seed = async () => {
     // 5. Owners
     await Propietario.insertMany(propietarios)
     console.log(`Propietarios: ${propietarios.length}`)
+
+    // 6. Properties: inserted last because they point to types, owners and executives.
+    // The readable references of the fixture are translated into the new _id values
+    const tiposPorNombre = mapaDeIds(await TipoPropiedad.find(), "nombre")
+    const propietariosPorRut = mapaDeIds(await Propietario.find(), "rut")
+    const ejecutivosPorEmail = mapaDeIds(await Usuario.find({ rol: "EJECUTIVO" }), "email")
+
+    await Propiedad.insertMany(
+        propiedades.map(({ tipo, propietarioRut, ejecutivoEmail, ...datos }) => ({
+            ...datos,
+            tipoId: buscarId(tiposPorNombre, tipo, "el tipo"),
+            propietarioId: buscarId(propietariosPorRut, propietarioRut, "el propietario con RUT"),
+            ejecutivoId: buscarId(ejecutivosPorEmail, ejecutivoEmail, "el ejecutivo"),
+        }))
+    )
+    console.log(`Propiedades: ${propiedades.length}`)
+
+    // 7. Link the PROPIETARIO login account to its owner record (usuarios.propietarioId),
+    // so "my properties" can filter by the logged-in owner (RNF-07)
+    await Usuario.updateOne(
+        { email: "propietario@gup.cl" },
+        { propietarioId: buscarId(propietariosPorRut, "12345678-5", "el propietario con RUT") }
+    )
+    console.log("Cuenta propietario@gup.cl vinculada a su propietario")
+
+    // 8. Link the CLIENTE login account to its client record (usuarios.clienteId).
+    // Rental requests take the client from the token through this link (rule 17),
+    // so without it the test client could not create a request after the seed
+    const clientesPorEmail = mapaDeIds(await Cliente.find(), "email")
+    await Usuario.updateOne(
+        { email: "cliente@gup.cl" },
+        { clienteId: buscarId(clientesPorEmail, "cliente@gup.cl", "el cliente con email") }
+    )
+    console.log("Cuenta cliente@gup.cl vinculada a su cliente")
 }
 
 try {

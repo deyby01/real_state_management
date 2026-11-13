@@ -21,14 +21,18 @@ This is the largest model, so it is split into **two phases**, each one with its
 
 ### Phase B — Catalog, owner view and fixtures
 
+Reordered on 2026-11-12, after `propietarios` was merged (PR #27): fixtures come before the catalog and the owner view, so both can be tested with real data.
+
+**Split into two Pull Requests (2026-11-12):** B0–B2 go first in their own PR, because Roberto's rental request fixtures need the test properties and the linked client account. B3–B5 continue on a new branch from `development`.
+
 | # | Step | What to test in Postman | Status |
 |---|---|---|---|
-| 6 | Public catalog: only `PUBLICADA` + `activo`, filters (comuna, tipo, price range, bedrooms, bathrooms), never the owner's data | Filters work; reserved properties hidden | ⬜ |
-| 7 | Owner's "my properties": filter by the logged-in user's `propietarioId` | Owner sees only theirs; another owner's property `404` | ⬜ |
-| 8 | Fixtures: ~10 properties, at least one per state | `make seed` loads them | ⬜ |
-| 9 | Full Postman pass; Pull Request B | Happy path and error cases | ⬜ |
-
-Phase B steps 7 and 8 need the `Propietario` model merged (Santiago).
+| B0 | `Propiedad.deleteMany({})` in `seed.js` (missing since phase A) | `make seed` leaves `propiedades` empty | ✅ (checked in a temporary database: 1 → 0) |
+| B1 | Resolve the four `TODO`s: check that `propietarioId` exists and is active on create; `populate("propietarioId")` in list, get and update | Nonexistent or inactive owner `400`; owner data visible to executives | ✅ (inexistent, inactive and invalid owner `400`; active `201`; `nombre email telefono` populated in list, get and update) |
+| B2 | Fixtures: ~10 properties, at least one per state; link the `propietario@gup.cl` user to its `Propietario` (`usuarios.propietarioId`) and `cliente@gup.cl` to its `Cliente` (`usuarios.clienteId`) | `make seed` loads them | ✅ (11 properties, all states, 0 null references, repeatable; owner account linked; written by the agent on request) |
+| B3 | Public catalog: only `PUBLICADA` + `activo`, filters (comuna, tipo, price range, bedrooms, bathrooms), never the owner's data (RNF-08) | Filters work; reserved properties hidden | ⬜ |
+| B4 | Owner's "my properties": filter by the logged-in user's `propietarioId` (RNF-07) | Owner sees only theirs; another owner's property `404` | ⬜ |
+| B5 | Full Postman pass; Pull Request B | Happy path and error cases | ⬜ |
 
 ## Endpoints
 
@@ -68,7 +72,8 @@ The whole `/api/propiedades` router is protected with `verificarToken` + `permit
 
 ## Coordination with other models
 
-- **`propietarios` (Santiago):** `propietarioId` references `Propietario`. Until his model is merged, **never `populate("propietarioId")`**: it throws `MissingSchemaError` (checked in the container). Three `TODO`s in `propiedad.controller.js` mark where to add the check and the populate. Declared with `ref: "Propietario"` before his model exists; the fixtures (step 8) and the owner view (step 7) wait for his merge. Owner fixtures should be created by him; properties then use their `_id`.
+- **`propietarios` (Santiago, ✅ merged PR #27, TODOs resolved in step B1):** `propietarioId` references `Propietario`. Until his model was merged, **never `populate("propietarioId")`**: it throws `MissingSchemaError` (checked in the container). Three `TODO`s in `propiedad.controller.js` mark where to add the check and the populate. Declared with `ref: "Propietario"` before his model exists; the fixtures (step 8) and the owner view (step 7) wait for his merge. Owner fixtures should be created by him; properties then use their `_id`.
+- **`solicitudesArriendo` (Roberto), 2026-11-12 re-review:** all previous review points fixed and the full flow verified on a temporary server (approve → property `RESERVADA`, second approval `409`, executive cancel → `PUBLICADA`, audit entries correct). Agreed: after the B0–B2 PR is merged, he merges `development` and adds `SolicitudArriendo.deleteMany` plus his fixtures (only `PUBLICADA`/`RESERVADA` properties) at the end of `seed.js`, reusing `mapaDeIds`/`buscarId`.
 - **`solicitudesArriendo` (Roberto):** `RESERVADA` is reached **only** by approving a request, and releasing a reservation moves the property back. Those changes happen in his controller; agree on how he updates the property's `estado` (and logs it in `bitacora`).
   - **2026-11-09, review of his PR (`feature/roberto/rental-requests`):** he uses `estado`, `ejecutivoId`, the model name `"Propiedad"` and `PUBLICADA`/`RESERVADA`, all matching this model. He loads `Propiedad` lazily with `mongoose.model("Propiedad")` until this model is merged; after phase A he should switch to a normal `import`. Review asked for: no `clienteId` from the body, no `ADMIN` in CU9 routes, client cancels only from `PENDIENTE`, `activo: true` when reading the property, `required` on `estado`. Suggested to merge after this phase A and `clientes` (Jose), so it can be tested.
   - **Consequence for step 4 (done):** `PATCH /:id/estado` rejects `RESERVADA` as a target and does not allow `RESERVADA` → `DISPONIBLE`/`PUBLICADA`; releasing is his flow. After phase A is merged, he should replace `mongoose.model("Propiedad")` with `import Propiedad from "../models/Propiedad.js"`.
@@ -87,3 +92,7 @@ The whole `/api/propiedades` router is protected with `verificarToken` + `permit
 | 2026-11-09 | Reviewed Roberto's PR. Step 3a done: `propietarioId` not editable; `actualizarPropiedad` with `findOneAndUpdate` + `returnDocument`/`runValidators`; 7 Postman tests passed. | Step 3b: soft delete. |
 | 2026-11-09 | Step 3b: `ELIMINACION` added to the bitacora enum (own commit); `eliminarPropiedad` with `findOne` → checks → `save` → bitacora; 7 Postman tests passed. | Step 4: state machine. |
 | 2026-11-10 | Step 4: `TRANSICIONES` table (DATA_MODEL 6.1 minus the three transitions owned by rental requests) and `cambiarEstadoPropiedad` (code given by the agent on request, explained block by block); 15 Postman tests passed. Phase A complete. | Pull Request A. Then phase B (catalog). |
+| 2026-11-12 | Phase B started on `feature/deyby/propiedades-catalogo`; plan reordered now that `propietarios` is merged. Step B0: `Propiedad.deleteMany({})` added to the seed (written by the agent on request), checked in a temporary database. | Step B1: owner check and `populate`. |
+| 2026-11-12 | Step B1: owner check on create (same pattern as the type check) and `populate("propietarioId", "nombre email telefono")` in list, get and update; JSDoc updated. Learned: Mongoose drops `undefined` from a filter, so `findOne({ _id: undefined, activo: true })` matches any active owner; the `required` on `propietarioId` is what still returns `400`. | Step B2: property fixtures. |
+| 2026-11-12 | Step B2 (written by the agent on request): `data/propiedades.js` with 11 properties referring to type, owner and executive by name, RUT and email; `seed.js` translates them into `_id` values with `mapaDeIds`/`buscarId` (clear error on a typo), and links `propietario@gup.cl` to Jorge Muñoz. Only new blocks appended to the seed, so teammates' lines are untouched. Checked in a temporary database. | Developer runs `make seed`; then step B3: public catalog. |
+| 2026-11-12 | Step B2 completed: `seed.js` also links `cliente@gup.cl` to its `Cliente` (same email), so rental requests can be tested after `make seed`. Checked in a temporary database (both links, 0 null references, repeatable). Phase B split: B0–B2 Pull Request now, so Roberto can finish his fixtures in parallel. | Open the B0–B2 PR; then B3 (catalog) on a new branch. |
