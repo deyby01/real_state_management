@@ -96,7 +96,7 @@ export const listarSolicitudes = async (req, res) => {
  * Route: GET /api/solicitudes/:id (CLIENTE or EJECUTIVO).
  * - CLIENTE: only their own request; EJECUTIVO: only the assigned one.
  *
- * Responses: 200 · 400 invalid id · 403 not yours · 404 not found · 500 server error.
+ * Responses: 200 · 400 invalid id · 404 not found or not yours · 500 server error.
  */
 export const obtenerSolicitud = async (req, res) => {
     try {
@@ -105,8 +105,9 @@ export const obtenerSolicitud = async (req, res) => {
 
         const solicitud = await SolicitudArriendo.findById(id)
         if (!solicitud) return res.status(404).json({ mensaje: "Solicitud no encontrada" })
+        // 404, not 403: a user must not be able to tell whether an id exists (AGENTS.md)
         if (!(await puedeVer(req, solicitud)))
-            return res.status(403).json({ mensaje: "No tienes acceso a esta solicitud" })
+            return res.status(404).json({ mensaje: "Solicitud no encontrada" })
 
         res.status(200).json(solicitud)
     } catch (error) {
@@ -183,7 +184,8 @@ const cargarParaCambio = async (req, res, { soloGestores }) => {
         ? rol === "EJECUTIVO" && igual(solicitud.ejecutivoId, _id)
         : await puedeVer(req, solicitud)
     if (!permitido) {
-        res.status(403).json({ mensaje: "No tienes permisos sobre esta solicitud" })
+        // Same as GET: hide whether the request exists from other users (AGENTS.md)
+        res.status(404).json({ mensaje: "Solicitud no encontrada" })
         return null
     }
     return solicitud
@@ -213,7 +215,7 @@ const agregarObservacion = (req, solicitud) => {
  * - The optional `observacion` in the body is appended to `observaciones`.
  * - Logs a CAMBIO_ESTADO entry in the audit log (RN-13).
  *
- * Responses: 200 · 400 invalid id · 403 not assigned · 404 not found ·
+ * Responses: 200 · 400 invalid id · 404 not found or not yours ·
  * 409 invalid transition · 500 server error.
  */
 export const evaluarSolicitud = async (req, res) => {
@@ -243,7 +245,7 @@ export const evaluarSolicitud = async (req, res) => {
  * - Without transactions, the request is rolled back if reserving fails.
  * - Logs an audit entry for both the request and the property (RN-13).
  *
- * Responses: 200 · 400 invalid id · 403 not assigned · 404 property/request not found ·
+ * Responses: 200 · 400 invalid id · 404 request/property not found or not yours ·
  * 409 invalid transition or property not PUBLISHED · 500 server error.
  */
 export const aprobarSolicitud = async (req, res) => {
@@ -285,7 +287,7 @@ export const aprobarSolicitud = async (req, res) => {
  * - Only EN_EVALUACION -> RECHAZADA is allowed (409 otherwise).
  * - The optional `observacion` is appended; the audit log gets CAMBIO_ESTADO.
  *
- * Responses: 200 · 400 invalid id · 403 not assigned · 404 not found ·
+ * Responses: 200 · 400 invalid id · 404 not found or not yours ·
  * 409 invalid transition · 500 server error.
  */
 export const rechazarSolicitud = async (req, res) => {
@@ -315,7 +317,7 @@ export const rechazarSolicitud = async (req, res) => {
  * - Without transactions, the request is rolled back if releasing fails.
  * - Logs the request change and, when applicable, the property release (RN-13).
  *
- * Responses: 200 · 400 invalid id · 403 not allowed · 404 not found ·
+ * Responses: 200 · 400 invalid id · 404 not found or not yours ·
  * 409 invalid transition · 500 server error.
  */
 export const cancelarSolicitud = async (req, res) => {
