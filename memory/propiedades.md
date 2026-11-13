@@ -2,7 +2,7 @@
 
 > **Owner:** Deyby · **Branch:** `feature/deyby/propiedades` · **Status:** 🚧 Phase A merged (PR #28, 2026-11-10); phase B not started
 > **Specification:** [`docs/DATA_MODEL.md → propiedades`](../docs/DATA_MODEL.md#propiedades-the-center-of-the-model), [state machine 6.1](../docs/DATA_MODEL.md#61-property)
-> **Depends on:** `tiposPropiedad` (✅), `usuarios` (✅, `ejecutivoId`), `bitacora` (✅), `propietarios` (Santiago, not merged yet) · **Used by:** `visitas` (Ignacio), `solicitudesArriendo` (Roberto), the public catalog and the landing page
+> **Depends on:** `tiposPropiedad` (✅), `usuarios` (✅, `ejecutivoId`), `bitacora` (✅), `propietarios` (✅ PR #27: phase B unblocked) · **Used by:** `visitas` (Ignacio), `solicitudesArriendo` (Roberto), the public catalog and the landing page
 
 ## Plan
 

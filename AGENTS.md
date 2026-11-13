@@ -198,6 +198,7 @@ The **`TipoPropiedad` flow is the reference implementation**. New features copy 
 - **When every route of a router has the same protection, declare it once** with `router.use(verificarToken, permitirRoles(...))` (see `propiedad.routes.js`, `bitacora.routes.js`, `cliente.routes.js`). A route added later is protected automatically. When converting a router, **delete** the old per-route middlewares: a leftover route with different roles is dead code that misleads the reviewer.
 - Every business-state field that the system changes (`estado`, `rol`, `activo`, `ejecutivoId`) stays **out of the body whitelist**: a new property is always `DISPONIBLE`, a new client always `INTERESADO`, a new user always `CLIENTE`.
 - `PUT` and `DELETE` filter `{ _id, activo: true }`, so a soft-deleted record answers `404` and cannot be edited or deleted twice.
+- **A unique identifier is normalized in the schema** (a `set:` function, see the `rut` of `Propietario.js`), so it also applies to `insertMany` in the fixtures. Normalize **everything** that can vary for the same value: dots, spaces **and letter case** (`12.345.678-k` and `12345678-K` are the same RUT). The duplicate test must include those variants, because a unique index compares exact text.
 
 ### Code documentation
 

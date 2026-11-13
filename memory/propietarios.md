@@ -1,6 +1,6 @@
 # propietarios — Propietario
 
-> **Owner:** Santiago · **Branch:** `feature/santiago/modelo-propietario` · **Status:** PR #27 open; both mandatory review fixes implemented and tested
+> **Owner:** Santiago · **Branch:** `feature/santiago/modelo-propietario` · **Status:** ✅ Merged (PR #27, 2026-11-12). Pending follow-ups: optional RUT/email format validation; linking login accounts through `usuarios.propietarioId` (Deyby)
 > **Specification:** [`docs/DATA_MODEL.md → propietarios`](../docs/DATA_MODEL.md#propietarios-property-owners)
 > **Depends on:** No model references · **Used by:** `usuarios`, `propiedades`
 

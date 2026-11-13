@@ -75,15 +75,15 @@ This flow must be demonstrable end to end: **React → Node/Express → MongoDB*
 
 ### Current status
 
-*Updated 2026-11-12.* Authentication (PR #20), the audit log (PR #22), the property management API, phase A (PR #28), and clients (PR #25) are merged into `development`, and the team now builds the backend **one model per person**, in the order of `docs/DATA_MODEL.md` (see [Model assignments](#model-assignments)). The React frontend has the pages mocked up but does not consume the API yet.
+*Updated 2026-11-12.* Authentication (PR #20), the audit log (PR #22), the property management API, phase A (PR #28), clients (PR #25) and owners (PR #27) are merged into `development`, and the team now builds the backend **one model per person**, in the order of `docs/DATA_MODEL.md` (see [Model assignments](#model-assignments)). The React frontend has the pages mocked up but does not consume the API yet.
 
 | Area | Status | Detail |
 |---|---|---|
 | UI design | ✅ Done | Landing, Properties, About Us, Contact and Login/Register pages mocked up in React + Tailwind. |
 | Original HTML/CSS frontend | ⏸️ Frozen | `frontend/` remains only as a design reference. No new features are added. |
 | React frontend | 🚧 In progress | Static pages; no API calls yet. |
-| Express backend | 🚧 In progress | `GET /api/health`, `TipoPropiedad` (PR #19), authentication (PR #20), audit log (PR #22), properties phase A (PR #28) and clients (PR #25). The server stops if the DB connection or `JWT_SECRET` is missing. |
-| MongoDB data model | 🚧 5 of 8 implemented | `usuarios`, `tiposPropiedad`, `bitacora`, `propiedades` and `clientes` in code; the other 3 are assigned (see [Model assignments](#model-assignments)). |
+| Express backend | 🚧 In progress | `GET /api/health`, `TipoPropiedad` (PR #19), authentication (PR #20), audit log (PR #22), properties phase A (PR #28), clients (PR #25) and owners (PR #27). The server stops if the DB connection or `JWT_SECRET` is missing. |
+| MongoDB data model | 🚧 6 of 8 implemented | `usuarios`, `tiposPropiedad`, `bitacora`, `propiedades`, `clientes` and `propietarios` in code; `visitas` and `solicitudesArriendo` are assigned (see [Model assignments](#model-assignments)). |
 | Authentication | ✅ Merged (PR #20) | Register, login (JWT), `GET /api/auth/me`, `verificarToken` and `permitirRoles`; fixtures with one user per role (`make seed`). Details: [`memory/usuarios.md`](memory/usuarios.md). |
 | Postman testing | 🚧 Manual | Endpoints tested by hand; no shared Postman collection in the repo yet. |
 
@@ -122,9 +122,9 @@ real_state_management/
 ├── backend/                 # Express + Mongoose
 │   ├── src/
 │   │   ├── config/db.js     # MongoDB connection
-│   │   ├── models/          # TipoPropiedad.js, Usuario.js, Bitacora.js, Propiedad.js, Cliente.js
-│   │   ├── controllers/     # tipoPropiedad.controller.js, auth.controller.js, bitacora.controller.js, propiedad.controller.js, cliente.controller.js
-│   │   ├── routes/          # tipoPropiedad.routes.js, auth.routes.js, bitacora.routes.js, propiedad.routes.js, cliente.routes.js
+│   │   ├── models/          # TipoPropiedad.js, Usuario.js, Bitacora.js, Propiedad.js, Cliente.js, Propietario.js
+│   │   ├── controllers/     # tipoPropiedad.controller.js, auth.controller.js, bitacora.controller.js, propiedad.controller.js, cliente.controller.js, propietario.controller.js
+│   │   ├── routes/          # tipoPropiedad.routes.js, auth.routes.js, bitacora.routes.js, propiedad.routes.js, cliente.routes.js, propietario.routes.js
 │   │   ├── services/        # bitacora.service.js (registrarBitacora, used by other controllers)
 │   │   ├── middlewares/     # auth.middleware.js (verificarToken), role.middleware.js (permitirRoles)
 │   │   ├── fixtures/        # seed.js + data/ (run with make seed)
@@ -181,6 +181,11 @@ real_state_management/
 | `POST` | `/api/clientes` | `EJECUTIVO`. Creates a client (`201`), always `INTERESADO` (`estado` in the body ignored), RUT normalized; invalid data → `400`; duplicate RUT or email → `409` |
 | `PUT` | `/api/clientes/:id` | `EJECUTIVO`. Partial update (`200`); `estado` and `activo` not editable; inactive or not found → `404`; duplicate → `409` |
 | `DELETE` | `/api/clientes/:id` | `EJECUTIVO`. Soft delete (`200`); already inactive or not found → `404` |
+| `GET` | `/api/propietarios` | **`EJECUTIVO` only** (whole router, CU2). Active owners (`200`) |
+| `GET` | `/api/propietarios/:id` | `EJECUTIVO`. One active owner (`200`); inactive or not found → `404`; invalid id → `400` |
+| `POST` | `/api/propietarios` | `EJECUTIVO`. Creates an owner (`201`); RUT normalized in the schema (no dots, `K` uppercase); invalid data → `400`; duplicate RUT → `409` |
+| `PUT` | `/api/propietarios/:id` | `EJECUTIVO`. Partial update of `rut`, `nombre`, `email`, `telefono` (`200`); empty body → `400`; inactive or not found → `404`; duplicate RUT → `409` |
+| `DELETE` | `/api/propietarios/:id` | `EJECUTIVO`. Soft delete (`200`); already inactive or not found → `404` |
 
 ---
 
@@ -195,7 +200,7 @@ Each model of [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md) is assigned to **one** 
 | # | Collection | Model | Owner | Status | Depends on | Memory file |
 |---|---|---|---|---|---|---|
 | 1 | `usuarios` | `Usuario` + auth | Deyby | ✅ Merged (PR #20) | — | [`memory/usuarios.md`](memory/usuarios.md) |
-| 2 | `propietarios` | `Propietario` | Santiago | 🚧 PR open, changes requested (RUT `k`/`K`, `router.use`); must merge `development` and keep both sides in `app.js` and `seed.js` | `usuarios` (✅) | `memory/propietarios.md` |
+| 2 | `propietarios` | `Propietario` | Santiago | ✅ Merged (PR #27) | `usuarios` (✅) | [`memory/propietarios.md`](memory/propietarios.md) |
 | 3 | `clientes` | `Cliente` | Jose | ✅ Merged (PR #25) | `usuarios` (✅) | [`memory/clientes.md`](memory/clientes.md) |
 | 4 | `tiposPropiedad` | `TipoPropiedad` | Deyby | ✅ Merged (PR #19) | — | [`memory/tiposPropiedad.md`](memory/tiposPropiedad.md) |
 | 5 | `propiedades` | `Propiedad` | Deyby | 🚧 Phase A merged (PR #28); phase B (catalog, owner view, fixtures) pending | `tiposPropiedad` (✅), `propietarios`, `usuarios` (✅); writes `bitacora` (✅) | [`memory/propiedades.md`](memory/propiedades.md) |
@@ -726,6 +731,7 @@ Test passwords go in the fixtures README, never real passwords.
 | 2026-11-10 | New agent rules for the whole team: English JSDoc docstrings for every exported function and focused commits per tested step (teaching loop now has *document* and *commit* steps). | Teammates' agents pick them up after `git pull`. |
 | 2026-11-10 | Documented all the existing backend code (`backend/src/`) with English JSDoc and comments, as the team's reference for the new documentation rule. Comments only, no behaviour change. | Teammates use it as an example; next: properties phase B. |
 | 2026-11-11 / 12 | Reviewer mode: reviewed Santiago's `propietarios` (changes requested: RUT `k`/`K` duplicates, `router.use`) and Jose's `clientes` (changes requested: `EJECUTIVO` only per CU5, `estado` out of the body, `activo: true` filter on `PUT`/`DELETE`, JSDoc responses). Jose applied everything in focused commits; `clientes` merged (PR #25). Accepted lessons moved to `AGENTS.md → Backend structure` (roles from the use-case matrix, `router.use`, state fields out of the whitelist, active-only updates). | Next: Santiago merges `development` into his branch, then re-review and merge; then Ignacio and Roberto. Pending proposal: `req.body ?? {}` so a `PUT` without a JSON body answers `400` instead of `500`. |
+| 2026-11-12 | Santiago applied both fixes (RUT check digit uppercased in the schema setter, `router.use`) and merged `development`, keeping both owner and client lines in `app.js`, `seed.js` and the fixtures README. Verified: combined seed in a temporary database (3 clients + 3 owners, repeatable), `8.765.432-k` then `8765432-K` → `409`, every non-executive role `403`. `propietarios` merged (PR #27). Accepted lesson: normalize letter case too and test case variants. | Next: Deyby's properties phase B is unblocked (owner check and `populate`, fixtures, owner view); Jose can move the RUT normalization to a schema setter; review Ignacio and Roberto. |
 
 ---
 
