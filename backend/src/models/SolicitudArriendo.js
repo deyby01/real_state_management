@@ -1,3 +1,8 @@
+/**
+ * `solicitudesArriendo` collection: formal rental requests and their evaluation.
+ * Approving a request reserves its property, so RN-14 is enforced here with a
+ * partial unique index. Field details: docs/DATA_MODEL.md -> 6.2 Rental request.
+ */
 import mongoose from "mongoose"
 
 const antecedentesSchema = new mongoose.Schema(
@@ -33,7 +38,7 @@ const solicitudSchema = new mongoose.Schema(
         clienteId: { type: mongoose.Schema.Types.ObjectId, ref: "Cliente", required: true },
         ejecutivoId: { type: mongoose.Schema.Types.ObjectId, ref: "Usuario", required: true },
         antecedentes: { type: antecedentesSchema, required: true },
-        estado: { type: String, enum: ESTADOS_SOLICITUD, default: "PENDIENTE" },
+        estado: { type: String, enum: ESTADOS_SOLICITUD, default: "PENDIENTE", required: true },
         observaciones: { type: [observacionSchema], default: [] },
     },
     { timestamps: true, collection: "solicitudesArriendo" }
