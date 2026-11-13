@@ -28,7 +28,8 @@ Every agent **reads** all the files. Each agent **writes** only in its developer
 | [`bitacora.md`](bitacora.md) | `Bitacora` + `registrarBitacora` service | Deyby | ✅ Merged (PR #22) |
 | [`propietarios.md`](propietarios.md) | `Propietario` | Santiago | ✅ Merged (PR #27) |
 | [`clientes.md`](clientes.md) | `Cliente` | Jose | ✅ Merged (PR #25) |
-| [`propiedades.md`](propiedades.md) | `Propiedad`: management API and state machine | Deyby | 🚧 Phase A merged (PR #28); phase B pending |
+| [`propiedades.md`](propiedades.md) | `Propiedad`: management API and state machine | Deyby | 🚧 Phase A (PR #28) and fixtures (PR #33) merged; catalog and owner view pending |
+| [`solicitudesArriendo.md`](solicitudesArriendo.md) | `SolicitudArriendo`: rental requests and reservation | Roberto | ✅ Merged (PR #24) |
 
 New files are created by the owner of the model when starting to work on it, by copying the template below. The full assignment table lives in [`MEMORY.md → Model assignments`](../MEMORY.md#model-assignments).
 
