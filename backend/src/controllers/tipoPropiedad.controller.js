@@ -1,5 +1,12 @@
 import TipoPropiedad from "../models/TipoPropiedad.js"
 
+/**
+ * Lists the active property types.
+ *
+ * Route: GET /api/tipo-propiedades (public: the catalog filters by type, RF5).
+ *
+ * Responses: 200 list · 500 server error.
+ */
 export const getTipoPropiedad = async (req, res) => {
     try {
         const tipoPropiedad = await TipoPropiedad.find({ activo: true })
@@ -9,6 +16,13 @@ export const getTipoPropiedad = async (req, res) => {
     }
 }
 
+/**
+ * Creates a property type.
+ *
+ * Route: POST /api/tipo-propiedades (ADMIN only).
+ *
+ * Responses: 201 created · 400 invalid data · 401/403 auth · 409 duplicate name.
+ */
 export const postTipoPropiedad = async (req, res) => {
     try {
         const { nombre } = req.body
