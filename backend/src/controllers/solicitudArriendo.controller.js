@@ -225,7 +225,10 @@ export const cancelarSolicitud = async (req, res) => {
     try {
         const solicitud = await cargarParaCambio(req, res, { soloGestores: false })
         if (!solicitud) return
-        if (!validarTransicion(res, solicitud, ["PENDIENTE", "APROBADA"], "CANCELADA")) return
+
+        // A client can only withdraw a pending request; releasing a reservation belongs to CU9
+        const permitidos = req.usuario.rol === "CLIENTE" ? ["PENDIENTE"] : ["PENDIENTE", "APROBADA"]
+        if (!validarTransicion(res, solicitud, permitidos, "CANCELADA")) return
 
         const estabaAprobada = solicitud.estado === "APROBADA"
         solicitud.estado = "CANCELADA"
