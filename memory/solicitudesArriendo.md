@@ -1,6 +1,6 @@
 # solicitudesArriendo — SolicitudArriendo
 
-> **Owner:** Roberto · **Branch:** `feature/roberto/rental-requests` · **Status:** 🚧 In progress (review fixes applied; `Propiedad` and `Cliente` merged; Postman and PR re-review pending)
+> **Owner:** Roberto · **Branch:** `feature/roberto/rental-requests` · **Status:** 🚧 In progress (review fixes applied, committed and pushed; 21/21 live checks pass; Postman evidence and PR re-review pending)
 > **Specification:** [`docs/DATA_MODEL.md → solicitudesArriendo`](../docs/DATA_MODEL.md#solicitudesarriendo-rental-requests)
 > **Depends on:** `propiedades` (✅ PR #28 phase A), `clientes` (✅ PR #25), `usuarios` (✅), `bitacora` (✅) · **Used by:** —
 
@@ -17,16 +17,35 @@ This model drives the rental flow and the property reservation. It is the only o
 | Fixtures | `backend/src/fixtures/data/solicitudesArriendo.js` (4 requests) |
 | Audit helper | `backend/src/services/bitacora.service.js` (`registrarBitacora`) |
 
+## Current state (2026-11-12, after compact)
+
+- Branch `feature/roberto/rental-requests` is clean and **in sync with origin at `a968d8f`**. The PR is #24.
+- `e04b9c4` merged `development` (clients PR #25, owners PR #27, properties phase A PR #28). After that, eight focused commits implement Deyby's review:
+
+```
+c63eda6 fix: require state in rental request model
+5fd8ca2 refactor: import property and client models directly
+c5640a4 fix: take rental request client from the token only
+c2da209 fix: ignore soft-deleted properties and clients in rental requests
+4c75777 fix: restrict rental request routes to clients and executives
+7e7a339 fix: only allow clients to cancel pending rental requests
+4de0c86 docs: document rental request flow with JSDoc
+a968d8f docs: update rental requests memory
+```
+
+- The local Docker stack is running and the database was **re-seeded** (4 types, 5 users, 3 clients, 3 owners). `usuarios.clienteId` is `null` in the fixtures, so `POST /api/solicitudes` answers `409` until a client is linked (temporary link used for tests, then reverted/reseeded).
+- Remaining work is evidence and coordination: Postman screenshots, PR #24 description/notes, partial index check in Compass, and fixture wiring once property fixtures exist.
+
 ## Plan
 
 | # | Step | What to test | Status |
 |---|---|---|---|
 | 0 | Context: read the model in DATA_MODEL, concepts and libraries | — | ✅ |
 | 1 | Model `SolicitudArriendo.js` (fields, sub-schemas, enum, partial index, required `estado`) | Index visible in Compass | 🚧 Code done; Compass check pending |
-| 2 | Controller: list and get by id | `200`, `400`, `403`, `404` | 🚧 Code done; Postman pending |
-| 3 | Controller: create + state changes | `201`, `400`, `409` | 🚧 Code done; creation needs `usuarios.clienteId`; Postman pending |
+| 2 | Controller: list and get by id | `200`, `400`, `403`, `404` | 🚧 Code done; live smoke checks pass; Postman pending |
+| 3 | Controller: create + state changes | `201`, `400`, `409` | 🚧 Code done; live smoke checks pass; Postman pending |
 | 4 | Soft delete | N/A: requests are never deleted, they end in `RECHAZADA`/`CANCELADA` | ✅ |
-| 5 | Routes + mounting in `app.js` + protection by role | No token `401`, wrong role `403` | ✅ Mounted; Postman pending |
+| 5 | Routes + mounting in `app.js` + protection by role | No token `401`, wrong role `403` | ✅ Mounted; roles verified live; Postman screenshots pending |
 | 6 | Fixtures in `fixtures/data/` + `seed.js` | `make seed` loads the data | 🚧 File ready; seed wiring blocked by property fixtures (Deyby, phase B step 8) |
 | 7 | Full Postman pass + Pull Request | Happy path and error cases | ⬜ |
 
@@ -95,12 +114,24 @@ State-change endpoints accept an optional `{ "observacion": "..." }` in the body
 - **`bitacora` (Deyby, ✅):** uses `registrarBitacora` with `entidad: "PROPIEDAD"` and actions `RESERVA` / `LIBERACION_RESERVA`.
 - **`usuarios` (Deyby, ✅):** public registration still does **not** create the `clientes` record, so `usuarios.clienteId` stays `null`. Until that link is agreed, `POST /api/solicitudes` answers `409` for a self-registered client. The temporary `clienteId` fallback from the body was removed for security.
 
+## Test evidence (2026-11-12, live backend + Docker + seed)
+
+21/21 HTTP checks passed against `http://localhost:4000/api` after `make seed` (property fixtures still absent, so two properties were created through the API and one owner/client were taken from the fixtures). The client was linked temporarily with `db.usuarios.updateOne({email:"cliente@gup.cl"},{$set:{clienteId:<Ana._id>}})`, and the link was reverted + the database re-seeded afterwards.
+
+| Area | Checks | Result |
+|---|---|---|
+| Create | `201`; `clienteId` from token; body `clienteId` of another client ignored; no profile `409` "Tu cuenta aún no tiene un perfil de cliente asociado" | ✅ |
+| Auth/roles | no token `401`; `ADMIN` on `GET /solicitudes` `403`; `CLIENTE` on `evaluar` `403`; `EJECUTIVO` `200` | ✅ |
+| Flow | evaluate `200`; approve `200` → property `RESERVADA`; second approval `409`; executive cancel `200` → property `PUBLICADA` | ✅ |
+| Cancel rules | `CLIENTE` cannot cancel `APROBADA` (`409`) nor `EN_EVALUACION` (`409`); can cancel `PENDIENTE` (`200`) | ✅ |
+| Soft delete | property deleted with `DELETE` → creating a request answers `404` | ✅ |
+
 ## Pending
 
-- **`usuarios.clienteId` link** (Deyby/Jose): needed to create requests end to end. For Postman we can set it temporarily in the local database (Ana ↔ her `clientes` document) without changing code or fixtures.
+- **`usuarios.clienteId` link** (Deyby/Jose): needed to create requests end to end without a manual link. For Postman, set it temporarily in the local database (Ana ↔ her `clientes` document), as done in the test above.
 - Wire the fixtures in `seed.js` after `Propiedad` fixtures exist: `SolicitudArriendo.deleteMany({})` and `insertMany(buildSolicitudesArriendo({ propiedades, clientes }))`.
 - Verify the partial index in Compass.
-- Postman tests + PR #24 re-review.
+- Postman screenshots (create/approve/second approval `409`/`ADMIN 403`/cancel) and update PR #24 description + *Notes for the reviewer*; then ask Deyby for re-review.
 
 ## Proposals for AGENTS.md
 
@@ -113,4 +144,5 @@ State-change endpoints accept an optional `{ "observacion": "..." }` in the body
 |---|---|---|
 | 2026-11-04 | Model, controller, routes and fixtures written by the developer; review found a wrong audit import, naming issues, an authorization bypass through `req.body.clienteId`, and a missing property-state guard. | Fixed: `services/bitacora.service.js` import, file names, `app.js` mounting, permission helper split, `RESERVADA` guard, property `bitacora` entries. Next: Postman + dependencies. |
 | 2026-11-12 | Merged `development` (now includes `clientes` PR #25, `propietarios` PR #27 and `propiedades` phase A PR #28) into the branch; conflict only in `app.js`, resolved keeping all four routers. | Merge committed and pushed. Dependencies unblocked. |
-| 2026-11-12 | Applied Deyby's review in focused commits: `required` on `estado`; direct `Propiedad`/`Cliente` imports; client identity from the token with `409` when unlinked; active-only property/client reads; ADMIN removed from the router and permission helpers; clients can only cancel `PENDIENTE`; English JSDoc and comments; `req.body ?? {}`. | Syntax checks pass. Next: Postman (temporary `usuarios.clienteId` link), partial index in Compass, fixtures after property fixtures, PR re-review. |
+| 2026-11-12 | Applied Deyby's review in focused commits: `required` on `estado`; direct `Propiedad`/`Cliente` imports; client identity from the token with `409` when unlinked; active-only property/client reads; ADMIN removed from the router and permission helpers; clients can only cancel `PENDIENTE`; English JSDoc and comments; `req.body ?? {}`. | Syntax checks pass. |
+| 2026-11-12 | Ran the live smoke test after starting the Docker stack and seeding: 21/21 checks passed (create from token, roles, approve/reserve, second approval `409`, cancel rules, soft delete `404`, unlinked client `409`). Reverted the temporary link, re-seeded the database and pushed the eight commits. | Branch in sync at `a968d8f`, PR #24 updated. Next: Postman screenshots, PR notes, Compass index, fixture wiring after property fixtures. |
