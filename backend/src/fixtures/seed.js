@@ -10,6 +10,8 @@ import { clientes } from "./data/clientes.js"
 import { tiposPropiedad } from "./data/tiposPropiedad.js"
 import { usuarios, PASSWORD_PRUEBA } from "./data/usuarios.js"
 import Bitacora from "../models/Bitacora.js"
+import Propietario from "../models/Propietario.js"
+import { propietarios } from "./data/propietarios.js"
 
 const seed = async () => {
     // This script DELETES all data: never run it against production
@@ -24,6 +26,7 @@ const seed = async () => {
     await Usuario.deleteMany({})
     await Cliente.deleteMany({})
     await Bitacora.deleteMany({})
+    await Propietario.deleteMany({})
 
     // 2. Property types
     await TipoPropiedad.insertMany(tiposPropiedad)
@@ -37,6 +40,10 @@ const seed = async () => {
     // 4. Clients
     await Cliente.insertMany(clientes)
     console.log(`Clientes: ${clientes.length}`)
+
+    // 5. Owners
+    await Propietario.insertMany(propietarios)
+    console.log(`Propietarios: ${propietarios.length}`)
 }
 
 try {
