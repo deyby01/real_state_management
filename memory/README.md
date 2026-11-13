@@ -26,6 +26,7 @@ Every agent **reads** all the files. Each agent **writes** only in its developer
 | [`usuarios.md`](usuarios.md) | `Usuario` + authentication (JWT, roles) | Deyby | ✅ Merged (PR #20) |
 | [`tiposPropiedad.md`](tiposPropiedad.md) | `TipoPropiedad` | Deyby | ✅ Merged (PR #19) |
 | [`bitacora.md`](bitacora.md) | `Bitacora` + `registrarBitacora` service | Deyby | ✅ Merged (PR #22) |
+| [`propietarios.md`](propietarios.md) | `Propietario` | Santiago | ✅ Merged (PR #27) |
 | [`clientes.md`](clientes.md) | `Cliente` | Jose | ✅ Merged (PR #25) |
 | [`propiedades.md`](propiedades.md) | `Propiedad`: management API and state machine | Deyby | 🚧 Phase A merged (PR #28); phase B pending |
 
