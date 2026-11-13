@@ -28,7 +28,7 @@ All of them use the password **`Password123`**.
 
 These are fake accounts for local development only. Never add real passwords here.
 
-The owner user `propietario@gup.cl` is linked to the owner record Jorge Muñoz (`12345678-5`) through `usuarios.propietarioId`, so it can test "my properties". The client user does not have a `clienteId` yet: it will be linked when the client-linking rule is agreed.
+The owner user `propietario@gup.cl` is linked to the owner record Jorge Muñoz (`12345678-5`) through `usuarios.propietarioId`, so it can test "my properties". The client user `cliente@gup.cl` is linked to the client record Ana Pérez (same email) through `usuarios.clienteId`, so it can create rental requests. These links are made by the seed only; how real accounts get linked (registration or admin panel) is still pending professor validation.
 
 ## What it loads
 

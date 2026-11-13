@@ -104,6 +104,16 @@ const seed = async () => {
         { propietarioId: buscarId(propietariosPorRut, "12345678-5", "el propietario con RUT") }
     )
     console.log("Cuenta propietario@gup.cl vinculada a su propietario")
+
+    // 8. Link the CLIENTE login account to its client record (usuarios.clienteId).
+    // Rental requests take the client from the token through this link (rule 17),
+    // so without it the test client could not create a request after the seed
+    const clientesPorEmail = mapaDeIds(await Cliente.find(), "email")
+    await Usuario.updateOne(
+        { email: "cliente@gup.cl" },
+        { clienteId: buscarId(clientesPorEmail, "cliente@gup.cl", "el cliente con email") }
+    )
+    console.log("Cuenta cliente@gup.cl vinculada a su cliente")
 }
 
 try {

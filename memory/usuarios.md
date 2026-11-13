@@ -60,7 +60,7 @@ The developer learned JWT and middlewares while building it, following the [teac
 
 ## Pending follow-ups
 
-1. Complete client registration with `clienteId` (needs the `Cliente` model, see above).
+1. Complete client registration with `clienteId` (needs the `Cliente` model, see above). The **fixtures** already link `cliente@gup.cl` → Ana Pérez and `propietario@gup.cl` → Jorge Muñoz (2026-11-12, properties phase B); real registration and admin linking are still pending.
 2. Validate the email format in the `Usuario` model.
 3. Shared Postman collection in the repo, with a variable that stores the token after login.
 4. `/api/usuarios` for the admin to create executives and owners and to deactivate users.
