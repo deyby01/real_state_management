@@ -95,8 +95,8 @@ export const crearSolicitud = async (req, res) => {
             return res.status(409).json({ mensaje: "Tu cuenta aún no tiene un perfil de cliente asociado" })
 
         const [propiedad, cliente] = await Promise.all([
-            Propiedad.findById(propiedadId),
-            Cliente.findById(clienteId),
+            Propiedad.findOne({ _id: propiedadId, activo: true }),
+            Cliente.findOne({ _id: clienteId, activo: true }),
         ])
         if (!propiedad) return res.status(404).json({ mensaje: "Propiedad no encontrada" })
         if (!cliente) return res.status(404).json({ mensaje: "Cliente no encontrado" })
@@ -177,7 +177,7 @@ export const aprobarSolicitud = async (req, res) => {
         if (!solicitud) return
         if (!validarTransicion(res, solicitud, ["EN_EVALUACION"], "APROBADA")) return
 
-        const propiedad = await Propiedad.findById(solicitud.propiedadId)
+        const propiedad = await Propiedad.findOne({ _id: solicitud.propiedadId, activo: true })
         if (!propiedad) return res.status(404).json({ mensaje: "Propiedad no encontrada" })
         if (propiedad.estado !== "PUBLICADA")
             return res.status(409).json({ mensaje: "La propiedad no está PUBLICADA" })
@@ -236,7 +236,7 @@ export const cancelarSolicitud = async (req, res) => {
         if (estabaAprobada) {
             let propiedad = null
             try {
-                propiedad = await Propiedad.findById(solicitud.propiedadId)
+                propiedad = await Propiedad.findOne({ _id: solicitud.propiedadId, activo: true })
                 if (propiedad && propiedad.estado === "RESERVADA") {
                     propiedad.estado = "PUBLICADA"
                     await propiedad.save()
