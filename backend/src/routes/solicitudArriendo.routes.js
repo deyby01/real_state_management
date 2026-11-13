@@ -1,3 +1,8 @@
+/**
+ * `/api/solicitudes` router: rental requests (CU8 client, CU9 executive).
+ * Every route requires a valid token; roles come from the use-case matrix,
+ * so ADMIN is intentionally not allowed here.
+ */
 import { Router } from "express"
 import { verificarToken } from "../middlewares/auth.middleware.js"
 import { permitirRoles } from "../middlewares/role.middleware.js"
