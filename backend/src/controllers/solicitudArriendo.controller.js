@@ -1,9 +1,9 @@
 import mongoose from "mongoose"
 import SolicitudArriendo from "../models/SolicitudArriendo.js"
 import Usuario from "../models/Usuario.js"
+import Propiedad from "../models/Propiedad.js"
+import Cliente from "../models/Cliente.js"
 import { registrarBitacora } from "../services/bitacora.service.js"
-const Propiedad = () => mongoose.model("Propiedad")
-const Cliente = () => mongoose.model("Cliente")
 
 const manejarError = (res, error) => {
     if (error.code === 11000)
@@ -95,8 +95,8 @@ export const crearSolicitud = async (req, res) => {
             return res.status(400).json({ mensaje: "clienteId inválido o ausente" })
 
         const [propiedad, cliente] = await Promise.all([
-            Propiedad().findById(propiedadId),
-            Cliente().findById(clienteId),
+            Propiedad.findById(propiedadId),
+            Cliente.findById(clienteId),
         ])
         if (!propiedad) return res.status(404).json({ mensaje: "Propiedad no encontrada" })
         if (!cliente) return res.status(404).json({ mensaje: "Cliente no encontrado" })
@@ -177,7 +177,7 @@ export const aprobarSolicitud = async (req, res) => {
         if (!solicitud) return
         if (!validarTransicion(res, solicitud, ["EN_EVALUACION"], "APROBADA")) return
 
-        const propiedad = await Propiedad().findById(solicitud.propiedadId)
+        const propiedad = await Propiedad.findById(solicitud.propiedadId)
         if (!propiedad) return res.status(404).json({ mensaje: "Propiedad no encontrada" })
         if (propiedad.estado !== "PUBLICADA")
             return res.status(409).json({ mensaje: "La propiedad no está PUBLICADA" })
@@ -236,7 +236,7 @@ export const cancelarSolicitud = async (req, res) => {
         if (estabaAprobada) {
             let propiedad = null
             try {
-                propiedad = await Propiedad().findById(solicitud.propiedadId)
+                propiedad = await Propiedad.findById(solicitud.propiedadId)
                 if (propiedad && propiedad.estado === "RESERVADA") {
                     propiedad.estado = "PUBLICADA"
                     await propiedad.save()
