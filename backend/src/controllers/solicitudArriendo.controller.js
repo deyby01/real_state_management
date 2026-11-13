@@ -84,15 +84,15 @@ export const obtenerSolicitud = async (req, res) => {
 
 export const crearSolicitud = async (req, res) => {
     try {
-        const { propiedadId, antecedentes } = req.body
+        const { propiedadId, antecedentes } = req.body ?? {}
 
         if (!mongoose.isValidObjectId(propiedadId) || !antecedentes || typeof antecedentes !== "object")
             return res.status(400).json({ mensaje: "propiedadId y antecedentes son obligatorios" })
 
-
-        const clienteId = (await clienteIdDelUsuario(req)) ?? req.body?.clienteId ?? null
-        if (!mongoose.isValidObjectId(clienteId))
-            return res.status(400).json({ mensaje: "clienteId inválido o ausente" })
+        // The client identity always comes from the token, never from the body (rule 17)
+        const clienteId = await clienteIdDelUsuario(req)
+        if (!clienteId)
+            return res.status(409).json({ mensaje: "Tu cuenta aún no tiene un perfil de cliente asociado" })
 
         const [propiedad, cliente] = await Promise.all([
             Propiedad.findById(propiedadId),
