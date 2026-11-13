@@ -14,6 +14,8 @@ import Propietario from "../models/Propietario.js"
 import { propietarios } from "./data/propietarios.js"
 import Propiedad from "../models/Propiedad.js"
 import { propiedades } from "./data/propiedades.js"
+import SolicitudArriendo from "../models/SolicitudArriendo.js"
+import { solicitudesArriendo } from "./data/solicitudesArriendo.js"
 
 /**
  * Builds a lookup table { readable key → _id } from documents already in the database.
@@ -32,10 +34,10 @@ const mapaDeIds = (documentos, campo) =>
  * A typo in a fixture (e.g. "Depto" instead of "Departamento") would otherwise
  * end as a generic "required" validation error that is hard to trace.
  *
- * @param {Map<string, ObjectId>} mapa - Table built with mapaDeIds.
+ * @param {Map<string, ObjectId|Object>} mapa - Table built with mapaDeIds, or a map of full documents.
  * @param {string} valor - Readable reference written in the fixture.
  * @param {string} descripcion - What is being looked up, for the error message.
- * @returns {ObjectId} The referenced document _id.
+ * @returns {ObjectId|Object} The referenced value (an _id when the map comes from mapaDeIds).
  * @throws {Error} If the reference does not exist.
  */
 const buscarId = (mapa, valor, descripcion) => {
@@ -63,6 +65,8 @@ const seed = async () => {
     // Properties point to types and owners whose _id changes on every seed:
     // keeping them would leave references to documents that no longer exist
     await Propiedad.deleteMany({})
+    // Requests point to properties and clients that are recreated on every seed
+    await SolicitudArriendo.deleteMany({})
 
     // 2. Property types
     await TipoPropiedad.insertMany(tiposPropiedad)
@@ -114,6 +118,26 @@ const seed = async () => {
         { clienteId: buscarId(clientesPorEmail, "cliente@gup.cl", "el cliente con email") }
     )
     console.log("Cuenta cliente@gup.cl vinculada a su cliente")
+
+    // 9. Rental requests: they point to properties and clients, so they go last.
+    // The property map keeps the full document because its ejecutivoId is copied
+    // into each request (D10); buscarId returns that document, not only its _id.
+    const propiedadesPorTitulo = new Map(
+        (await Propiedad.find()).map((propiedad) => [propiedad.titulo, propiedad])
+    )
+
+    await SolicitudArriendo.insertMany(
+        solicitudesArriendo.map(({ propiedadTitulo, clienteEmail, ...datos }) => {
+            const propiedad = buscarId(propiedadesPorTitulo, propiedadTitulo, "la propiedad")
+            return {
+                ...datos,
+                propiedadId: propiedad._id,
+                clienteId: buscarId(clientesPorEmail, clienteEmail, "el cliente con email"),
+                ejecutivoId: propiedad.ejecutivoId,
+            }
+        })
+    )
+    console.log(`Solicitudes de arriendo: ${solicitudesArriendo.length}`)
 }
 
 try {
