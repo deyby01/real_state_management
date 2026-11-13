@@ -12,6 +12,7 @@ import { usuarios, PASSWORD_PRUEBA } from "./data/usuarios.js"
 import Bitacora from "../models/Bitacora.js"
 import Propietario from "../models/Propietario.js"
 import { propietarios } from "./data/propietarios.js"
+import Propiedad from "../models/Propiedad.js"
 
 const seed = async () => {
     // This script DELETES all data: never run it against production
@@ -27,6 +28,9 @@ const seed = async () => {
     await Cliente.deleteMany({})
     await Bitacora.deleteMany({})
     await Propietario.deleteMany({})
+    // Properties point to types and owners whose _id changes on every seed:
+    // keeping them would leave references to documents that no longer exist
+    await Propiedad.deleteMany({})
 
     // 2. Property types
     await TipoPropiedad.insertMany(tiposPropiedad)

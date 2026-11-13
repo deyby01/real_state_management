@@ -21,14 +21,16 @@ This is the largest model, so it is split into **two phases**, each one with its
 
 ### Phase B — Catalog, owner view and fixtures
 
+Reordered on 2026-11-12, after `propietarios` was merged (PR #27): fixtures come before the catalog and the owner view, so both can be tested with real data.
+
 | # | Step | What to test in Postman | Status |
 |---|---|---|---|
-| 6 | Public catalog: only `PUBLICADA` + `activo`, filters (comuna, tipo, price range, bedrooms, bathrooms), never the owner's data | Filters work; reserved properties hidden | ⬜ |
-| 7 | Owner's "my properties": filter by the logged-in user's `propietarioId` | Owner sees only theirs; another owner's property `404` | ⬜ |
-| 8 | Fixtures: ~10 properties, at least one per state | `make seed` loads them | ⬜ |
-| 9 | Full Postman pass; Pull Request B | Happy path and error cases | ⬜ |
-
-Phase B steps 7 and 8 need the `Propietario` model merged (Santiago).
+| B0 | `Propiedad.deleteMany({})` in `seed.js` (missing since phase A) | `make seed` leaves `propiedades` empty | ✅ (checked in a temporary database: 1 → 0) |
+| B1 | Resolve the four `TODO`s: check that `propietarioId` exists and is active on create; `populate("propietarioId")` in list, get and update | Nonexistent or inactive owner `400`; owner data visible to executives | ⬜ |
+| B2 | Fixtures: ~10 properties, at least one per state; link the `propietario@gup.cl` user to its `Propietario` (`usuarios.propietarioId`) | `make seed` loads them | ⬜ |
+| B3 | Public catalog: only `PUBLICADA` + `activo`, filters (comuna, tipo, price range, bedrooms, bathrooms), never the owner's data (RNF-08) | Filters work; reserved properties hidden | ⬜ |
+| B4 | Owner's "my properties": filter by the logged-in user's `propietarioId` (RNF-07) | Owner sees only theirs; another owner's property `404` | ⬜ |
+| B5 | Full Postman pass; Pull Request B | Happy path and error cases | ⬜ |
 
 ## Endpoints
 
@@ -87,3 +89,4 @@ The whole `/api/propiedades` router is protected with `verificarToken` + `permit
 | 2026-11-09 | Reviewed Roberto's PR. Step 3a done: `propietarioId` not editable; `actualizarPropiedad` with `findOneAndUpdate` + `returnDocument`/`runValidators`; 7 Postman tests passed. | Step 3b: soft delete. |
 | 2026-11-09 | Step 3b: `ELIMINACION` added to the bitacora enum (own commit); `eliminarPropiedad` with `findOne` → checks → `save` → bitacora; 7 Postman tests passed. | Step 4: state machine. |
 | 2026-11-10 | Step 4: `TRANSICIONES` table (DATA_MODEL 6.1 minus the three transitions owned by rental requests) and `cambiarEstadoPropiedad` (code given by the agent on request, explained block by block); 15 Postman tests passed. Phase A complete. | Pull Request A. Then phase B (catalog). |
+| 2026-11-12 | Phase B started on `feature/deyby/propiedades-catalogo`; plan reordered now that `propietarios` is merged. Step B0: `Propiedad.deleteMany({})` added to the seed (written by the agent on request), checked in a temporary database. | Step B1: owner check and `populate`. |
