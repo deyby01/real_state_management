@@ -28,7 +28,7 @@ All of them use the password **`Password123`**.
 
 These are fake accounts for local development only. Never add real passwords here.
 
-The owner and client users don't have `propietarioId` / `clienteId` yet: they will be linked when the `Propietario` model exists and the client-linking rule is agreed.
+The owner user `propietario@gup.cl` is linked to the owner record Jorge Muñoz (`12345678-5`) through `usuarios.propietarioId`, so it can test "my properties". The client user does not have a `clienteId` yet: it will be linked when the client-linking rule is agreed.
 
 ## What it loads
 
@@ -39,7 +39,7 @@ The owner and client users don't have `propietarioId` / `clienteId` yet: they wi
 | `clientes` | 3 | [`data/clientes.js`](data/clientes.js) |
 | `bitacora` | 0 (only emptied) | — Entries are created by real state changes, never by the fixtures |
 | `propietarios` | 3 (2 active, 1 inactive) | [`data/propietarios.js`](data/propietarios.js); business records, not linked to login accounts yet |
-| `propiedades` | 0 (only emptied, fixtures coming in phase B) | Emptied because they reference types and owners whose `_id` changes on every seed |
+| `propiedades` | 11 (5 `PUBLICADA` and active, one in each other state, 1 soft-deleted) | [`data/propiedades.js`](data/propiedades.js); 6 belong to Jorge Muñoz and 5 to María Torres, split between both executives. They refer to their type, owner and executive by name, RUT and email; `seed.js` translates those into `_id` values |
 
 ## Adding data
 
