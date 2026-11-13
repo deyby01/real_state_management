@@ -270,6 +270,8 @@ export const registrarBitacora = async ({ ... }) => { ... }
 - A variable that every teammate needs must be added to `docker-compose.yml` **and** documented in `backend/.env.example` and `backend/README.md`, because teammates may not have a `backend/.env`.
 - **Dependencies live inside the Docker image.** After `npm install <package>` in `backend/` or `frontend-react/`, run `make build`. Teammates must also run `make build` after pulling a `package.json` change.
 - Test data: `make seed` **empties** the collections and loads the fixtures in `backend/src/fixtures/` (test users per role, password `Password123`). New models must add their data there.
+  - **Every model adds its `deleteMany({})` in the same Pull Request** that creates it. A collection the seed does not empty keeps documents pointing to `_id` values that were just recreated (properties and rental requests both missed it at first).
+  - Fixtures that point to other documents use **readable references** (a type name, an owner RUT, a client email, a property title), never hard-coded `_id`s. `seed.js` translates them with `mapaDeIds` / `buscarId`, which stops the seed with a clear message on a typo. See `data/propiedades.js` and `data/solicitudesArriendo.js`.
 - Backend logs: `make logs-back`. Database: MongoDB Compass at `mongodb://localhost:27017`, database `real_estate`.
 - Do not run `npm run dev` while Docker is running: both use the same ports.
 
@@ -324,6 +326,7 @@ export const registrarBitacora = async ({ ... }) => { ... }
 19. **The JWT payload contains only the user's `_id` and `rol`.** A JWT is signed, not encrypted: anyone can read its content.
 20. **Secrets are never written in the code.** They come from environment variables (`process.env.JWT_SECRET`). The `JWT_SECRET` in `docker-compose.yml` and `.env.example` is for **local development only**.
 21. **The public catalog never exposes the owner's contact data.**
+22. **Who the caller is always comes from the token, never from the body** (extends rule 17 to `clienteId`, `propietarioId`, `ejecutivoId`...). If the profile the endpoint needs is not linked yet (for example `usuarios.clienteId`), **fail closed** with `409` and a clear message; never fall back to an id sent in the body, because that turns a data gap into an impersonation hole.
 
 ---
 

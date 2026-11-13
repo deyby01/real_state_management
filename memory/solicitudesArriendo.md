@@ -1,6 +1,6 @@
 # solicitudesArriendo — SolicitudArriendo
 
-> **Owner:** Roberto · **Branch:** `feature/roberto/rental-requests` · **Status:** 🚧 In progress (fixtures and seed added after PR #33; `make seed` verified twice; 404 consistency applied; Postman evidence and final review pending)
+> **Owner:** Roberto · **Branch:** `feature/roberto/rental-requests` · **Status:** ✅ Merged (PR #24, 2026-11-13). Pending: Postman screenshots in the PR; whether a client may send several `PENDIENTE` requests for the same property (pending professor validation)
 > **Specification:** [`docs/DATA_MODEL.md → solicitudesArriendo`](../docs/DATA_MODEL.md#solicitudesarriendo-rental-requests)
 > **Depends on:** `propiedades` (✅ PR #28 phase A), `clientes` (✅ PR #25), `usuarios` (✅), `bitacora` (✅) · **Used by:** —
 
