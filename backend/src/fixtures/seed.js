@@ -14,8 +14,8 @@ import Propietario from "../models/Propietario.js"
 import { propietarios } from "./data/propietarios.js"
 import Propiedad from "../models/Propiedad.js"
 import { propiedades } from "./data/propiedades.js"
-import Visita from "../models/Visita.js"
-import { construirVisitas } from "./data/visitas.js"
+import SolicitudArriendo from "../models/SolicitudArriendo.js"
+import { solicitudesArriendo } from "./data/solicitudesArriendo.js"
 
 /**
  * Builds a lookup table { readable key → _id } from documents already in the database.
@@ -34,10 +34,10 @@ const mapaDeIds = (documentos, campo) =>
  * A typo in a fixture (e.g. "Depto" instead of "Departamento") would otherwise
  * end as a generic "required" validation error that is hard to trace.
  *
- * @param {Map<string, ObjectId>} mapa - Table built with mapaDeIds.
+ * @param {Map<string, ObjectId|Object>} mapa - Table built with mapaDeIds, or a map of full documents.
  * @param {string} valor - Readable reference written in the fixture.
  * @param {string} descripcion - What is being looked up, for the error message.
- * @returns {ObjectId} The referenced document _id.
+ * @returns {ObjectId|Object} The referenced value (an _id when the map comes from mapaDeIds).
  * @throws {Error} If the reference does not exist.
  */
 const buscarId = (mapa, valor, descripcion) => {
@@ -62,10 +62,11 @@ const seed = async () => {
     await Cliente.deleteMany({})
     await Bitacora.deleteMany({})
     await Propietario.deleteMany({})
-    await Visita.deleteMany({})
     // Properties point to types and owners whose _id changes on every seed:
     // keeping them would leave references to documents that no longer exist
     await Propiedad.deleteMany({})
+    // Requests point to properties and clients that are recreated on every seed
+    await SolicitudArriendo.deleteMany({})
 
     // 2. Property types
     await TipoPropiedad.insertMany(tiposPropiedad)
@@ -77,8 +78,8 @@ const seed = async () => {
     console.log(`Usuarios: ${usuarios.length} (contraseña: ${PASSWORD_PRUEBA})`)
 
     // 4. Clients
-    const clientesInsertados = await Cliente.insertMany(clientes)
-    console.log(`Clientes: ${clientesInsertados.length}`)
+    await Cliente.insertMany(clientes)
+    console.log(`Clientes: ${clientes.length}`)
 
     // 5. Owners
     await Propietario.insertMany(propietarios)
@@ -118,35 +119,25 @@ const seed = async () => {
     )
     console.log("Cuenta cliente@gup.cl vinculada a su cliente")
 
-    // 9. Visits: built from the PUBLICADA properties (step 6) and the clients (step 4).
-    // Their _id only exist after inserting them, so the fixture receives the documents.
-    const clientesParaVisitas = [...clientesInsertados].sort((a, b) => a.email.localeCompare(b.email))
-    const idsEjecutivos = new Set(
-        (await Usuario.find({ rol: "EJECUTIVO" })).map((usuario) => usuario._id.toString())
+    // 9. Rental requests: they point to properties and clients, so they go last.
+    // The property map keeps the full document because its ejecutivoId is copied
+    // into each request (D10); buscarId returns that document, not only its _id.
+    const propiedadesPorTitulo = new Map(
+        (await Propiedad.find()).map((propiedad) => [propiedad.titulo, propiedad])
     )
 
-    const propiedadesParaVisitas = (
-        await Propiedad.find({ estado: "PUBLICADA", activo: true }).sort({ titulo: 1 })
+    await SolicitudArriendo.insertMany(
+        solicitudesArriendo.map(({ propiedadTitulo, clienteEmail, ...datos }) => {
+            const propiedad = buscarId(propiedadesPorTitulo, propiedadTitulo, "la propiedad")
+            return {
+                ...datos,
+                propiedadId: propiedad._id,
+                clienteId: buscarId(clientesPorEmail, clienteEmail, "el cliente con email"),
+                ejecutivoId: propiedad.ejecutivoId,
+            }
+        })
     )
-        .filter((propiedad) => idsEjecutivos.has(propiedad.ejecutivoId.toString()))
-        .slice(0, 2)
-
-    if (propiedadesParaVisitas.length === 2 && clientesParaVisitas.length >= 2) {
-        const ahora = new Date()
-        const visitas = construirVisitas(propiedadesParaVisitas, clientesParaVisitas).map((v) => ({
-            ...v,
-            createdAt: ahora,
-            updatedAt: ahora
-        }))
-        // Mongoose 9+: insertMany validates and casts by default; lean: true skips both.
-        // The fixture supplies ObjectIds, Dates and timestamps (REALIZADA in the past).
-        await Visita.insertMany(visitas, { lean: true })
-        console.log(`Visitas: ${visitas.length}`)
-    } else {
-        console.log(
-            "Visitas: omitidas (se necesitan 2 propiedades PUBLICADA con ejecutivo vigente y al menos 2 clientes)"
-        )
-    }
+    console.log(`Solicitudes de arriendo: ${solicitudesArriendo.length}`)
 }
 
 try {
