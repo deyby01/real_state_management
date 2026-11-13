@@ -21,13 +21,15 @@ const bitacoraSchema = new mongoose.Schema(
             required: true
         },
         // Closed list, so a typo such as "cambio_estado" is rejected instead of stored.
-        // A teammate who needs a new action asks the owner of this model to add it
+        // A teammate who needs a new action asks the owner of this model to add it.
+        // REPROGRAMACION: a visit moved to another time (RF7, RNF-12); the state does not change
         accion: {
             type: String,
             required: true,
-            enum: ["CREACION", "CAMBIO_ESTADO", "RESERVA", "LIBERACION_RESERVA", "ELIMINACION"]
+            enum: ["CREACION", "CAMBIO_ESTADO", "RESERVA", "LIBERACION_RESERVA", "ELIMINACION", "REPROGRAMACION"]
         },
         // Empty on CREACION. Equal to estadoNuevo on ELIMINACION (only `activo` changes)
+        // and on REPROGRAMACION (only the date changes)
         estadoAnterior: {
             type: String,
             required: false
