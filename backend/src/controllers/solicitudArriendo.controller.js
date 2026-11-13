@@ -23,7 +23,6 @@ const clienteIdDelUsuario = async (req) => {
 
 const puedeVer = async (req, solicitud) => {
     const { rol, _id } = req.usuario
-    if (rol === "ADMIN") return true
     if (rol === "EJECUTIVO") return igual(solicitud.ejecutivoId, _id)
     if (rol === "CLIENTE") return igual(solicitud.clienteId, await clienteIdDelUsuario(req))
     return false
@@ -57,7 +56,7 @@ export const listarSolicitudes = async (req, res) => {
         let filtro = {}
         if (rol === "CLIENTE") filtro = { clienteId: await clienteIdDelUsuario(req) }
         else if (rol === "EJECUTIVO") filtro = { ejecutivoId: _id }
-        else if (rol !== "ADMIN") return res.status(403).json({ mensaje: "Sin permisos" })
+        else return res.status(403).json({ mensaje: "Sin permisos" })
 
         const solicitudes = await SolicitudArriendo.find(filtro).sort({ createdAt: -1 })
         res.status(200).json(solicitudes)
@@ -131,7 +130,7 @@ const cargarParaCambio = async (req, res, { soloGestores }) => {
     }
     const { rol, _id } = req.usuario
     const permitido = soloGestores
-        ? rol === "ADMIN" || (rol === "EJECUTIVO" && igual(solicitud.ejecutivoId, _id))
+        ? rol === "EJECUTIVO" && igual(solicitud.ejecutivoId, _id)
         : await puedeVer(req, solicitud)
     if (!permitido) {
         res.status(403).json({ mensaje: "No tienes permisos sobre esta solicitud" })

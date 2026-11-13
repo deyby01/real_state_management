@@ -16,11 +16,11 @@ const router = Router()
 router.use(verificarToken)
 
 router.post("/", permitirRoles("CLIENTE"), crearSolicitud)
-router.get("/", permitirRoles("CLIENTE", "EJECUTIVO", "ADMIN"), listarSolicitudes)
-router.get("/:id", permitirRoles("CLIENTE", "EJECUTIVO", "ADMIN"), obtenerSolicitud)
-router.patch("/:id/evaluar", permitirRoles("EJECUTIVO", "ADMIN"), evaluarSolicitud)
-router.patch("/:id/aprobar", permitirRoles("EJECUTIVO", "ADMIN"), aprobarSolicitud)
-router.patch("/:id/rechazar", permitirRoles("EJECUTIVO", "ADMIN"), rechazarSolicitud)
-router.patch("/:id/cancelar", permitirRoles("CLIENTE", "EJECUTIVO", "ADMIN"), cancelarSolicitud)
+router.get("/", permitirRoles("CLIENTE", "EJECUTIVO"), listarSolicitudes)
+router.get("/:id", permitirRoles("CLIENTE", "EJECUTIVO"), obtenerSolicitud)
+router.patch("/:id/evaluar", permitirRoles("EJECUTIVO"), evaluarSolicitud)
+router.patch("/:id/aprobar", permitirRoles("EJECUTIVO"), aprobarSolicitud)
+router.patch("/:id/rechazar", permitirRoles("EJECUTIVO"), rechazarSolicitud)
+router.patch("/:id/cancelar", permitirRoles("CLIENTE", "EJECUTIVO"), cancelarSolicitud)
 
 export default router
