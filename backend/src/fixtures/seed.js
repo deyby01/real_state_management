@@ -77,8 +77,8 @@ const seed = async () => {
     console.log(`Usuarios: ${usuarios.length} (contraseña: ${PASSWORD_PRUEBA})`)
 
     // 4. Clients
-    await Cliente.insertMany(clientes)
-    console.log(`Clientes: ${clientes.length}`)
+    const clientesInsertados = await Cliente.insertMany(clientes)
+    console.log(`Clientes: ${clientesInsertados.length}`)
 
     // 5. Owners
     await Propietario.insertMany(propietarios)
@@ -118,7 +118,9 @@ const seed = async () => {
     )
     console.log("Cuenta cliente@gup.cl vinculada a su cliente")
 
-    // 9. Visits: built from PUBLICADA properties loaded in step 6 (see data/visitas.js)
+    // 9. Visits: built from the PUBLICADA properties (step 6) and the clients (step 4).
+    // Their _id only exist after inserting them, so the fixture receives the documents.
+    const clientesParaVisitas = [...clientesInsertados].sort((a, b) => a.email.localeCompare(b.email))
     const idsEjecutivos = new Set(
         (await Usuario.find({ rol: "EJECUTIVO" })).map((usuario) => usuario._id.toString())
     )
@@ -129,9 +131,9 @@ const seed = async () => {
         .filter((propiedad) => idsEjecutivos.has(propiedad.ejecutivoId.toString()))
         .slice(0, 2)
 
-    if (propiedadesParaVisitas.length === 2) {
+    if (propiedadesParaVisitas.length === 2 && clientesParaVisitas.length >= 2) {
         const ahora = new Date()
-        const visitas = construirVisitas(propiedadesParaVisitas).map((v) => ({
+        const visitas = construirVisitas(propiedadesParaVisitas, clientesParaVisitas).map((v) => ({
             ...v,
             createdAt: ahora,
             updatedAt: ahora
@@ -141,7 +143,9 @@ const seed = async () => {
         await Visita.insertMany(visitas, { lean: true })
         console.log(`Visitas: ${visitas.length}`)
     } else {
-        console.log("Visitas: omitidas (faltan 2 propiedades PUBLICADA con ejecutivo vigente)")
+        console.log(
+            "Visitas: omitidas (se necesitan 2 propiedades PUBLICADA con ejecutivo vigente y al menos 2 clientes)"
+        )
     }
 }
 
