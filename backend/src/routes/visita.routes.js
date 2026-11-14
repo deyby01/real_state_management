@@ -19,8 +19,9 @@ import {
  * Protection: every route requires authentication and the EJECUTIVO role (RF7).
  * - ADMIN has no visit use case in this module; visit reporting will use
  *   GET /api/reportes/visitas when implemented (RF12).
- * - CLIENTE is deferred until usuarios.clienteId is linked with Clientes (Jose):
- *   POST (own request), GET (own visits) and PATCH cancelar (own visit only).
+ * - CLIENTE is deferred to the follow-up PR (CU6: request and cancel own visits):
+ *   the `usuarios.clienteId` link already exists (PR #33), so that PR only needs the
+ *   session-based clienteId, the ownership check and populate("clienteId").
  * - Any EJECUTIVO may manage any visit (Decision A); per-executive-only restrictions
  *   remain a proposal pending professor validation.
  */

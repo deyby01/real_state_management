@@ -181,7 +181,7 @@ export const getVisitaById = async (req, res) => {
 /**
  * Creates a visit request validating property publication and executive schedule.
  *
- * Route: POST /api/visitas (EJECUTIVO; CLIENTE once clientes is merged).
+ * Route: POST /api/visitas (EJECUTIVO; CLIENTE own request in the follow-up PR, CU6).
  * - Whitelist: only `propiedadId`, `clienteId`, `fechaInicio`, and `observaciones`
  *   are read from the body; `estado`, `resultado`, and `fechaFin` are ignored.
  * - Enforces RN-16: property must exist, be active (`activo: true`), and be `PUBLICADA`.
@@ -396,8 +396,6 @@ export const putVisita = async (req, res) => {
             }
             visita.observaciones = observaciones
         }
-        
-        
 
         const visitaGuardada = await visita.save()
 
@@ -443,7 +441,7 @@ export const rechazarVisita = (req, res) =>
 /**
  * Cancels a visit (SOLICITADA or CONFIRMADA → CANCELADA).
  *
- * Route: PATCH /api/visitas/:id/cancelar (EJECUTIVO; CLIENTE own visit once clientes is merged).
+ * Route: PATCH /api/visitas/:id/cancelar (EJECUTIVO; CLIENTE own visit in the follow-up PR, CU6).
  * Body: { observacion? }.
  * Responses: 200 cancelled · 400 invalid id · 401/403 auth · 404 not found · 409 transition not allowed · 500 server error.
  */

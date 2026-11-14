@@ -1,6 +1,6 @@
 # visitas — Visita
 
-> **Owner:** Ignacio · **Branch:** `feature/ignacio/visitas` · **Status:** 🚧 Deyby's review in progress — steps 1–3 done (2026-11-13); comments, memory and push pending
+> **Owner:** Ignacio · **Branch:** `feature/ignacio/visitas` · **Status:** 🚧 Deyby's review in progress — steps 1–4 done (2026-11-13); R5 (`REPROGRAMACION`), memory and push pending
 > **Specification:** [`docs/DATA_MODEL.md → visitas`](../docs/DATA_MODEL.md#visitas-visit-requests)
 > **Depends on:** `propiedades` (Deyby, merged ✅ PR #28 + fixtures PR #33), `clientes` (Jose, merged ✅ PR #25), `usuarios` (merged ✅, linked to `clientes` and `propietarios` by PR #33), `bitacora` (merged ✅, `REPROGRAMACION` added in PR #35)
 > **Used by:** — (nothing references `visitas` yet; it feeds the visit reports, RF12)
@@ -27,7 +27,7 @@ Requested after `clientes`, `propietarios`, the property fixtures (#33) and `sol
 | R1 | Bring `development` (merge, not rebase): conflicts in `app.js`, `fixtures/README.md` and `fixtures/seed.js` | `make seed` + login again | ✅ merge `ae6a9bb` |
 | R2 | Verify the client on `POST`: `Cliente.findOne({ _id: clienteId, activo: true })` → `400` | unknown client, soft-deleted client, active client | ✅ `fix: verify the client when creating a visit` |
 | R3 | Redo the fixtures with the team pattern: readable references, `deleteMany`, step 10, no silent guard | `make seed` twice, 0 empty references in Compass | ✅ `refactor: build visit fixtures from readable references` |
-| R4 | Remove outdated comments (unmerged `Cliente`, `(step 3d)`, blank lines with spaces, `CLIENTE` notes) | `git diff --check` | ⬜ |
+| R4 | Remove outdated comments (unmerged `Cliente`, `(step 3d)`, blank lines with spaces, `CLIENTE` notes) | `git diff --check` | ✅ `docs: update visit comments after clients were merged` |
 | R5 | Move the `CLIENTE` endpoints to the next PR; register `REPROGRAMACION` in `putVisita` (enum already merged in #35) | — | ⬜ |
 | R6 | Update this memory, `node --check`, `git diff --check`, `git push`, ask for the final review | — | ⬜ |
 
@@ -155,3 +155,4 @@ The step 7 suite (`step7-full-2.ps1`, kept outside the repo in a temp folder) cr
 | 2026-11-13 | Review R1: merge `development` into the branch (merge, not rebase) | Conflicts in `app.js` (keep both routers), `fixtures/README.md` (keep both rows) and `fixtures/seed.js` (took `development` entirely: the visit block is rebuilt in R3). Merge commit `ae6a9bb`; `make seed` ok, `/api/visitas` and `/api/solicitudes` answer `401` without a token. The merge commit accidentally swallowed the 16 memory lines that were staged; from now on `git add` lists files explicitly. |
 | 2026-11-13 | Review R2: verify the client on `POST` | Added `Cliente.findOne({ _id: clienteId, activo: true })` after the RN-16 property check → `400 "Cliente no válido o inactivo"`; JSDoc and `Responses` updated. 8/8 real cases (active `201`, unknown `400`, soft-deleted `400`, malformed id `400` via `CastError`, `409` RN-16 wins). `make seed` restored the deleted client. |
 | 2026-11-13 | Review R3: fixtures with readable references | `data/visitas.js` is now a static array + `enHoras`; `seed.js` only added two imports, `Visita.deleteMany({})` and step 10 (`buscarId` + `propiedadesPorTitulo` + `clientesPorEmail`, `lean: true`); README row replaced and the guard paragraph removed. Two `make seed` runs: 6 visits, 0 empty references, D10 true, 1 h duration, 0 RN-10 overlaps, `GET /api/visitas` 200 with populate. Next: R4 (outdated comments). |
+| 2026-11-13 | Review R4: outdated comments and whitespace | `Visita.js`: the "Cliente model is unmerged" note is gone (the controller validates the client) and both `(step 3d)` markers now name the real mechanism (`TRANSICIONES`, `PATCH /resultado`). Controller: the two `CLIENTE once clientes is merged` routes now say "in the follow-up PR, CU6"; the two whitespace-only lines in `putVisita` were removed. Router: the `CLIENTE` note says the `usuarios.clienteId` link already exists and lists what the follow-up PR needs. `node --check` ×3, `git diff --check` clean, `GET /api/visitas` still 200/6. Next: R5 (`REPROGRAMACION`). |

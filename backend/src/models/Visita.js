@@ -25,7 +25,7 @@ const visitaSchema = new mongoose.Schema(
             ref: "Propiedad",
             required: true
         },
-        // Cliente model is unmerged (Jose); declared as ObjectId reference without populate
+        // Reference to an existing, active client; the controller validates it on creation
         clienteId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Cliente",
@@ -59,14 +59,14 @@ const visitaSchema = new mongoose.Schema(
             required: false,
             trim: true
         },
-        // A new visit always starts as SOLICITADA; transitions will be enforced by controller endpoints (step 3d)
+        // A new visit always starts as SOLICITADA; the controller enforces the transitions (§6.3)
         estado: {
             type: String,
             required: true,
             enum: ESTADOS_VISITA,
             default: "SOLICITADA"
         },
-        // Written by the executive after the visit; setting it will move CONFIRMADA → REALIZADA (step 3d)
+        // Written by the executive after the visit; PATCH /resultado moves CONFIRMADA → REALIZADA
         resultado: {
             type: String,
             required: false,
