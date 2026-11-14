@@ -2,6 +2,7 @@ import mongoose from "mongoose"
 import Propiedad from "../models/Propiedad.js"
 import TipoPropiedad from "../models/TipoPropiedad.js"
 import Propietario from "../models/Propietario.js"
+import Usuario from "../models/Usuario.js"
 import { registrarBitacora } from "../services/bitacora.service.js"
 
 /**
@@ -397,6 +398,97 @@ export const obtenerPropiedadCatalogo = async (req, res) => {
         const propiedad = await Propiedad.findOne({ _id: req.params.id, estado: "PUBLICADA", activo: true })
             .select(CAMPOS_CATALOGO)
             .populate("tipoId", "nombre")
+
+        if (!propiedad) {
+            return res.status(404).json({ mensaje: "Propiedad no encontrada" })
+        }
+
+        res.status(200).json(propiedad)
+
+    } catch (error) {
+        if (error.name === "CastError") {
+            return res.status(400).json({ mensaje: "ID de propiedad inválido", error: error.message })
+        }
+        return res.status(500).json({ mensaje: "Error al obtener la propiedad", error: error.message })
+    }
+}
+
+
+/**
+ * Fields an owner sees about their own properties. An allowlist like
+ * CAMPOS_CATALOGO, plus `estado` and `updatedAt` (the owner follows the situation
+ * of each property, RNF-07) and `ejecutivoId` (who to contact, problem P3).
+ * `propietarioId` (the owner themselves) and `activo` (internal) stay out.
+ */
+const CAMPOS_PROPIETARIO = `${CAMPOS_CATALOGO} estado ejecutivoId updatedAt`
+
+/**
+ * Reads the `propietarios` record linked to the logged-in user.
+ * The JWT only carries `_id` and `rol` (rule 19), so `usuarios.propietarioId` is queried here.
+ *
+ * @param {Object} req - Express request with `req.usuario` set by verificarToken.
+ * @returns {Promise<ObjectId|null>} The linked owner id, or null when unlinked.
+ */
+const propietarioIdDelUsuario = async (req) => {
+    const usuario = await Usuario.findById(req.usuario._id).select("propietarioId")
+    return usuario?.propietarioId ?? null
+}
+
+/**
+ * Lists the properties of the logged-in owner (RNF-07, CA-01).
+ *
+ * Route: GET /api/mis-propiedades (PROPIETARIO only).
+ * - The owner comes from the token (`usuarios.propietarioId`), never from the
+ *   query or the body (rule 22).
+ * - Fails closed with 409 when the account has no linked owner: Mongoose drops
+ *   `undefined` keys from a filter, so a missing id could match every property.
+ * - Every state is listed (the owner also follows reserved, rented or maintenance
+ *   properties); soft-deleted ones are not.
+ *
+ * Responses: 200 list (newest first) · 401/403 auth · 409 no owner profile · 500 server error.
+ */
+export const listarMisPropiedades = async (req, res) => {
+    try {
+        const propietarioId = await propietarioIdDelUsuario(req)
+        if (!propietarioId) {
+            return res.status(409).json({ mensaje: "Tu cuenta aún no tiene un perfil de propietario asociado" })
+        }
+
+        const propiedades = await Propiedad.find({ propietarioId, activo: true })
+            .select(CAMPOS_PROPIETARIO)
+            .sort({ createdAt: -1 })
+            .populate("tipoId", "nombre")
+            .populate("ejecutivoId", "nombre email")
+
+        res.status(200).json(propiedades)
+
+    } catch (error) {
+        return res.status(500).json({ mensaje: "Error al obtener tus propiedades", error: error.message })
+    }
+}
+
+
+/**
+ * Returns one property of the logged-in owner.
+ *
+ * Route: GET /api/mis-propiedades/:id (PROPIETARIO only).
+ * - `propietarioId` is part of the filter, so another owner's property answers 404,
+ *   the same as a nonexistent one: the owner cannot even confirm it exists (RNF-07).
+ *
+ * Responses: 200 property · 400 invalid id · 401/403 auth · 404 not found or not theirs ·
+ * 409 no owner profile · 500 server error.
+ */
+export const obtenerMiPropiedad = async (req, res) => {
+    try {
+        const propietarioId = await propietarioIdDelUsuario(req)
+        if (!propietarioId) {
+            return res.status(409).json({ mensaje: "Tu cuenta aún no tiene un perfil de propietario asociado" })
+        }
+
+        const propiedad = await Propiedad.findOne({ _id: req.params.id, propietarioId, activo: true })
+            .select(CAMPOS_PROPIETARIO)
+            .populate("tipoId", "nombre")
+            .populate("ejecutivoId", "nombre email")
 
         if (!propiedad) {
             return res.status(404).json({ mensaje: "Propiedad no encontrada" })

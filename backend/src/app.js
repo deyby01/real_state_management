@@ -13,6 +13,7 @@ import clienteRouter from "./routes/cliente.routes.js"
 import propiedadRouter from "./routes/propiedad.routes.js"
 import solicitudRouter from "./routes/solicitudArriendo.routes.js"
 import catalogoRouter from "./routes/catalogo.routes.js"
+import misPropiedadesRouter from "./routes/misPropiedades.routes.js"
 
 const app = express()
 app.use(express.json())
@@ -37,5 +38,7 @@ app.use("/api/solicitudes", solicitudRouter)
 
 // Public: no token.
 app.use("/api/catalogo", catalogoRouter)
+
+app.use("/api/mis-propiedades", misPropiedadesRouter)
 
 export default app

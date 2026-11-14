@@ -1,6 +1,6 @@
 # propiedades — Propiedad
 
-> **Owner:** Deyby · **Branch:** `feature/deyby/catalogo-publico` · **Status:** 🚧 Phase A merged (PR #28, 2026-11-10); phase B steps B0–B2 merged (PR #33, 2026-11-12); B3–B5 in progress
+> **Owner:** Deyby · **Branch:** `feature/deyby/catalogo-publico` · **Status:** 🚧 Phase A merged (PR #28, 2026-11-10); phase B steps B0–B2 merged (PR #33, 2026-11-12); B3–B4 done on the branch; B5 (Postman pass and Pull Request) pending
 > **Specification:** [`docs/DATA_MODEL.md → propiedades`](../docs/DATA_MODEL.md#propiedades-the-center-of-the-model), [state machine 6.1](../docs/DATA_MODEL.md#61-property)
 > **Depends on:** `tiposPropiedad` (✅), `usuarios` (✅, `ejecutivoId`), `bitacora` (✅), `propietarios` (✅ PR #27: phase B unblocked) · **Used by:** `visitas` (Ignacio), `solicitudesArriendo` (Roberto), the public catalog and the landing page
 
@@ -31,12 +31,12 @@ Reordered on 2026-11-12, after `propietarios` was merged (PR #27): fixtures come
 | B1 | Resolve the four `TODO`s: check that `propietarioId` exists and is active on create; `populate("propietarioId")` in list, get and update | Nonexistent or inactive owner `400`; owner data visible to executives | ✅ (inexistent, inactive and invalid owner `400`; active `201`; `nombre email telefono` populated in list, get and update) |
 | B2 | Fixtures: ~10 properties, at least one per state; link the `propietario@gup.cl` user to its `Propietario` (`usuarios.propietarioId`) and `cliente@gup.cl` to its `Cliente` (`usuarios.clienteId`) | `make seed` loads them | ✅ (11 properties, all states, 0 null references, repeatable; owner account linked; written by the agent on request) |
 | B3 | Public catalog: only `PUBLICADA` + `activo`, filters (comuna, tipo, price range, bedrooms, bathrooms), never the owner's data (RNF-08) | Filters work; reserved properties hidden | ✅ `GET /api/catalogo` and `GET /api/catalogo/:id` (code shown by the agent on request, typed by the developer); 16 checks passed |
-| B4 | Owner's "my properties": filter by the logged-in user's `propietarioId` (RNF-07) | Owner sees only theirs; another owner's property `404` | ⬜ |
+| B4 | Owner's "my properties": filter by the logged-in user's `propietarioId` (RNF-07) | Owner sees only theirs; another owner's property `404` | ✅ `GET /api/mis-propiedades` and `GET /api/mis-propiedades/:id` (code shown by the agent, typed by the developer); 9 Postman checks planned (see session log) |
 | B5 | Full Postman pass; Pull Request B | Happy path and error cases | ⬜ |
 
 ## Endpoints
 
-The whole `/api/propiedades` router is protected with `verificarToken` + `permitirRoles("EJECUTIVO")`. The public catalog and the owner view will live in other routes (phase B).
+The whole `/api/propiedades` router is protected with `verificarToken` + `permitirRoles("EJECUTIVO")`. The public catalog (`/api/catalogo`, no token) and the owner view (`/api/mis-propiedades`, `PROPIETARIO` only) live in their own routers.
 
 | Method | Route | Who can use it | Responses |
 |---|---|---|---|
@@ -48,10 +48,13 @@ The whole `/api/propiedades` router is protected with `verificarToken` + `permit
 | `PATCH` | `/api/propiedades/:id/estado` | `EJECUTIVO` | Body `{ estado, observacion? }`. `200` + bitacora `CAMBIO_ESTADO`; unknown state `400` (lists the valid ones); `RESERVADA` as target `409` (only by approving a request); transition not in `TRANSICIONES` `409` (`No se puede pasar de X a Y`); nonexistent or deleted `404`; invalid id `400` |
 | `GET` | `/api/catalogo` | **Public** (no token) | `200`: only `PUBLICADA` + active, newest first, `tipoId` populated, never owner data; optional `?comuna=`, `?tipo=<_id>`, `?precioMin=`, `?precioMax=`, `?dormitorios=` (min), `?banos=` (min); invalid filter `400` |
 | `GET` | `/api/catalogo/:id` | **Public** | `200`; not `PUBLICADA`, deleted or nonexistent `404`; invalid id `400` |
+| `GET` | `/api/mis-propiedades` | `PROPIETARIO` (whole router) | `200`: only the logged-in owner's active properties, every state, newest first, `tipoId` and `ejecutivoId` (`nombre email`) populated, never `propietarioId` or `activo`; account without linked owner `409`; no token `401`; other role `403` |
+| `GET` | `/api/mis-propiedades/:id` | `PROPIETARIO` | `200`; another owner's, soft-deleted or nonexistent `404`; invalid id `400`; account without linked owner `409` |
 
 ## Decisions
 
 - **Public catalog (B3):** separate router `/api/catalogo` with no token, because `propiedad.routes.js` protects every route with `router.use`. Base filter always `estado: PUBLICADA, activo: true` (RN-02). Fields returned through an **allowlist** (`CAMPOS_CATALOGO`), so `propietarioId` (RNF-08), `ejecutivoId`, `activo` and `estado` never leave the server, and a field added later stays private by default. `dormitorios` and `banos` are **minimums** (`$gte`); `tipo` is the property type `_id` (the frontend reads the types from the public `GET /api/tipo-propiedades`); `comuna` is an exact match; empty filters (`?precioMin=`) are ignored because forms send empty fields; invalid numbers, negatives or `precioMin > precioMax` → `400`. The detail answers `404` for a reserved, rented or deleted property, the same as a nonexistent one. *(minimum vs exact: pending professor validation)*
+- **Owner view (B4):** separate router `/api/mis-propiedades` (the route the spec's API table suggests), because the `/api/propiedades` router answers `403` to any non-executive before reaching a route. The owner is read from `usuarios.propietarioId` with a helper (`propietarioIdDelUsuario`, same pattern as Roberto's `clienteIdDelUsuario`), never from the query or body (rule 22); it is not stored in the JWT, so a change to the link applies without logging in again. An account without a linked owner **fails closed** with `409`: Mongoose drops `undefined` keys from a filter, so a missing id could otherwise match every property. `propietarioId` is part of the detail filter, so another owner's property answers **`404`, not `403`** (it does not confirm the id exists, CA-01). Every state is shown (the owner follows reserved, rented and maintenance properties too), soft-deleted ones are not. Fields through the allowlist `CAMPOS_PROPIETARIO` = `CAMPOS_CATALOGO` + `estado`, `ejecutivoId`, `updatedAt`; the executive's `nombre email` is included so the owner knows who to contact (problem P3). *(showing the executive's contact and hiding deleted properties: pending professor validation)*
 - **Only `EJECUTIVO` creates, edits and changes the state of properties.** The spec's use case matrix gives "CU3 Administrar propiedades" only to the executive, and its API table lists `/propiedades` for the executive. `ADMIN` manages users and views reports.
 - **`ejecutivoId` is the logged-in executive** (`req.usuario._id`), never taken from the body. It satisfies RN-15 (every property has a responsible executive) without letting anyone assign a property to an arbitrary user. Reassignment is out of scope for now. *(pending professor validation: spec §13 question 6, manual, automatic or by comuna)*
 - **Executives see all active properties, not only their own** (optional filters `?estado=` and `?ejecutivoId=`). The spec says executives manage properties, not "their" properties, so one executive can cover or review another's work. *(pending professor validation)*
@@ -84,6 +87,8 @@ The whole `/api/propiedades` router is protected with `verificarToken` + `permit
 
 ## Proposals for AGENTS.md
 
+- **Shared "profile of the logged-in user" helper (2026-11-14).** `propietarioIdDelUsuario` (this model) and `clienteIdDelUsuario` (`solicitudesArriendo`) do the same query on different fields. If a third model needs it (for example `visitas` reading the client), move them to one service such as `services/perfil.service.js` instead of copying it again. Not done now to respect model ownership.
+
 ## Session log
 
 | Date | What was done | Result / next step |
@@ -100,3 +105,4 @@ The whole `/api/propiedades` router is protected with `verificarToken` + `permit
 | 2026-11-12 | Step B2 (written by the agent on request): `data/propiedades.js` with 11 properties referring to type, owner and executive by name, RUT and email; `seed.js` translates them into `_id` values with `mapaDeIds`/`buscarId` (clear error on a typo), and links `propietario@gup.cl` to Jorge Muñoz. Only new blocks appended to the seed, so teammates' lines are untouched. Checked in a temporary database. | Developer runs `make seed`; then step B3: public catalog. |
 | 2026-11-12 | Step B2 completed: `seed.js` also links `cliente@gup.cl` to its `Cliente` (same email), so rental requests can be tested after `make seed`. Checked in a temporary database (both links, 0 null references, repeatable). Phase B split: B0–B2 Pull Request now, so Roberto can finish his fixtures in parallel. | Open the B0–B2 PR; then B3 (catalog) on a new branch. |
 | 2026-11-13 | Step B3: public catalog (list with filters and detail). New approach to finish faster: the agent shows the final, tested code and explains every decision; the developer types it. | Step B4: owner's "my properties". |
+| 2026-11-14 | Step B4: owner view (`listarMisPropiedades`, `obtenerMiPropiedad`, `propietarioIdDelUsuario`, `CAMPOS_PROPIETARIO`, router `misPropiedades.routes.js` mounted at `/api/mis-propiedades`). Explained: identity from the token, why `propietarioId` is not in the JWT, fail closed, `404` vs `403`, why a separate router. Postman checks with `propietario@gup.cl` (Jorge Muñoz): list → 5 properties, no deleted one; JSON with `estado`/`ejecutivoId`, without `propietarioId`/`activo`; own detail `200`; María's property `404`; deleted `404`; invalid id `400`; no token `401`; executive or client `403`; `propietarioId: null` in Compass → `409` with the same token. New working rule: the developer writes the code; the agent keeps the memory files. | Step B5: full Postman pass and Pull Request B. |
