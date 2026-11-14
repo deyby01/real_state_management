@@ -16,6 +16,8 @@ import Propiedad from "../models/Propiedad.js"
 import { propiedades } from "./data/propiedades.js"
 import SolicitudArriendo from "../models/SolicitudArriendo.js"
 import { solicitudesArriendo } from "./data/solicitudesArriendo.js"
+import Visita, { DURACION_VISITA_MS } from "../models/Visita.js"
+import { visitas, enHoras } from "./data/visitas.js"
 
 /**
  * Builds a lookup table { readable key → _id } from documents already in the database.
@@ -67,6 +69,8 @@ const seed = async () => {
     await Propiedad.deleteMany({})
     // Requests point to properties and clients that are recreated on every seed
     await SolicitudArriendo.deleteMany({})
+    // Visits point to properties and clients that are recreated on every seed
+    await Visita.deleteMany({})
 
     // 2. Property types
     await TipoPropiedad.insertMany(tiposPropiedad)
@@ -138,6 +142,32 @@ const seed = async () => {
         })
     )
     console.log(`Solicitudes de arriendo: ${solicitudesArriendo.length}`)
+
+    // 10. Visits: they point to properties and clients, so they go last. The property
+    // map keeps the full document because its ejecutivoId is copied into each visit
+    // (D10). `lean: true` skips validation and casting: the REALIZADA visit is in the
+    // past and would fail the future-date validator, so the fixture builds real Dates
+    // and the timestamps are set by hand (the timestamp middleware does not run).
+    const ahoraVisitas = new Date()
+
+    await Visita.insertMany(
+        visitas.map(({ propiedadTitulo, clienteEmail, horas, ...datos }) => {
+            const propiedad = buscarId(propiedadesPorTitulo, propiedadTitulo, "la propiedad")
+            const fechaInicio = enHoras(horas)
+            return {
+                ...datos,
+                propiedadId: propiedad._id,
+                clienteId: buscarId(clientesPorEmail, clienteEmail, "el cliente con email"),
+                ejecutivoId: propiedad.ejecutivoId,
+                fechaInicio,
+                fechaFin: new Date(fechaInicio.getTime() + DURACION_VISITA_MS),
+                createdAt: ahoraVisitas,
+                updatedAt: ahoraVisitas,
+            }
+        }),
+        { lean: true }
+    )
+    console.log(`Visitas: ${visitas.length}`)
 }
 
 try {
