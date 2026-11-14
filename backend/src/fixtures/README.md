@@ -41,9 +41,7 @@ The owner user `propietario@gup.cl` is linked to the owner record Jorge Muñoz (
 | `propietarios` | 3 (2 active, 1 inactive) | [`data/propietarios.js`](data/propietarios.js); business records, not linked to login accounts yet |
 | `propiedades` | 11 (5 `PUBLICADA` and active, one in each other state, 1 soft-deleted) | [`data/propiedades.js`](data/propiedades.js); 6 belong to Jorge Muñoz and 5 to María Torres, split between both executives. They refer to their type, owner and executive by name, RUT and email; `seed.js` translates those into `_id` values |
 | `solicitudesArriendo` | 5 (one per state) | [`data/solicitudesArriendo.js`](data/solicitudesArriendo.js); refer to their property by title and their client by email; the `APROBADA` one explains the `RESERVADA` property |
-| `visitas` | 6 (when the guard finds 2 active `PUBLICADA` properties with a current executive **and at least 2 clients**) | [`data/visitas.js`](data/visitas.js); they reference those properties and the seeded clients (first two by email) |
-
-After properties and clients load (steps 4 and 6), the seed inserts 6 sample visits on the first two matching `PUBLICADA` properties, split between the first two clients by email. If the guard fails (insufficient properties or clients), it logs `Visitas: omitidas...` without stopping the seed.
+| `visitas` | 6 (one per state, plus a second `SOLICITADA`) | [`data/visitas.js`](data/visitas.js); refer to their property by title and their client by email |
 
 ## Adding data
 
