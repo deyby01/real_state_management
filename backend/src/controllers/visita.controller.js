@@ -328,8 +328,9 @@ export const postVisita = async (req, res) => {
  * - Does not re-check RN-16: rescheduling adjusts the time of an existing agreement;
  *   if the property is unmarketable, the executive should cancel it (CANCELADA).
  * - Document save pattern triggers pre("validate") hook recalculating `fechaFin`.
- * - Audit log: Bitacora has no REPROGRAMACION action yet (requested to Deyby); not logged
- *   to avoid logging a fake CAMBIO_ESTADO where previous equals new state.
+ * - Logs a REPROGRAMACION entry after saving (RN-13, RNF-12): the state does not change,
+ *   so `estadoAnterior` and `estadoNuevo` both hold the current state and the observation
+ *   keeps the previous and the new start date.
  *
  * Responses: 200 rescheduled · 400 invalid date/id · 401/403 auth · 404 not found ·
  * 409 terminal state or overlap conflict · 500 server error.
@@ -388,6 +389,9 @@ export const putVisita = async (req, res) => {
             })
         }
 
+        // Keep the previous start date for the audit log: the document is mutated below
+        const fechaAnterior = visita.fechaInicio
+
         visita.fechaInicio = fechaInicioDate
 
         if (observaciones !== undefined) {
@@ -398,6 +402,19 @@ export const putVisita = async (req, res) => {
         }
 
         const visitaGuardada = await visita.save()
+
+        // Audit log (RN-13): the state does not change, only the date, so both states are
+        // the current one and the observation keeps the move. If logging fails after save,
+        // the visit is already rescheduled and the catch returns 500 (known limitation)
+        await registrarBitacora({
+            entidad: "VISITA",
+            entidadId: visitaGuardada._id,
+            accion: "REPROGRAMACION",
+            estadoAnterior: visitaGuardada.estado,
+            estadoNuevo: visitaGuardada.estado,
+            usuarioId: req.usuario._id,
+            observacion: `Reprogramada del ${fechaAnterior.toISOString()} al ${visitaGuardada.fechaInicio.toISOString()}`
+        })
 
         await visitaGuardada.populate("ejecutivoId", "nombre email rol")
         await visitaGuardada.populate("propiedadId", "titulo direccion estado")
