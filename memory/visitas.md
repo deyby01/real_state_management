@@ -1,6 +1,6 @@
 # visitas — Visita
 
-> **Owner:** Ignacio · **Branch:** `feature/ignacio/visitas` · **Status:** 🚧 Deyby's review in progress — steps 1–5 done (2026-11-13); final checks and push pending
+> **Owner:** Ignacio · **Branch:** `feature/ignacio/visitas` · **Status:** ✅ Ready for Deyby's final review (2026-11-13) — review steps R1–R6 done, 105/105 checks green; push and PR opening pending
 > **Specification:** [`docs/DATA_MODEL.md → visitas`](../docs/DATA_MODEL.md#visitas-visit-requests)
 > **Depends on:** `propiedades` (Deyby, merged ✅ PR #28 + fixtures PR #33), `clientes` (Jose, merged ✅ PR #25), `usuarios` (merged ✅, linked to `clientes` and `propietarios` by PR #33), `bitacora` (merged ✅, `REPROGRAMACION` added in PR #35)
 > **Used by:** — (nothing references `visitas` yet; it feeds the visit reports, RF12)
@@ -16,7 +16,7 @@
 | 4 | Soft delete | — | N/A: visits are voided with CANCELADA; DATA_MODEL has no activo |
 | 5 | Routes + mounting in `app.js` + role protection | No token `401`, wrong role `403` | ✅ (mounted in Step 2; matrix closed in step 5: `EJECUTIVO` only, `ADMIN` 403, `CLIENTE` deferred) |
 | 6 | Fixtures in `backend/src/fixtures/data/` + `seed.js` | `make seed` loads 6 visits with readable references (review R3 replaced the guard) | ✅ |
-| 7 | Full Postman pass + Pull Request (description from `.github/pull_request_template.md`) | Happy path and error cases (`400`, `401`, `403`, `409`) | ✅ 103/103 on rebased branch; PR text ready, screenshots pending |
+| 7 | Full Postman pass + Pull Request (description from `.github/pull_request_template.md`) | Happy path and error cases (`400`, `401`, `403`, `409`) | ✅ 105/105 after review R5; PR text ready, screenshots pending |
 
 ### Deyby's review (2026-11-13)
 
@@ -29,7 +29,7 @@ Requested after `clientes`, `propietarios`, the property fixtures (#33) and `sol
 | R3 | Redo the fixtures with the team pattern: readable references, `deleteMany`, step 10, no silent guard | `make seed` twice, 0 empty references in Compass | ✅ `refactor: build visit fixtures from readable references` |
 | R4 | Remove outdated comments (unmerged `Cliente`, `(step 3d)`, blank lines with spaces, `CLIENTE` notes) | `git diff --check` | ✅ `docs: update visit comments after clients were merged` |
 | R5 | Move the `CLIENTE` endpoints to the next PR; register `REPROGRAMACION` in `putVisita` (enum already merged in #35) | `PUT` leaves exactly one audit entry; error cases leave none | ✅ `feat: log visit rescheduling in the audit log` |
-| R6 | Update this memory, `node --check`, `git diff --check`, `git push`, ask for the final review | — | ⬜ |
+| R6 | Update this memory, `node --check`, `git diff --check`, `git push`, ask for the final review | full suite (105 checks) green on a fresh seed | ✅ `docs: record the visit review in the model memory` |
 
 ## Endpoints
 
@@ -129,7 +129,7 @@ State after `make seed` (2026-11-13, verified twice):
 - The soft-deleted property id changes on every seed; the step 7 suite takes it as a parameter.
 - Every seed recreates the users, so Postman tokens must be refreshed before the next request.
 
-The step 7 suite (`step7-full-2.ps1`, kept outside the repo in a temp folder) creates 8 visits with 2029 dates and 13 audit entries; run `make seed` afterwards to go back to the state above. The R2 script (`step2-cliente.ps1`) soft-deletes a client to test the `400`; `make seed` reactivates it.
+The step 7 suite (`step7-full-2.ps1`, kept outside the repo in a temp folder) creates 8 visits with 2029 dates and 16 audit entries (8 `CREACION`, 5 `CAMBIO_ESTADO`, 3 `REPROGRAMACION`); it takes the soft-deleted property id as a parameter (`-propBorrada`). Run `make seed` afterwards to go back to the state above. The R2 script (`step2-cliente.ps1`) soft-deletes a client to test the `400`; `make seed` reactivates it.
 
 ## Session log
 
@@ -158,3 +158,4 @@ The step 7 suite (`step7-full-2.ps1`, kept outside the repo in a temp folder) cr
 | 2026-11-13 | Review R3: fixtures with readable references | `data/visitas.js` is now a static array + `enHoras`; `seed.js` only added two imports, `Visita.deleteMany({})` and step 10 (`buscarId` + `propiedadesPorTitulo` + `clientesPorEmail`, `lean: true`); README row replaced and the guard paragraph removed. Two `make seed` runs: 6 visits, 0 empty references, D10 true, 1 h duration, 0 RN-10 overlaps, `GET /api/visitas` 200 with populate. Next: R4 (outdated comments). |
 | 2026-11-13 | Review R4: outdated comments and whitespace | `Visita.js`: the "Cliente model is unmerged" note is gone (the controller validates the client) and both `(step 3d)` markers now name the real mechanism (`TRANSICIONES`, `PATCH /resultado`). Controller: the two `CLIENTE once clientes is merged` routes now say "in the follow-up PR, CU6"; the two whitespace-only lines in `putVisita` were removed. Router: the `CLIENTE` note says the `usuarios.clienteId` link already exists and lists what the follow-up PR needs. `node --check` ×3, `git diff --check` clean, `GET /api/visitas` still 200/6. Next: R5 (`REPROGRAMACION`). |
 | 2026-11-13 | Review R5: reschedule in the audit log | `putVisita` keeps `fechaAnterior` before mutating the document and calls `registrarBitacora` after `save()` with `accion: "REPROGRAMACION"`, `estadoAnterior === estadoNuevo` and an observation with both ISO dates; JSDoc updated. 21/21 checks: one entry per successful `PUT` (with the executive populated as `usuarioId`), zero entries on `400` past date, `409` overlap, `409` terminal state and `404`; `observaciones` still saved. `make seed` left `visitas` = 6 and `bitacora` = 0. Next: R6 (final checks, memory, push). |
+| 2026-11-13 | Review R6: final checks before the review | Updated the step 7 suite: the old "no REPROGRAMACION" assertion became three checks (3 entries = 3 successful `PUT`, `estadoAnterior === estadoNuevo`, observation with both dates). Full suite on a fresh seed: **105/105**, 0 failures. `node --check` on the five touched files and `git diff --check` clean; `make seed` left `visitas` = 6 and `bitacora` = 0. Next: push and ask Deyby for the final review. |
