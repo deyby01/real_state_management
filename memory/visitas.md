@@ -1,8 +1,8 @@
 # visitas — Visita
 
-> **Owner:** Ignacio · **Branch:** `feature/ignacio/visitas` · **Status:** ✅ Model complete — PR text ready; Postman screenshots and GitHub PR opening pending (2026-11-13)  
-> **Specification:** [`docs/DATA_MODEL.md → visitas`](../docs/DATA_MODEL.md#visitas-visit-requests)  
-> **Depends on:** `propiedades` (Deyby, merged ✅ PR #28 + fixtures PR #33), `clientes` (Jose, merged ✅ PR #25), `usuarios` (merged ✅, linked to `clientes` and `propietarios` by PR #33); writes to `bitacora` (merged ✅)  
+> **Owner:** Ignacio · **Branch:** `feature/ignacio/visitas` · **Status:** 🚧 Deyby's review in progress — steps 1–3 done (2026-11-13); comments, memory and push pending
+> **Specification:** [`docs/DATA_MODEL.md → visitas`](../docs/DATA_MODEL.md#visitas-visit-requests)
+> **Depends on:** `propiedades` (Deyby, merged ✅ PR #28 + fixtures PR #33), `clientes` (Jose, merged ✅ PR #25), `usuarios` (merged ✅, linked to `clientes` and `propietarios` by PR #33), `bitacora` (merged ✅, `REPROGRAMACION` added in PR #35)
 > **Used by:** — (nothing references `visitas` yet; it feeds the visit reports, RF12)
 
 ## Plan
@@ -15,8 +15,21 @@
 | 3 | Controller: create, modify date and state transitions (business rules + bitacora) | `201`, `400`, `409` | ✅ (POST with RN-16/D10, `PUT` reschedule and the four PATCH transitions) |
 | 4 | Soft delete | — | N/A: visits are voided with CANCELADA; DATA_MODEL has no activo |
 | 5 | Routes + mounting in `app.js` + role protection | No token `401`, wrong role `403` | ✅ (mounted in Step 2; matrix closed in step 5: `EJECUTIVO` only, `ADMIN` 403, `CLIENTE` deferred) |
-| 6 | Fixtures in `backend/src/fixtures/data/` + `seed.js` | `make seed` loads 6 visits when guard passes (2 `PUBLICADA` + current executive + ≥2 clients); else omitidas | ✅ |
-| 7 | Full Postman pass + Pull Request (description from `.github/pull_request_template.md`) | Happy path and error cases (`400`, `401`, `403`, `409`) | ✅ 103/103 on rebased branch; ⬜ open PR + attach screenshots |
+| 6 | Fixtures in `backend/src/fixtures/data/` + `seed.js` | `make seed` loads 6 visits with readable references (review R3 replaced the guard) | ✅ |
+| 7 | Full Postman pass + Pull Request (description from `.github/pull_request_template.md`) | Happy path and error cases (`400`, `401`, `403`, `409`) | ✅ 103/103 on rebased branch; PR text ready, screenshots pending |
+
+### Deyby's review (2026-11-13)
+
+Requested after `clientes`, `propietarios`, the property fixtures (#33) and `solicitudesArriendo` (#24) were merged. One commit per step.
+
+| # | Step | What to test | Status |
+|---|---|---|---|
+| R1 | Bring `development` (merge, not rebase): conflicts in `app.js`, `fixtures/README.md` and `fixtures/seed.js` | `make seed` + login again | ✅ merge `ae6a9bb` |
+| R2 | Verify the client on `POST`: `Cliente.findOne({ _id: clienteId, activo: true })` → `400` | unknown client, soft-deleted client, active client | ✅ `fix: verify the client when creating a visit` |
+| R3 | Redo the fixtures with the team pattern: readable references, `deleteMany`, step 10, no silent guard | `make seed` twice, 0 empty references in Compass | ✅ `refactor: build visit fixtures from readable references` |
+| R4 | Remove outdated comments (unmerged `Cliente`, `(step 3d)`, blank lines with spaces, `CLIENTE` notes) | `git diff --check` | ⬜ |
+| R5 | Move the `CLIENTE` endpoints to the next PR; register `REPROGRAMACION` in `putVisita` (enum already merged in #35) | — | ⬜ |
+| R6 | Update this memory, `node --check`, `git diff --check`, `git push`, ask for the final review | — | ⬜ |
 
 ## Endpoints
 
@@ -62,7 +75,7 @@
 - **ISO 8601 for date range query (Decision):** Query params `desde` and `hasta` expect ISO 8601 strings (e.g. `?hasta=2026-11-15T23:59:59-03:00`). Parsing simple `YYYY-MM-DD` strings defaults to UTC midnight, which truncates Chilean local time (UTC-3) at 21:00 of the previous day.
 - **Agenda filtering by start time:** `GET /api/visitas` filters by `fechaInicio` (when visits start), which matches standard calendar/agenda expectations. True interval overlap checks are reserved for RN-10 collision detection.
 - **Chronological sorting:** `GET /api/visitas` sorts by `{ fechaInicio: 1 }` (ascending) so executives see upcoming visits first.
-- **Property integration (step 3c, PR #28):** the `POST` no longer accepts `ejecutivoId` from the body. The property is read from the database, must be `activo: true` and `PUBLICADA` (RN-16), and its `ejecutivoId` is copied onto the visit (D10). `clienteId` is still read from the body and not validated against `Clientes` until the CLIENTE follow-up PR.
+- **Property and client validation on creation (step 3c + review R2):** the `POST` no longer accepts `ejecutivoId` from the body. The property is read from the database, must be `activo: true` and `PUBLICADA` (RN-16), and its `ejecutivoId` is copied onto the visit (D10). `clienteId` still comes from the body (the `CLIENTE` endpoints are the follow-up PR), but it is validated with `Cliente.findOne({ _id: clienteId, activo: true })` → `400` "Cliente no válido o inactivo": MongoDB does not enforce references, so an unknown or soft-deleted id would otherwise be stored as a dangling reference.
 - **Whitelist of fields on creation:** only `propiedadId`, `clienteId`, `fechaInicio` and `observaciones` are read. `estado`, `resultado`, `fechaFin` and `ejecutivoId` are ignored; visits always start as `SOLICITADA`.
 - **Informative 409 Conflict:** Overlap responses return `{ mensaje, visitaEnConflicto }` detailing the conflicting visit ID, interval, and status for clear debugging and UI feedback.
 - **Concurrency limitation (Known race condition):** Two simultaneous `POST` requests for the same executive and interval could pass the overlap query before either writes. MongoDB lacks native interval exclusion constraints (unlike RN-14's partial unique index). Documented as an acceptable design limitation without multi-document transactions.
@@ -76,10 +89,10 @@
 - **Audit log failure after save (transitions):** if `registrarBitacora` fails after `visita.save()`, the state change is already persisted while the response is an error and the entry is missing. Same save-then-log ordering as `POST`; accepted without multi-document transactions.
 - **Populate on responses (Decision B):** `GET /api/visitas`, `GET /api/visitas/:id` and the `201` of `POST` populate `ejecutivoId` (`nombre email rol`) and `propiedadId` (`titulo direccion estado`), so the frontend receives the same shape everywhere.
 - **Documented code (AGENTS.md rule 12):** every exported function gets an English JSDoc block (route, allowed roles, business rules, responses); the model file starts with a header comment pointing to `docs/DATA_MODEL.md`; comments are in English from now on when this model's files are edited.
-- **Conditional visit fixtures (step 6):** `construirVisitas(propiedades, clientes)` in `fixtures/data/visitas.js`; not a static array. `seed.js` step 9 loads 6 visits only when the guard passes: **2** active `PUBLICADA` properties whose `ejecutivoId` matches a freshly seeded `EJECUTIVO`, and **at least 2** seeded clients (avoids `TypeError` on `cliente2._id` if the clients fixture shrinks); otherwise it logs `Visitas: omitidas (se necesitan 2 propiedades PUBLICADA con ejecutivo vigente y al menos 2 clientes)`. `Visita.deleteMany` always runs on seed.
-- **Fixture insert (Mongoose 9):** `insertMany(..., { validateBeforeSave: false })` does not skip validation in Mongoose 9+. The seed uses `insertMany(..., { lean: true })` so the historical `REALIZADA` visit (past `fechaInicio`) can load; `lean` skips validation **and casting**, so the fixture provides `ObjectId` instances and `Date`s itself, and `createdAt`/`updatedAt` are set manually because the timestamp middleware does not run.
-- **Fixture `clienteId` uses the seeded clients (2026-11-13):** with `clientes` merged, the old placeholders `650000000000000000000002/3` were dangling references (6/6 visits). `construirVisitas` now receives the documents returned by `Cliente.insertMany`, sorted by email, and uses `cliente1._id` / `cliente2._id`; the sixth visit is assigned to the second client so two different clients appear. The seed therefore has no fixed ids, and `populate("clienteId")` / `usuarios.clienteId` comparisons will resolve.
-- **Fixture ids must be `ObjectId` instances (found in the step 6 review):** with `lean: true` a string `clienteId` was stored as a string; `countDocuments({ clienteId: ObjectId(...) })` returned 0 instead of 5, and a future `populate("clienteId")` would miss those visits. Verified again after the seeded-client change: `visitas` with a `clienteId` that does not exist in `clientes` = 0/6.
+- **Fixture shape (review R3, 2026-11-13):** `fixtures/data/visitas.js` is a **static array** (`visitas`) plus `enHoras(horas)`, the same pattern as `solicitudesArriendo.js`: no builder and no guard. Each visit declares its references in a readable way — `propiedadTitulo` and `clienteEmail` — and `seed.js` translates them with `buscarId(propiedadesPorTitulo, ...)` / `buscarId(clientesPorEmail, ...)`. A typo stops the seed with `Fixture inválido: no existe la propiedad "X"` instead of silently omitting visits (new AGENTS.md rule).
+- **Fixture insert (Mongoose 9):** `insertMany(..., { validateBeforeSave: false })` does not skip validation in Mongoose 9+. The seed uses `insertMany(..., { lean: true })` so the historical `REALIZADA` visit (past `fechaInicio`) can load; `lean` skips validation **and casting**, so the fixture provides `Date` instances and `createdAt`/`updatedAt` are set manually because the timestamp middleware does not run.
+- **Fixture `clienteId` and `ejecutivoId`:** `clienteId` comes from `clientesPorEmail` (real `ObjectId` from the seeded clients, so `populate("clienteId")` resolves) and `ejecutivoId` is copied from the property document (D10). The seed has no fixed ids.
+- **Fixture schedule avoids RN-10 by construction:** the six visits land on three properties — `ejecutivo1` gets -168 h, +72 h, +96 h and +168 h; `ejecutivo2` gets +120 h and +144 h. Every pair is at least 24 h apart and each visit lasts 1 h, so the overlap check never triggers on seeded data. Verified with an aggregation over `visitas`: 0 overlaps.
 - **Local helper script removed (step 7):** `backend/scripts/seed-visitas-only.js` was a temporary workaround until the properties fixture existed. PR #33 merged `fixtures/data/propiedades.js` and the seed now empties and reloads `propiedades`, so `make seed` loads the visits by itself and the script (and its folder) was deleted.
 
 ## Coordination with other models
@@ -89,27 +102,33 @@
   2. `estado === "PUBLICADA"` is required (RN-16) → `409` with `estadoActual` otherwise.
   3. `ejecutivoId` is copied from the property (D10) and no longer read from the body.
   `populate("propiedadId", "titulo direccion estado")` works; it does not cascade to `propietarioId` on the property response (by design).
-- **Properties fixture (Deyby, merged ✅ PR #33):** `fixtures/data/propiedades.js` loads 11 properties (one per state, one soft-deleted), the seed empties `propiedades` and links the accounts `propietario@gup.cl` / `cliente@gup.cl`. The visit guard therefore runs on every `make seed` and inserts the 6 visits without touching `visitas.js`; the temporary helper script is gone.
-- **`clientes` (Jose, merged ✅ PR #25; account link merged in PR #33):** `clienteId` reference and the fixtures now use the seeded clients. `usuarios.clienteId` is filled for `cliente@gup.cl` by the seed, so the "my visits" endpoint can compare against the token's user. **Still pending (follow-up PR):** `CLIENTE` endpoints, resolving `clienteId` from the session instead of the body, and validating that `clienteId` exists (`populate("clienteId", "nombre email")` in the responses).
-- **`bitacora` (Deyby, merged ✅):** call `registrarBitacora` with `entidad: "VISITA"` on every state transition (RN-13). The enum now also has `ELIMINACION` (added for properties). **Open question:** it still has no `REPROGRAMACION`, and rescheduling (`PUT`) is not a state change, so ask Deyby to add it or accept not logging the reschedule and document why (current behaviour: it is not logged).
+- **Properties fixture (Deyby, merged ✅ PR #33):** `fixtures/data/propiedades.js` loads 11 properties (one per state, one soft-deleted), the seed empties `propiedades` and links the accounts `propietario@gup.cl` / `cliente@gup.cl`. Since review R3 the visit fixtures reuse its `propiedadesPorTitulo` map (built in the rental-request step), so a visit reaches its property and executive through the title, not through a fixed id.
+- **`clientes` (Jose, merged ✅ PR #25; account link merged in PR #33):** `clienteId` reference, the fixtures use the seeded clients through `clientesPorEmail`, and `POST` validates the client (review R2). **Still pending (follow-up PR):** `CLIENTE` endpoints, resolving `clienteId` from the session instead of the body, the ownership check, and `populate("clienteId", "nombre email")` in the responses.
+- **`bitacora` (Deyby, merged ✅):** call `registrarBitacora` with `entidad: "VISITA"` on every state transition (RN-13). The enum has `CREACION`, `CAMBIO_ESTADO`, `ELIMINACION` and, since PR #35, `REPROGRAMACION`. Review R5 logs the reschedule (`PUT`) with `estadoAnterior === estadoNuevo`, because moving the date is not a state change.
 
 ## Proposals for AGENTS.md
 
 - ✅ **Accepted (2026-11-12, AGENTS.md → Rules / Data model):** *Validate soft delete against `DATA_MODEL.md`.* Do not assume `activo` or a `DELETE` endpoint exists on every model. Collections like `visitas` manage their lifecycle through domain states (`CANCELADA`), not soft delete. AGENTS.md now also requires `PUT`/`DELETE` to filter `{ _id, activo: true }` when the model does have soft delete.
 - ✅ **Accepted (2026-11-12, AGENTS.md → Technical conventions):** *Check the actor × use case matrix before assigning roles.* `ADMIN` is not a superuser in this case; it only manages users/parameters and reads reports (CU10). Roles must come from the use-case matrix of the case specification, not from intuition.
+- ⬜ **Proposed (2026-11-13):** *Stage merge resolutions file by file.* While a merge is open, `git add .` sweeps in uncommitted memory edits that belong to a later step: the R1 merge commit took 16 lines of this file by accident. The rule would extend *Small, focused commits* to conflicts: `git add <the conflicted files>` only.
+- ⬜ **Proposed (2026-11-13):** *Never rewrite a `.md` with `Set-Content` on Windows.* PowerShell 5.1 writes UTF-8 **with BOM** and CRLF, so the file changes encoding and line endings (and `git diff` shows the whole file). Edit memory files with the editor's line-level replace, or rewrite them with `[System.IO.File]::WriteAllText` and `UTF8Encoding($false)` plus `\n`.
 
 ## Local test data (working database, not in git)
 
-`make seed` clears `tiposPropiedad`, `usuarios`, `clientes`, `propietarios`, `propiedades`, `visitas` and `bitacora`, then reloads everything in dependency order. Since PR #33, `propiedades` is also emptied, so the visit guard always finds the 11 fresh properties and loads the 6 visits on every run.
+`make seed` clears `tiposPropiedad`, `usuarios`, `clientes`, `propietarios`, `propiedades`, `solicitudesArriendo`, `visitas` and `bitacora`, then reloads everything in dependency order. The `visitas` `deleteMany` was restored in review R3: without it, every seed left visits pointing to properties and clients that had just been recreated.
 
-State after `make seed` (2026-11-13):
+State after `make seed` (2026-11-13, verified twice):
 
-- `visitas` = **6**, on "Casa familiar con patio" and "Departamento con vista al mar" (both from `ejecutivo1`), one per state (`SOLICITADA`×2), 1 h duration, `ejecutivoId` copied from the property, `clienteId` an existing `ObjectId` (5 for `camila.rivas@mail.cl`, 1 for `cliente@gup.cl`).
-- `propiedades` = **11** (one per state, 5 `PUBLICADA`, 1 soft-deleted), `clientes` = 3, `propietarios` = 3, `usuarios` = 5.
+- `visitas` = **6**, on three properties, one per state plus a second `SOLICITADA`, 1 h duration, `ejecutivoId` copied from the property (D10), `clienteId` an existing `ObjectId`:
+  - "Departamento luminoso cerca del metro" (`ejecutivo1`): `REALIZADA` -168 h, `SOLICITADA` +72 h and `CONFIRMADA` +96 h, all for `cliente@gup.cl`.
+  - "Estudio amoblado en Providencia" (`ejecutivo2`): `RECHAZADA` +120 h and `CANCELADA` +144 h, for `luis.soto@mail.cl`.
+  - "Departamento con vista al mar" (`ejecutivo1`): `SOLICITADA` +168 h, for `luis.soto@mail.cl`.
+- `propiedades` = **11** (one per state, 5 `PUBLICADA`, 1 soft-deleted), `solicitudesArriendo` = **5**, `clientes` = 3, `propietarios` = 3, `usuarios` = 5.
 - `bitacora` = **0**: fixtures insert documents directly and do not simulate real operations.
-- The soft-deleted property id changes on every seed (`6af684d4f4af770916491f49` at the last run); the step 7 suite takes it as a parameter.
+- The soft-deleted property id changes on every seed; the step 7 suite takes it as a parameter.
+- Every seed recreates the users, so Postman tokens must be refreshed before the next request.
 
-The step 7 suite (`step7-full-2.ps1`, kept outside the repo in a temp folder) creates 8 visits with 2029 dates and 13 audit entries; run `make seed` afterwards to go back to the state above.
+The step 7 suite (`step7-full-2.ps1`, kept outside the repo in a temp folder) creates 8 visits with 2029 dates and 13 audit entries; run `make seed` afterwards to go back to the state above. The R2 script (`step2-cliente.ps1`) soft-deletes a client to test the `400`; `make seed` reactivates it.
 
 ## Session log
 
@@ -133,3 +152,6 @@ The step 7 suite (`step7-full-2.ps1`, kept outside the repo in a temp folder) cr
 | 2026-11-13 | Step 7: full Postman-equivalent pass on the rebased branch | 103/103 checks, 0 failures: happy path (`201` + 1 h `fechaFin` + D10 + populate), whitelists on `POST`/`PUT`, `400`/`404`/`409` error cases, RN-10 overlap (same and different property), RN-16, state machine, full role matrix (`401`/`403` for ADMIN/CLIENTE/PROPIETARIO), and audit log (8 `CREACION` + 5 `CAMBIO_ESTADO`, no `REPROGRAMACION`). `make seed` run again afterwards to leave a clean DB. Next: commits + PR. |
 | 2026-11-13 | Rebase onto `development` (`c033f65`) | Conflicts in `app.js` (keep all routers) and `seed.js`/`fixtures/README.md` (Deyby seed + visit step 9). Rebased history pushed; then fixture fix for real `clienteId` after `clientes` merge. |
 | 2026-11-13 | Commit `ec02ff1`: seeded clients + visit guard | `construirVisitas(propiedades, clientes)`; guard requires 2 `PUBLICADA` props + ≥2 clients; `fixtures/README.md` updated; re-tested `make seed` (`Visitas: 6`, dangling `clienteId` = 0). 103/103 pass on this commit. Branch **in sync** with `origin/feature/ignacio/visitas`. Next: Postman screenshots + open PR to `development`. |
+| 2026-11-13 | Review R1: merge `development` into the branch (merge, not rebase) | Conflicts in `app.js` (keep both routers), `fixtures/README.md` (keep both rows) and `fixtures/seed.js` (took `development` entirely: the visit block is rebuilt in R3). Merge commit `ae6a9bb`; `make seed` ok, `/api/visitas` and `/api/solicitudes` answer `401` without a token. The merge commit accidentally swallowed the 16 memory lines that were staged; from now on `git add` lists files explicitly. |
+| 2026-11-13 | Review R2: verify the client on `POST` | Added `Cliente.findOne({ _id: clienteId, activo: true })` after the RN-16 property check → `400 "Cliente no válido o inactivo"`; JSDoc and `Responses` updated. 8/8 real cases (active `201`, unknown `400`, soft-deleted `400`, malformed id `400` via `CastError`, `409` RN-16 wins). `make seed` restored the deleted client. |
+| 2026-11-13 | Review R3: fixtures with readable references | `data/visitas.js` is now a static array + `enHoras`; `seed.js` only added two imports, `Visita.deleteMany({})` and step 10 (`buscarId` + `propiedadesPorTitulo` + `clientesPorEmail`, `lean: true`); README row replaced and the guard paragraph removed. Two `make seed` runs: 6 visits, 0 empty references, D10 true, 1 h duration, 0 RN-10 overlaps, `GET /api/visitas` 200 with populate. Next: R4 (outdated comments). |
