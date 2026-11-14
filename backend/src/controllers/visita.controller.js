@@ -1,5 +1,6 @@
 import Visita, { ESTADOS_VISITA, DURACION_VISITA_MS } from "../models/Visita.js"
 import Propiedad from "../models/Propiedad.js"
+import Cliente from "../models/Cliente.js"
 import { registrarBitacora } from "../services/bitacora.service.js"
 
 /**
@@ -185,6 +186,9 @@ export const getVisitaById = async (req, res) => {
  *   are read from the body; `estado`, `resultado`, and `fechaFin` are ignored.
  * - Enforces RN-16: property must exist, be active (`activo: true`), and be `PUBLICADA`.
  *   Returns 400 if property does not exist or was deleted; 409 if not in PUBLICADA status.
+ * - Requires an existing, active client (`activo: true`): MongoDB does not enforce
+ *   references, so an unknown or soft-deleted `clienteId` returns 400 instead of
+ *   being stored as a dangling id.
  * - Enforces D10: `ejecutivoId` is copied directly from the property to preserve historical
  *   traceability (never accepted from client).
  * - Validates that `fechaInicio` is a valid date and strictly in the future (400).
@@ -192,12 +196,12 @@ export const getVisitaById = async (req, res) => {
  *   ($lt/$gt) against all properties (excluding CANCELADA/RECHAZADA visits) → 409 with conflict details.
  * - Logs a CREACION entry in the audit log after saving (RN-13).
  * - Populates executive (`nombre email rol`) and property (`titulo direccion estado`) on 201 response.
- * - Not verified yet: `clienteId` reference (Clientes model not merged, Jose).
  * - Known limitation: concurrent requests for the same executive and interval may both pass
  *   overlap check without MongoDB exclusion constraints (acceptable without transactions).
  *
- * Responses: 201 created · 400 missing fields, invalid/deleted property, malformed id or past date ·
- * 401/403 auth · 409 property not published (RN-16) or executive overlap (RN-10) · 500 server error.
+ * Responses: 201 created · 400 missing fields, invalid/deleted property, unknown or inactive
+ * client, malformed id or past date · 401/403 auth · 409 property not published (RN-16) or
+ * executive overlap (RN-10) · 500 server error.
  */
 export const postVisita = async (req, res) => {
     try {
@@ -230,6 +234,13 @@ export const postVisita = async (req, res) => {
                 mensaje: "Solo se pueden agendar visitas en propiedades publicadas",
                 estadoActual: propiedad.estado
             })
+        }
+
+        // The client must exist and be active. MongoDB does not check references, so an
+        // unknown or soft-deleted clienteId would be stored as a dangling id
+        const cliente = await Cliente.findOne({ _id: clienteId, activo: true })
+        if (!cliente) {
+            return res.status(400).json({ mensaje: "Cliente no válido o inactivo" })
         }
 
         // D10: Executive is copied from the property to preserve visit history even if
