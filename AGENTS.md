@@ -138,7 +138,7 @@ The goal is a **clear history**: anyone (a teammate, the professor, the develope
 
 - **One commit per tested step**, not one commit per model. A model is usually 5 to 8 commits: the model, each controller function (or a small group of related ones), the routes and their mounting in `app.js`, the fixtures.
 - **Commit only what works.** The agent suggests the commit **after** the step was tested, never before.
-- **The agent proposes the commit at the end of every step**, without waiting to be asked: the exact `git add <files>` (listing the files, never a blind `git add .`) and the message. The memory file update of that step goes in the same commit.
+- **The agent proposes the commit at the end of every step**, without waiting to be asked: the exact `git add <files>` (listing the files, never a blind `git add .` — including when staging merge conflict resolutions, so uncommitted edits in other files are not swept in) and the message. The memory file update of that step goes in the same commit.
 - **Do not mix unrelated changes.** A change to another model or a shared file that is not part of the step goes in its own commit (example: adding `ELIMINACION` to the `Bitacora` enum was committed apart from the property soft delete).
 - **Message:** imperative, lowercase, says *what* changed: `feat: add create property controller with audit log`, `fix: return 404 for deleted properties`.
 

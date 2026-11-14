@@ -75,15 +75,15 @@ This flow must be demonstrable end to end: **React → Node/Express → MongoDB*
 
 ### Current status
 
-*Updated 2026-11-14.* Authentication (PR #20), the audit log (PR #22), properties (management API, PR #28; owner check and fixtures, PR #33; public catalog and owner view, PR #36), clients (PR #25), owners (PR #27) and rental requests (PR #24) are merged into `development`, and the team now builds the backend **one model per person**, in the order of `docs/DATA_MODEL.md` (see [Model assignments](#model-assignments)). The React frontend has the pages mocked up but does not consume the API yet.
+*Updated 2026-11-14.* Authentication (PR #20), the audit log (PR #22), properties (management API, PR #28; owner check and fixtures, PR #33; public catalog and owner view, PR #36), clients (PR #25), owners (PR #27), visits (PR #26) and rental requests (PR #24) are merged into `development`, and the team now builds the backend **one model per person**, in the order of `docs/DATA_MODEL.md` (see [Model assignments](#model-assignments)). The React frontend has the pages mocked up but does not consume the API yet.
 
 | Area | Status | Detail |
 |---|---|---|
 | UI design | ✅ Done | Landing, Properties, About Us, Contact and Login/Register pages mocked up in React + Tailwind. |
 | Original HTML/CSS frontend | ⏸️ Frozen | `frontend/` remains only as a design reference. No new features are added. |
 | React frontend | 🚧 In progress | Static pages; no API calls yet. |
-| Express backend | 🚧 In progress | `GET /api/health`, `TipoPropiedad` (PR #19), authentication (PR #20), audit log (PR #22), properties with public catalog and owner view (PR #28, PR #33, PR #36), clients (PR #25), owners (PR #27) and rental requests (PR #24). The server stops if the DB connection or `JWT_SECRET` is missing. |
-| MongoDB data model | 🚧 7 of 8 implemented | `usuarios`, `tiposPropiedad`, `bitacora`, `propiedades`, `clientes`, `propietarios` and `solicitudesArriendo` in code; `visitas` is assigned (see [Model assignments](#model-assignments)). |
+| Express backend | 🚧 In progress | `GET /api/health`, `TipoPropiedad` (PR #19), authentication (PR #20), audit log (PR #22), properties with public catalog and owner view (PR #28, PR #33, PR #36), clients (PR #25), owners (PR #27), visits (PR #26) and rental requests (PR #24). The server stops if the DB connection or `JWT_SECRET` is missing. |
+| MongoDB data model | ✅ 8 of 8 implemented | `usuarios`, `tiposPropiedad`, `bitacora`, `propiedades`, `clientes`, `propietarios`, `visitas` and `solicitudesArriendo` in code (see [Model assignments](#model-assignments)). |
 | Authentication | ✅ Merged (PR #20) | Register, login (JWT), `GET /api/auth/me`, `verificarToken` and `permitirRoles`; fixtures with one user per role (`make seed`). Details: [`memory/usuarios.md`](memory/usuarios.md). |
 | Postman testing | 🚧 Manual | Endpoints tested by hand; no shared Postman collection in the repo yet. |
 
@@ -122,9 +122,9 @@ real_state_management/
 ├── backend/                 # Express + Mongoose
 │   ├── src/
 │   │   ├── config/db.js     # MongoDB connection
-│   │   ├── models/          # TipoPropiedad.js, Usuario.js, Bitacora.js, Propiedad.js, Cliente.js, Propietario.js, SolicitudArriendo.js
-│   │   ├── controllers/     # tipoPropiedad.controller.js, auth.controller.js, bitacora.controller.js, propiedad.controller.js, cliente.controller.js, propietario.controller.js, solicitudArriendo.controller.js
-│   │   ├── routes/          # tipoPropiedad.routes.js, auth.routes.js, bitacora.routes.js, propiedad.routes.js, cliente.routes.js, propietario.routes.js, solicitudArriendo.routes.js, catalogo.routes.js, misPropiedades.routes.js
+│   │   ├── models/          # TipoPropiedad.js, Usuario.js, Bitacora.js, Propiedad.js, Cliente.js, Propietario.js, Visita.js, SolicitudArriendo.js
+│   │   ├── controllers/     # tipoPropiedad.controller.js, auth.controller.js, bitacora.controller.js, propiedad.controller.js, cliente.controller.js, propietario.controller.js, visita.controller.js, solicitudArriendo.controller.js
+│   │   ├── routes/          # tipoPropiedad.routes.js, auth.routes.js, bitacora.routes.js, propiedad.routes.js, cliente.routes.js, propietario.routes.js, visita.routes.js, solicitudArriendo.routes.js, catalogo.routes.js, misPropiedades.routes.js
 │   │   ├── services/        # bitacora.service.js (registrarBitacora, used by other controllers)
 │   │   ├── middlewares/     # auth.middleware.js (verificarToken), role.middleware.js (permitirRoles)
 │   │   ├── fixtures/        # seed.js + data/ (run with make seed)
@@ -190,6 +190,14 @@ real_state_management/
 | `POST` | `/api/propietarios` | `EJECUTIVO`. Creates an owner (`201`); RUT normalized in the schema (no dots, `K` uppercase); invalid data → `400`; duplicate RUT → `409` |
 | `PUT` | `/api/propietarios/:id` | `EJECUTIVO`. Partial update of `rut`, `nombre`, `email`, `telefono` (`200`); empty body → `400`; inactive or not found → `404`; duplicate RUT → `409` |
 | `DELETE` | `/api/propietarios/:id` | `EJECUTIVO`. Soft delete (`200`); already inactive or not found → `404` |
+| `GET` | `/api/visitas` | **`EJECUTIVO` only** (whole router, CU7; `CLIENTE` own endpoints in follow-up PR). Visits sorted by `fechaInicio` ascending; optional `?estado=`, `?propiedadId=`, `?ejecutivoId=`, `?desde=` and `?hasta=` (`200`); invalid filter/date/id → `400` |
+| `GET` | `/api/visitas/:id` | `EJECUTIVO`. One visit (`200`); not found → `404`; invalid id → `400` |
+| `POST` | `/api/visitas` | `EJECUTIVO`. Creates a 1-hour visit (`fechaFin = fechaInicio + 1h`, D8), always `SOLICITADA`, `ejecutivoId` copied from the property (D10) (`201`); property must be active and `PUBLICADA` (`400`/`409`, RN-16); client must be active (`400`); past date → `400`; executive schedule overlap → `409` (RN-10). Logs `CREACION` |
+| `PUT` | `/api/visitas/:id` | `EJECUTIVO`. Reschedules `fechaInicio` (and optional `observaciones`) while `SOLICITADA` or `CONFIRMADA` (`200`); terminal state or overlap (`$ne` self-exclusion) → `409`; past/invalid date → `400`; not found → `404`. Logs `REPROGRAMACION` |
+| `PATCH` | `/api/visitas/:id/confirmar` | `EJECUTIVO`. `SOLICITADA` → `CONFIRMADA`; optional `observacion` (`200`); other state → `409`. Logs `CAMBIO_ESTADO` |
+| `PATCH` | `/api/visitas/:id/rechazar` | `EJECUTIVO`. `SOLICITADA` → `RECHAZADA`; optional `observacion` (`200`); other state → `409`. Logs `CAMBIO_ESTADO` |
+| `PATCH` | `/api/visitas/:id/cancelar` | `EJECUTIVO`. `SOLICITADA` or `CONFIRMADA` → `CANCELADA`; optional `observacion` (`200`); terminal state → `409`. Logs `CAMBIO_ESTADO` |
+| `PATCH` | `/api/visitas/:id/resultado` | `EJECUTIVO`. Records `resultado` (required string) and transitions `CONFIRMADA` → `REALIZADA` (`200`); missing/non-string `resultado` → `400`; other state → `409`. Logs `CAMBIO_ESTADO` |
 | `POST` | `/api/solicitudes` | **`CLIENTE` only** (CU8). Client taken from the token (`usuarios.clienteId`, never the body); property must be active and `PUBLICADA`; starts `PENDIENTE`, `ejecutivoId` copied from the property (`201`); unlinked account or property not `PUBLICADA` → `409`. Logs `CREACION` |
 | `GET` | `/api/solicitudes` | `CLIENTE` (only theirs) or `EJECUTIVO` (only assigned to them). Newest first (`200`); `ADMIN` → `403` |
 | `GET` | `/api/solicitudes/:id` | `CLIENTE` / `EJECUTIVO`. Own or assigned request (`200`); another user's or not found → `404` |
@@ -215,7 +223,7 @@ Each model of [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md) is assigned to **one** 
 | 3 | `clientes` | `Cliente` | Jose | ✅ Merged (PR #25) | `usuarios` (✅) | [`memory/clientes.md`](memory/clientes.md) |
 | 4 | `tiposPropiedad` | `TipoPropiedad` | Deyby | ✅ Merged (PR #19) | — | [`memory/tiposPropiedad.md`](memory/tiposPropiedad.md) |
 | 5 | `propiedades` | `Propiedad` | Deyby | ✅ Merged (PR #28, PR #33, PR #36) | `tiposPropiedad` (✅), `propietarios` (✅), `usuarios` (✅); writes `bitacora` (✅) | [`memory/propiedades.md`](memory/propiedades.md) |
-| 6 | `visitas` | `Visita` | Ignacio | ⬜ Assigned | `propiedades` (✅ phase A), `clientes` (✅), `usuarios` (✅); writes `bitacora` (✅) | `memory/visitas.md` |
+| 6 | `visitas` | `Visita` | Ignacio | ✅ Merged (PR #26); `CLIENTE` endpoints in follow-up PR | `propiedades` (✅), `clientes` (✅), `usuarios` (✅); writes `bitacora` (✅) | [`memory/visitas.md`](memory/visitas.md) |
 | 7 | `solicitudesArriendo` | `SolicitudArriendo` | Roberto | ✅ Merged (PR #24) | `propiedades` (✅), `clientes` (✅), `usuarios` (✅); writes `bitacora` (✅) | [`memory/solicitudesArriendo.md`](memory/solicitudesArriendo.md) |
 | 8 | `bitacora` | `Bitacora` | Deyby | ✅ Merged (PR #22) | `usuarios` (✅) | [`memory/bitacora.md`](memory/bitacora.md) |
 
@@ -746,6 +754,7 @@ Test passwords go in the fixtures README, never real passwords.
 | 2026-11-12 / 13 | Properties phase B split: owner check and `populate`, property fixtures (11, all states) and seed links for `propietario@gup.cl` and `cliente@gup.cl` merged first (PR #33) to unblock rental requests. Roberto's re-review: every previous point fixed in focused commits, fixtures connected to the seed (5 requests, one per state; the `APROBADA` one explains the `RESERVADA` property), `404` for other users' requests. Full flow verified on a temporary server. `solicitudesArriendo` merged (PR #24). Accepted lessons moved to `AGENTS.md` (fail closed on missing profiles, readable fixture references). | 7 of 8 models. Next: review Ignacio's `visitas`; Deyby continues with the public catalog (B3) and the owner view (B4). After pulling: `make seed`. |
 | 2026-11-13 | Reviewed Ignacio's `visitas` (changes requested: verify `clienteId`, fixtures with readable references and append-only seed, stale comments; client flow in a follow-up PR). Added `REPROGRAMACION` to the `bitacora` action enum so visit rescheduling can be logged (RNF-12). | Ignacio merges `development` and applies the review; then re-review. |
 | 2026-11-13 / 14 | `propiedades` phase B finished: public catalog with filters (`/api/catalogo`, allowlist of fields, only `PUBLICADA`) and owner view (`/api/mis-propiedades`, owner from `usuarios.propietarioId`, fail closed `409`, another owner's property `404`). New way of working: the agent shows the final code and explains it, the developer types it, and the agent keeps the memory files. Full pass 27/27 against the running stack. Merged (PR #36, merge commit). Proposal kept in `memory/propiedades.md` (not accepted yet): shared helper for the logged-in user's profile if a third model needs it. | `propiedades` complete; 7 of 8 models merged, only `visitas` pending. Next: re-review Ignacio's `visitas`. No `make seed` or `make build` needed after pulling. |
+| 2026-11-14 | Re-reviewed Ignacio's `visitas`: all 6 review steps applied (merged `development`, active client check on `POST`, static fixtures with readable references and `Visita.deleteMany({})`, comment cleanup, `REPROGRAMACION` logged in `putVisita`). Verified 74/74 integration checks against the live stack and two `make seed` runs (6 visits, 0 empty references). `visitas` merged (PR #26). Accepted lesson moved to `AGENTS.md`: list conflicted files explicitly in `git add` when resolving a merge. | All 8 of 8 models merged into `development`. After pulling: `make seed`. Next: `CLIENTE` visit endpoints (follow-up PR), Postman collection and frontend integration. |
 
 ---
 

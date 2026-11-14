@@ -29,6 +29,7 @@ Every agent **reads** all the files. Each agent **writes** only in its developer
 | [`propietarios.md`](propietarios.md) | `Propietario` | Santiago | ✅ Merged (PR #27) |
 | [`clientes.md`](clientes.md) | `Cliente` | Jose | ✅ Merged (PR #25) |
 | [`propiedades.md`](propiedades.md) | `Propiedad`: management API and state machine | Deyby | ✅ Merged (PR #28, PR #33, PR #36) |
+| [`visitas.md`](visitas.md) | `Visita`: visit scheduling, overlap check and state machine | Ignacio | ✅ Merged (PR #26); `CLIENTE` endpoints in follow-up PR |
 | [`solicitudesArriendo.md`](solicitudesArriendo.md) | `SolicitudArriendo`: rental requests and reservation | Roberto | ✅ Merged (PR #24) |
 
 New files are created by the owner of the model when starting to work on it, by copying the template below. The full assignment table lives in [`MEMORY.md → Model assignments`](../MEMORY.md#model-assignments).
