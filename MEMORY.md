@@ -75,7 +75,7 @@ This flow must be demonstrable end to end: **React → Node/Express → MongoDB*
 
 ### Current status
 
-*Updated 2026-11-17.* **Frontend integration started:** the shared base (CORS, API client, session, protected panel by role, login) is on `feature/deyby/integracion-base`, and every teammate has a task card in [`memory/integracion.md`](memory/integracion.md). Authentication (PR #20), the audit log (PR #22), properties (management API, PR #28; owner check and fixtures, PR #33; public catalog and owner view, PR #36), clients (PR #25), owners (PR #27), visits (PR #26) and rental requests (PR #24) are merged into `development`, and the team now builds the backend **one model per person**, in the order of `docs/DATA_MODEL.md` (see [Model assignments](#model-assignments)). The React frontend has the pages mocked up but does not consume the API yet.
+*Updated 2026-11-17.* **Frontend integration started:** the shared base (CORS, API client, session, protected panel by role, login) is merged (PR #39), and every teammate has a task card in [`memory/integracion.md`](memory/integracion.md). Authentication (PR #20), the audit log (PR #22), properties (management API, PR #28; owner check and fixtures, PR #33; public catalog and owner view, PR #36), clients (PR #25), owners (PR #27), visits (PR #26) and rental requests (PR #24) are merged into `development`, and the team now builds the backend **one model per person**, in the order of `docs/DATA_MODEL.md` (see [Model assignments](#model-assignments)). The React frontend has the pages mocked up but does not consume the API yet.
 
 | Area | Status | Detail |
 |---|---|---|
@@ -158,6 +158,7 @@ real_state_management/
 | `/contacto` | ContactPage |
 | `/login` | LoginPage |
 | `/registro` | RegisterPage |
+| `/propiedades/:id` | DetallePropiedadPage (public detail from `GET /api/catalogo/:id`; action box by session) |
 | `/panel` | PanelLayout + PanelInicio (any logged-in user; sidebar by role from `layouts/menuPanel.js`) |
 | `/panel/*` | One route per section inside its role's group in `App.jsx`; unfinished sections show `EnConstruccion` |
 
@@ -241,7 +242,7 @@ The full task of each teammate (screens, endpoints, files, `App.jsx` line, accep
 
 | Who | Screens | Panel route(s) | Status |
 |---|---|---|---|
-| Deyby | Base (Phase 0); property detail, catalog and filters, landing featured, registration, executive properties, owner's properties, audit log | `/propiedades/:id`, `propiedades`, `mis-propiedades`, `bitacora` | ✅ Phase 0 (PR pending) · ⬜ Phase 1 |
+| Deyby | Base (Phase 0); property detail, catalog and filters, landing featured, registration, executive properties, owner's properties, audit log | `/propiedades/:id`, `propiedades`, `mis-propiedades`, `bitacora` | ✅ Phase 0 (PR #39) · 🚧 Phase 1 |
 | Santiago | Owners panel (executive) | `propietarios` | ⬜ |
 | Jose | Clients panel (executive) | `clientes` | ⬜ |
 | Ignacio | Visit schedule (executive); later "Agendar visita" for clients | `visitas` | ⬜ |
