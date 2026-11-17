@@ -64,6 +64,9 @@ services:
     environment:
       # Igual que en el backend: necesario en Windows y macOS para que Vite detecte los cambios
       CHOKIDAR_USEPOLLING: "true"
+      # URL de la API para el navegador. Es localhost y no "backend": quien hace
+      # las peticiones es tu navegador, que está fuera de Docker
+      VITE_API_URL: http://localhost:4000/api
     volumes:
       # Tu código se ve dentro del contenedor: al guardar, Vite recarga el navegador
       - ./frontend-react:/app
