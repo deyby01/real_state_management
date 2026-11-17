@@ -1,6 +1,6 @@
 # integracion — Frontend integration (React ↔ API)
 
-> **Owner:** Deyby (integrator) · **Base branch:** `feature/deyby/integracion-base` · **Status:** 🚧 Phase 0 done, Phase 1 open
+> **Owner:** Deyby (integrator) · **Base:** merged (PR #39) · **Status:** 🚧 Phase 1 open
 > **Rules:** [`AGENTS.md → Frontend structure (React)`](../AGENTS.md#frontend-structure-react). **Endpoints:** [`MEMORY.md → Existing backend endpoints`](../MEMORY.md#existing-backend-endpoints).
 > **Who edits this file:** only the integrator. Each teammate records their progress in a **`## Frontend integration`** section of their **own** `memory/<collection>.md` (plan table + session log), not here.
 
@@ -10,7 +10,7 @@
 
 The professor asked for **CORS only** (no Vite proxy, no new dependencies). The integration is done in two phases:
 
-1. **Phase 0 — base (Deyby, merged first).** Everything the screens need is shared and ready:
+1. **Phase 0 — base (Deyby, merged in PR #39).** Everything the screens need is shared and ready:
 
    | Piece | File | What it gives you |
    |---|---|---|
@@ -49,7 +49,7 @@ The professor asked for **CORS only** (no Vite proxy, no new dependencies). The 
 
 | Who | Task | Panel route(s) | Status |
 |---|---|---|---|
-| Deyby | Base (Phase 0); public property detail; catalog with filters; landing featured; registration; executive properties panel; owner's properties; audit log | `/propiedades/:id`, `propiedades`, `mis-propiedades`, `bitacora` | ✅ Phase 0 · ⬜ Phase 1 |
+| Deyby | Base (Phase 0); public property detail; catalog with filters; landing featured; registration; executive properties panel; owner's properties; audit log | `/propiedades/:id`, `propiedades`, `mis-propiedades`, `bitacora` | ✅ Phase 0 (PR #39) · 🚧 Phase 1 (detail page done, PR pending) |
 | Santiago | Owners panel (executive) | `propietarios` | ⬜ |
 | Jose | Clients panel (executive) | `clientes` | ⬜ |
 | Ignacio | Visit schedule (executive); later the client's "Agendar visita" | `visitas` | ⬜ |
@@ -135,7 +135,7 @@ Status icons: ✅ merged · 🚧 PR open / in progress · ⬜ not started. The i
   - **Executive:** list (propiedad, cliente, fecha, estado) with the buttons the state allows (`PENDIENTE`: evaluar, cancelar; `EN_EVALUACION`: aprobar, rechazar; `APROBADA`: cancelar); a detail view with the antecedentes and the observaciones history.
   - **Client:** their requests with estado; "Cancelar" only while `PENDIENTE`.
 - **Backend touch-ups in your own files (allowed, you own `solicitudesArriendo`):** `GET /solicitudes` and `/:id` do not populate; add `.populate("propiedadId", "titulo direccion valorArriendo")` and `.populate("clienteId", "nombre email")` so the screens show names instead of ids.
-- **Dependency:** the "Solicitar arriendo" button lives in the public property detail page (`/propiedades/:id`, Deyby, done first). Until it is merged, test `SolicitarArriendoForm` from your `MisSolicitudes` page with a seed property `_id`; when the detail page is merged, add the one line that renders it there for a logged-in `CLIENTE`.
+- **Dependency:** the "Solicitar arriendo" form lives in the public property detail page (`frontend-react/src/pages/DetallePropiedadPage.jsx`, Deyby). Until it is merged, test `SolicitarArriendoForm` from your `MisSolicitudes` page with a seed property `_id`. When it is merged, render your form in the `CLIENTE` branch of `AccionesCliente` (a comment marks the spot), replacing the "Muy pronto..." text. Use `formatearPrecio` / `formatearFechaHora` from `src/utils/formato.js`.
 - **Acceptance checks:**
   - [ ] Ana (`cliente@gup.cl`) sees only her 2 requests; Carla sees only the ones assigned to her.
   - [ ] Ana sends a request for a `PUBLICADA` property → appears as `PENDIENTE` in both views.
@@ -168,3 +168,4 @@ Status icons: ✅ merged · 🚧 PR open / in progress · ⬜ not started. The i
 | Date | What was done | Result / next step |
 |---|---|---|
 | 2026-11-17 | Phase 0 built on `feature/deyby/integracion-base`: CORS, `VITE_API_URL`, `apiFetch`, `AuthContext`, `RutaProtegida`, role-based panel, login and header connected; frontend conventions added to `AGENTS.md`; task cards for every teammate. Tested in the browser with every seed role. | Merge the base PR, notify the team, start Phase 1 (Deyby: property detail first). |
+| 2026-11-17 | Base merged (PR #39). Phase 1, Deyby: public property detail `/propiedades/:id` with the action box where Roberto's and Ignacio's components go; shared `utils/formato.js`. | PR for the detail, then the catalog with real data. |

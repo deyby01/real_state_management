@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import PropertiesPage from "./pages/PropertiesPage";
+import DetallePropiedadPage from "./pages/DetallePropiedadPage";
 import AboutUs from "./pages/AboutUs";
 import ContactPage from "./pages/ContactPage";
 import LoginPage from "./pages/LoginPage";
@@ -16,6 +17,7 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/propiedades" element={<PropertiesPage />} />
+        <Route path="/propiedades/:id" element={<DetallePropiedadPage />} />
         <Route path="/nosotros" element={<AboutUs />} />
         <Route path="/contacto" element={<ContactPage />} />
         <Route path="/login" element={<LoginPage />} />
