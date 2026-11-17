@@ -39,7 +39,7 @@ The owner user `propietario@gup.cl` is linked to the owner record Jorge Muñoz (
 | `clientes` | 3 | [`data/clientes.js`](data/clientes.js) |
 | `bitacora` | 0 (only emptied) | — Entries are created by real state changes, never by the fixtures |
 | `propietarios` | 3 (2 active, 1 inactive) | [`data/propietarios.js`](data/propietarios.js); business records, not linked to login accounts yet |
-| `propiedades` | 11 (5 `PUBLICADA` and active, one in each other state, 1 soft-deleted) | [`data/propiedades.js`](data/propiedades.js); 6 belong to Jorge Muñoz and 5 to María Torres, split between both executives. They refer to their type, owner and executive by name, RUT and email; `seed.js` translates those into `_id` values |
+| `propiedades` | 25 (19 `PUBLICADA` and active, 5 of them `destacada`; one in each other state; 1 soft-deleted) | [`data/propiedades.js`](data/propiedades.js); every type, Santiago and the coast, rents from 350.000 to 3.200.000, real photos (Unsplash URLs). 14 belong to Jorge Muñoz (13 active) and 11 to María Torres, split between both executives. They refer to their type, owner and executive by name, RUT and email; `seed.js` translates those into `_id` values |
 | `solicitudesArriendo` | 5 (one per state) | [`data/solicitudesArriendo.js`](data/solicitudesArriendo.js); refer to their property by title and their client by email; the `APROBADA` one explains the `RESERVADA` property |
 | `visitas` | 6 (one per state, plus a second `SOLICITADA`) | [`data/visitas.js`](data/visitas.js); refer to their property by title and their client by email |
 
