@@ -5,6 +5,7 @@
  */
 import express from "express"
 import morgan from "morgan"
+import cors from "cors"
 import tipoRouter from "./routes/tipoPropiedad.routes.js"
 import authRouter from "./routes/auth.routes.js"
 import bitacoraRouter from "./routes/bitacora.routes.js"
@@ -17,6 +18,15 @@ import misPropiedadesRouter from "./routes/misPropiedades.routes.js"
 import visitaRouter from "./routes/visita.routes.js"
 
 const app = express()
+
+// CORS: the frontend runs on another origin (localhost:5173), so the browser blocks
+// its requests unless this API lists that origin. Several origins can be given
+// separated by commas. The default is the Vite dev server, never "*" (any site).
+const origenesPermitidos = (process.env.CORS_ORIGIN ?? "http://localhost:5173")
+    .split(",")
+    .map((origen) => origen.trim())
+app.use(cors({ origin: origenesPermitidos }))
+
 app.use(express.json())
 app.use(morgan("dev"))
 

@@ -39,6 +39,9 @@ services:
       JWT_SECRET: e0e00448af4e2f0e4acb4f68f5c7b8c48a43ce10dd9bd54d789f5979591ddd7e
       # Cuánto dura un token antes de expirar (formato: 15m, 1h, 1d...)
       JWT_EXPIRES_IN: 1d
+      # Origen del frontend que puede llamar a esta API (CORS). Es la URL que ves
+      # en el navegador, no el nombre del contenedor. Varios: separados por coma
+      CORS_ORIGIN: http://localhost:5173
       # Revisa los archivos cada poco tiempo en vez de esperar avisos del sistema.
       # Necesario en Windows y macOS para que nodemon detecte los cambios
       CHOKIDAR_USEPOLLING: "true"
