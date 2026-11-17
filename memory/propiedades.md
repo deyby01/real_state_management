@@ -97,7 +97,7 @@ The whole `/api/propiedades` router is protected with `verificarToken` + `permit
 |---|---|---|---|
 | F1 | Public detail `/propiedades/:id` (gallery, specs, price, action box by session) | `GET /catalogo/:id` | ✅ (browser: published property, gallery, 404 for `RESERVADA`/nonexistent, invalid id, box for no session / `CLIENTE` / `EJECUTIVO`, login returns to the detail) |
 | F2 | Catalog `/propiedades` with real data and filters (filters in the URL, sort, cards link to the detail) | `GET /catalogo`, `GET /tipo-propiedades` | ✅ (browser: comuna, type, price range, bedrooms, `400` for min > max shown, back button restores the search, clear, sort by price, card → detail, mobile) |
-| F2b | Landing featured properties and search box with real data | `GET /catalogo` | ⬜ |
+| F2b | Landing showcase (6 newest + 2 featured, no repeats), search box that opens the catalog with the filters in the URL | `GET /catalogo` (once, shared), `GET /tipo-propiedades` | ✅ (browser: Casa + 4 dorm → 5 results in the catalog with the form filled in, featured and card links to the detail, mobile, no console errors) |
 | — | Fixtures: 25 properties (19 published, 5 featured, every type), real Unsplash photos on all of them | `make seed` | ✅ (seed run twice on a temporary database, 0 empty references) |
 | F3 | Registration connected | `POST /auth/register` | ⬜ |
 | F4 | Executive properties panel (`propiedades`): list, create/edit, state changes, soft delete | `/propiedades` | ⬜ |
@@ -126,3 +126,4 @@ Shared helpers added for everyone: `frontend-react/src/utils/formato.js` (`forma
 | 2026-11-14 | Pull Request B merged (PR #36, merge commit). Memory synced on `docs/deyby/sync-pr36`. | Model complete. Future work outside this model's plan: reports (RF12) and the frontend catalog / owner pages. |
 | 2026-11-17 | Frontend F1: `catalogo.service.js`, `utils/formato.js`, `GaleriaPropiedad`, `DetallePropiedadPage` and route `/propiedades/:id` (code written by the agent, explained to the developer). Tested in the browser. | F2: catalog with real data and filters, so the cards link to the detail. |
 | 2026-11-17 | Frontend F2: catalog with real data, filters kept in the URL (`useSearchParams`), draft form reset with `key`, sort on the client, `tipoPropiedad.service.js`. More property fixtures with real photos (written by the agent on request). | Landing featured (F2b), then registration (F3). |
+| 2026-11-17 | Frontend F2b: home page with real data (`LandingPage` loads the catalog once and passes it to the search box and the showcase; featured block from `destacada`; search navigates to `/propiedades?...`). | PR for the catalog + landing + fixtures; then registration (F3). |
