@@ -1,62 +1,65 @@
-const formatoCLP = new Intl.NumberFormat("es-CL", {
-    style: "currency",
-    currency: "CLP",
-    maximumFractionDigits: 0,
-});
+import { Link } from "react-router-dom"
+import { formatearPrecio } from "../../utils/formato"
 
-const estadoEstilos = {
-    disponible: "bg-green-100 text-green-700",
-    reservada: "bg-yellow-100 text-yellow-700",
-    arrendada: "bg-orange-100 text-orange-700",
-    vendida: "bg-rose-100 text-rose-700",
-};
-
-const estadoTexto = {
-    disponible: "Disponible",
-    reservada: "Reservada",
-    arrendada: "Arrendada",
-    vendida: "Vendida",
-};
-
-function PropertiesCard({ property }) {
-    const unidad = property.operation === "arriendo" ? " / mes" : "";
+/**
+ * Catalog card of a published property (data from GET /api/catalogo).
+ * The first image by `orden` is the cover; the whole card links to the detail page.
+ *
+ * @param {Object} props
+ * @param {Object} props.propiedad - A catalog property: _id, titulo, tipoId.nombre, direccion,
+ *   superficie, dormitorios, banos, valorArriendo, imagenes, destacada.
+ */
+function PropertiesCard({ propiedad }) {
+    const portada = [...propiedad.imagenes].sort((a, b) => a.orden - b.orden)[0]
 
     return (
-        <article className="bg-white border border-stone-200 rounded-xl shadow-sm hover:shadow-lg hover:-translate-y-1 transition duration-300 overflow-hidden">
-            <div className="relative h-56">
-                <img
-                    src={property.image}
-                    alt={property.title}
-                    loading="lazy"
-                    className="w-full h-full object-cover"
-                />
-                <span
-                    className={`absolute top-4 left-4 px-2.5 py-1 rounded-md text-xs font-bold ${estadoEstilos[property.status]}`}
-                >
-                    {estadoTexto[property.status]}
+        <article className="bg-white border border-stone-200 rounded-xl shadow-sm hover:shadow-lg hover:-translate-y-1 transition duration-300 overflow-hidden flex flex-col">
+            <div className="relative h-56 bg-stone-200">
+                {portada ? (
+                    <img
+                        src={portada.url}
+                        alt={propiedad.titulo}
+                        loading="lazy"
+                        className="w-full h-full object-cover"
+                    />
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center text-stone-400">
+                        <i className="fa-regular fa-image text-3xl"></i>
+                    </div>
+                )}
+                <span className="absolute top-4 left-4 px-2.5 py-1 rounded-md text-xs font-bold bg-white/90 text-[#173f52]">
+                    {propiedad.tipoId?.nombre}
                 </span>
+                {propiedad.destacada && (
+                    <span className="absolute top-4 right-4 px-2.5 py-1 rounded-md text-xs font-bold bg-[#ad654a] text-white">
+                        Destacada
+                    </span>
+                )}
             </div>
 
-            <div className="p-5">
-                <p className="text-emerald-700 text-sm font-bold mb-1">{property.location}</p>
-                <h3 className="text-[#173f52] text-xl font-semibold mb-2">{property.title}</h3>
+            <div className="p-5 flex flex-col flex-1">
+                <p className="text-emerald-700 text-sm font-bold mb-1">
+                    {propiedad.direccion.comuna} · {propiedad.direccion.ciudad}
+                </p>
+                <h3 className="text-[#173f52] text-xl font-semibold mb-2">{propiedad.titulo}</h3>
                 <p className="text-stone-500 text-sm">
-                    {property.bedrooms > 0 && <>{property.bedrooms} dormitorios <span className="mx-1 text-stone-300">·</span></>}
-                    {property.office > 0 && <>{property.office} privados <span className="mx-1 text-stone-300">·</span></>}
-                    {property.bathrooms} baños <span className="mx-1 text-stone-300">·</span> {property.area} m²
+                    {propiedad.dormitorios > 0 && (
+                        <>{propiedad.dormitorios} dorm. <span className="mx-1 text-stone-300">·</span></>
+                    )}
+                    {propiedad.banos} baños <span className="mx-1 text-stone-300">·</span> {propiedad.superficie} m²
                 </p>
 
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-stone-200">
+                <div className="flex items-center justify-between mt-auto pt-4 border-t border-stone-200">
                     <p className="text-[#ad654a] text-lg font-bold">
-                        {formatoCLP.format(property.price)}
-                        <small className="text-stone-400 text-xs font-normal">{unidad}</small>
+                        {formatearPrecio(propiedad.valorArriendo)}
+                        <small className="text-stone-400 text-xs font-normal"> / mes</small>
                     </p>
-                    <a
-                        href={`#propiedad-${property.id}`}
+                    <Link
+                        to={`/propiedades/${propiedad._id}`}
                         className="bg-[#173f52] hover:bg-[#285f70] text-white text-sm font-semibold px-4 py-2 rounded-md transition"
                     >
                         Ver detalles
-                    </a>
+                    </Link>
                 </div>
             </div>
         </article>
