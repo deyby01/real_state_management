@@ -5,7 +5,8 @@
  * the session; on load it is validated against GET /auth/me.
  */
 import { createContext, useCallback, useContext, useEffect, useState } from "react"
-import { apiFetch, borrarToken, guardarToken, obtenerToken } from "../services/api"
+import { borrarToken, guardarToken, obtenerToken } from "../services/api"
+import { iniciarSesion, obtenerUsuarioActual } from "../services/auth.service"
 
 const AuthContext = createContext(null)
 
@@ -30,7 +31,7 @@ export function AuthProvider({ children }) {
     // so the session is restored only if the API still accepts it
     useEffect(() => {
         if (!obtenerToken()) return
-        apiFetch("/auth/me")
+        obtenerUsuarioActual()
             .then(setUsuario)
             .catch(logout)
             .finally(() => setCargando(false))
@@ -51,10 +52,7 @@ export function AuthProvider({ children }) {
      * @returns {Promise<Object>} The logged-in user (with `rol`), to decide where to redirect.
      */
     const login = async (email, password) => {
-        const { token, usuario } = await apiFetch("/auth/login", {
-            method: "POST",
-            body: { email, password },
-        })
+        const { token, usuario } = await iniciarSesion(email, password)
         guardarToken(token)
         setUsuario(usuario)
         return usuario
