@@ -95,6 +95,7 @@ Five students work on this repository. **Each one owns one or more models** of [
 - **Never create or modify another teammate's model, controller or routes**, not even "to unblock". If the task needs something from another model (a field, an endpoint, a link such as `usuarios.clienteId`), explain what is needed, tell the developer to agree it with the owner, and write it down in *Coordination with other models* in the memory file.
 - **A dependency that is not merged yet does not block the work:** declare the reference (`ObjectId` + `ref: "<Model>"`) and continue. Mongoose only needs the other model when using `populate`.
 - **Reuse, do not rewrite, what is already merged:** `verificarToken`, `permitirRoles`, `connectDB`, the fixtures and the `TipoPropiedad` structure. Read [`memory/usuarios.md`](memory/usuarios.md) to see how to protect routes.
+- **Frontend integration follows the same ownership:** each teammate builds the screens of **their** model, with their own service file and pages. The task of every teammate (screens, endpoints, files, acceptance tests) is in [`memory/integracion.md`](memory/integracion.md); see [Frontend structure (React)](#frontend-structure-react).
 
 ### Shared files (small, careful changes)
 
@@ -105,6 +106,7 @@ Some files are touched by every model. Changes there must be **only the lines th
 | `backend/src/app.js` | One `import` and one `app.use("/api/...", router)` |
 | `backend/src/fixtures/seed.js` | Its import, its `deleteMany` and its `insertMany`, after the models it depends on |
 | `backend/src/fixtures/README.md` | One row in *What it loads* |
+| `frontend-react/src/App.jsx` | Its page `import` and one `<Route path="..." element={...} />` **inside its role's group** under `/panel` |
 
 Before opening the Pull Request: `git fetch origin && git rebase origin/development`. A conflict in these files is usually "keep both lines": explain it to the developer step by step.
 
@@ -199,6 +201,32 @@ The **`TipoPropiedad` flow is the reference implementation**. New features copy 
 - Every business-state field that the system changes (`estado`, `rol`, `activo`, `ejecutivoId`) stays **out of the body whitelist**: a new property is always `DISPONIBLE`, a new client always `INTERESADO`, a new user always `CLIENTE`.
 - `PUT` and `DELETE` filter `{ _id, activo: true }`, so a soft-deleted record answers `404` and cannot be edited or deleted twice.
 - **A unique identifier is normalized in the schema** (a `set:` function, see the `rut` of `Propietario.js`), so it also applies to `insertMany` in the fixtures. Normalize **everything** that can vary for the same value: dots, spaces **and letter case** (`12.345.678-k` and `12345678-K` are the same RUT). The duplicate test must include those variants, because a unique index compares exact text.
+
+### Frontend structure (React)
+
+The **integration base** (PR `feature/deyby/integracion-base`) is the reference: `services/api.js`, `services/auth.service.js`, `context/AuthContext.jsx`, `components/RutaProtegida.jsx`, `layouts/PanelLayout.jsx` and the login page (`pages/LoginPage.jsx`, the reference form). Read them before writing a new screen.
+
+| Layer | File | Naming | Example |
+|---|---|---|---|
+| API client (shared, do not edit) | `frontend-react/src/services/api.js` | — | `apiFetch(ruta, { method, body, params })` |
+| Service | `frontend-react/src/services/` | `<camelCase>.service.js`, one per model | `auth.service.js`, `propietario.service.js` |
+| Panel page | `frontend-react/src/pages/panel/` | PascalCase, Spanish | `PropietariosPanel.jsx` |
+| Components of a model | `frontend-react/src/components/<modelo>/` | PascalCase | `components/propietarios/PropietarioForm.jsx` |
+| Session | `frontend-react/src/context/AuthContext.jsx` | — | `const { usuario, login, logout } = useAuth()` |
+
+- **Every API call goes through `apiFetch`, inside a service function.** Never call `fetch` (or install `axios`) in a page: `apiFetch` adds the base URL, the token, the JSON headers, turns error responses into `ApiError` and closes the session on a `401`. A page imports `listarPropietarios()` from its service, never writes `"/propietarios"` itself.
+- **A service function only maps one endpoint**: no `try/catch`, no UI. The page catches the error and shows `error.message`, which is the backend's Spanish `mensaje` (same rule as `registrarBitacora`: the caller decides). `error.status` tells the case apart: `0` network or CORS (backend down, or the page opened at `127.0.0.1` instead of `localhost`), `400` invalid data, `404` not found, `409` conflict.
+- **Every screen that loads data handles three states:** loading (`cargando`), error (message in a `role="alert"` box) and empty list ("No hay ... registrados"). A form disables its submit button while sending (see `LoginPage.jsx`).
+- **Forms are controlled**: one `form` state object and one `cambiarCampo` handler that uses `e.target.name`. After a successful create/update/state change, **reload the list from the API** instead of editing the local array by hand: the server is the source of truth (it sets `estado`, `ejecutivoId`, timestamps).
+- **Use the API's data shape, not the old mock data.** Ids are `_id` (use it as the React `key`); prices are numbers (`valorArriendo`, `gastosComunes`) formatted on screen with `toLocaleString("es-CL")` (rule 10); the address is embedded (`direccion.comuna`, `direccion.calle`); populated references arrive as objects (`tipoId.nombre`, `ejecutivoId.nombre`, `propiedadId.titulo`). States are shown as the stored constant or a readable label, never changed.
+- **Panel routes:** add your page **inside your role's group** in `App.jsx` with a **relative** path (`<Route path="propietarios" element={<PropietariosPanel />} />`). The sidebar link already exists in `layouts/menuPanel.js`, which only the integrator edits. `RutaProtegida` and the menu are UI conveniences: security is always the backend's `401`/`403`.
+- **Navigation inside the app uses `<Link>` / `useNavigate`**, never `<a href>` (a full reload restarts the app and re-validates the session).
+- **Styles:** Tailwind with the theme colors of `src/index.css` (`ink`, `canvas`, `smoke-*`, `danger`) and Font Awesome icons, already loaded. Copy the look of `PanelLayout`/`PanelInicio` (white cards `bg-white rounded-xl shadow-sm`). Tables must not overflow on mobile: wrap them in `overflow-x-auto`.
+- **No new dependencies** (no axios, no UI kits, no state libraries) without asking the integrator: React, React Router and Tailwind cover the whole integration, and every new package forces everyone to `make build`.
+- **Text on screen is Spanish; comments and JSDoc are English** (same rule as the backend). Each page and service function gets a short JSDoc block.
+- **Open the frontend at `http://localhost:5173`**, never `127.0.0.1`: CORS only allows the origin in `CORS_ORIGIN` (they are different origins for the browser).
+- **Decision (documented risk):** the JWT is kept in `localStorage` (`gup_token`) so a reload keeps the session. Any script injected in the page could read it (XSS); React escapes text by default, so **never use `dangerouslySetInnerHTML`**. An `httpOnly` cookie would be safer but needs backend changes outside the course scope. Only the token is stored: the user and role always come from `GET /api/auth/me`.
+- **Test in the browser** with the seed users (`make seed`, password `Password123`): the happy path, an error case from the API (`409`, `400`), and a role that must not see the screen. Check the console has no errors.
 
 ### Code documentation
 
@@ -345,7 +373,8 @@ export const registrarBitacora = async ({ ... }) => { ... }
 
 1. The main `README.md` still describes the backend as "basic setup" and does not mention `docs/DATA_MODEL.md`, `MEMORY.md` or `AGENTS.md`. It should be updated once the model is validated.
 2. `frontend-react/README.md` is the generic Vite README and does not describe the real project. It should be replaced with a proper one.
-3. The React frontend does not consume the API yet; some forms only validate on the client and do not persist data.
+3. Since the integration base, the frontend consumes the API for the session (login, panel). The other pages still use mock data until each teammate's integration task is merged (see [`memory/integracion.md`](memory/integracion.md)). `RegisterPage`, the contact form and the Google/Apple buttons, "Recuérdame" and "¿Olvidaste tu contraseña?" on the login page are still visual only.
+4. Some backend messages lack accents (e.g. "ID de propiedad invalido"). Users now see them on screen; fix them in a small `fix:` commit by each owner.
 
 ---
 

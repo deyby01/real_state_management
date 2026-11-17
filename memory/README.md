@@ -31,6 +31,9 @@ Every agent **reads** all the files. Each agent **writes** only in its developer
 | [`propiedades.md`](propiedades.md) | `Propiedad`: management API and state machine | Deyby | ✅ Merged (PR #28, PR #33, PR #36) |
 | [`visitas.md`](visitas.md) | `Visita`: visit scheduling, overlap check and state machine | Ignacio | ✅ Merged (PR #26); `CLIENTE` endpoints in follow-up PR |
 | [`solicitudesArriendo.md`](solicitudesArriendo.md) | `SolicitudArriendo`: rental requests and reservation | Roberto | ✅ Merged (PR #24) |
+| [`integracion.md`](integracion.md) | Frontend integration: shared base and **one task card per teammate** | Deyby (integrator) | 🚧 Phase 0 done, Phase 1 open |
+
+**Frontend integration:** read your card in [`integracion.md`](integracion.md) (only the integrator edits it) and track your own progress in a `## Frontend integration` section of **your** model file, with the same plan table and session log as the template below.
 
 New files are created by the owner of the model when starting to work on it, by copying the template below. The full assignment table lives in [`MEMORY.md → Model assignments`](../MEMORY.md#model-assignments).
 
