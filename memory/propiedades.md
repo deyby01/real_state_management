@@ -89,6 +89,20 @@ The whole `/api/propiedades` router is protected with `verificarToken` + `permit
 
 - **Shared "profile of the logged-in user" helper (2026-11-14).** `propietarioIdDelUsuario` (this model) and `clienteIdDelUsuario` (`solicitudesArriendo`) do the same query on different fields. If a third model needs it (for example `visitas` reading the client), move them to one service such as `services/perfil.service.js` instead of copying it again. Not done now to respect model ownership.
 
+## Frontend integration
+
+> Task card: [`memory/integracion.md → Deyby`](integracion.md#deyby--properties-catalog-session-pages-audit-log). Branch: `feature/deyby/detalle-propiedad` (then one branch per group of screens).
+
+| # | Screen | API | Status |
+|---|---|---|---|
+| F1 | Public detail `/propiedades/:id` (gallery, specs, price, action box by session) | `GET /catalogo/:id` | ✅ (browser: published property, gallery, 404 for `RESERVADA`/nonexistent, invalid id, box for no session / `CLIENTE` / `EJECUTIVO`, login returns to the detail) |
+| F2 | Catalog `/propiedades` with real data and filters; landing featured | `GET /catalogo`, `GET /tipo-propiedades` | ⬜ |
+| F3 | Registration connected | `POST /auth/register` | ⬜ |
+| F4 | Executive properties panel (`propiedades`): list, create/edit, state changes, soft delete | `/propiedades` | ⬜ |
+| F5 | Owner view (`mis-propiedades`) and audit log (`bitacora`) | `/mis-propiedades`, `/bitacora` | ⬜ |
+
+Shared helpers added for everyone: `frontend-react/src/utils/formato.js` (`formatearPrecio`, `formatearDireccion`, `formatearFechaHora`).
+
 ## Session log
 
 | Date | What was done | Result / next step |
@@ -107,4 +121,5 @@ The whole `/api/propiedades` router is protected with `verificarToken` + `permit
 | 2026-11-13 | Step B3: public catalog (list with filters and detail). New approach to finish faster: the agent shows the final, tested code and explains every decision; the developer types it. | Step B4: owner's "my properties". |
 | 2026-11-14 | Step B4: owner view (`listarMisPropiedades`, `obtenerMiPropiedad`, `propietarioIdDelUsuario`, `CAMPOS_PROPIETARIO`, router `misPropiedades.routes.js` mounted at `/api/mis-propiedades`). Explained: identity from the token, why `propietarioId` is not in the JWT, fail closed, `404` vs `403`, why a separate router. Postman checks with `propietario@gup.cl` (Jorge Muñoz): list → 5 properties, no deleted one; JSON with `estado`/`ejecutivoId`, without `propietarioId`/`activo`; own detail `200`; María's property `404`; deleted `404`; invalid id `400`; no token `401`; executive or client `403`; `propietarioId: null` in Compass → `409` with the same token. New working rule: the developer writes the code; the agent keeps the memory files. | Step B5: full Postman pass and Pull Request B. |
 | 2026-11-14 | Step B5: automated pass against the running stack (27/27: catalog filters and `400`s, `RESERVADA` hidden, no owner or internal fields; owner list of 5 with every state, María's property `404`, `400`/`401`/`403`). No `console.log` or commented-out code. `development` moved one commit (PR #35, `REPROGRAMACION` in `Bitacora.js`): no file in common, rebase is clean. PR description drafted from the template. | Rebase, push, open Pull Request B. After the merge: integrator sync (`MEMORY.md` endpoints and model table: `propiedades` ✅ except reports). |
+| 2026-11-17 | Frontend F1: `catalogo.service.js`, `utils/formato.js`, `GaleriaPropiedad`, `DetallePropiedadPage` and route `/propiedades/:id` (code written by the agent, explained to the developer). Tested in the browser. | F2: catalog with real data and filters, so the cards link to the detail. |
 | 2026-11-14 | Pull Request B merged (PR #36, merge commit). Memory synced on `docs/deyby/sync-pr36`. | Model complete. Future work outside this model's plan: reports (RF12) and the frontend catalog / owner pages. |
