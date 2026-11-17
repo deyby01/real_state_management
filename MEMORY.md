@@ -75,13 +75,13 @@ This flow must be demonstrable end to end: **React → Node/Express → MongoDB*
 
 ### Current status
 
-*Updated 2026-11-14.* Authentication (PR #20), the audit log (PR #22), properties (management API, PR #28; owner check and fixtures, PR #33; public catalog and owner view, PR #36), clients (PR #25), owners (PR #27), visits (PR #26) and rental requests (PR #24) are merged into `development`, and the team now builds the backend **one model per person**, in the order of `docs/DATA_MODEL.md` (see [Model assignments](#model-assignments)). The React frontend has the pages mocked up but does not consume the API yet.
+*Updated 2026-11-17.* **Frontend integration started:** the shared base (CORS, API client, session, protected panel by role, login) is on `feature/deyby/integracion-base`, and every teammate has a task card in [`memory/integracion.md`](memory/integracion.md). Authentication (PR #20), the audit log (PR #22), properties (management API, PR #28; owner check and fixtures, PR #33; public catalog and owner view, PR #36), clients (PR #25), owners (PR #27), visits (PR #26) and rental requests (PR #24) are merged into `development`, and the team now builds the backend **one model per person**, in the order of `docs/DATA_MODEL.md` (see [Model assignments](#model-assignments)). The React frontend has the pages mocked up but does not consume the API yet.
 
 | Area | Status | Detail |
 |---|---|---|
 | UI design | ✅ Done | Landing, Properties, About Us, Contact and Login/Register pages mocked up in React + Tailwind. |
 | Original HTML/CSS frontend | ⏸️ Frozen | `frontend/` remains only as a design reference. No new features are added. |
-| React frontend | 🚧 In progress | Static pages; no API calls yet. |
+| React frontend | 🚧 Integration | Base ready: `apiFetch`, `AuthContext`, `RutaProtegida`, `/panel` by role, login and header connected. Each teammate integrates their model's screens (see [Frontend integration](#frontend-integration-assignments)). Other pages still use mock data. |
 | Express backend | 🚧 In progress | `GET /api/health`, `TipoPropiedad` (PR #19), authentication (PR #20), audit log (PR #22), properties with public catalog and owner view (PR #28, PR #33, PR #36), clients (PR #25), owners (PR #27), visits (PR #26) and rental requests (PR #24). The server stops if the DB connection or `JWT_SECRET` is missing. |
 | MongoDB data model | ✅ 8 of 8 implemented | `usuarios`, `tiposPropiedad`, `bitacora`, `propiedades`, `clientes`, `propietarios`, `visitas` and `solicitudesArriendo` in code (see [Model assignments](#model-assignments)). |
 | Authentication | ✅ Merged (PR #20) | Register, login (JWT), `GET /api/auth/me`, `verificarToken` and `permitirRoles`; fixtures with one user per role (`make seed`). Details: [`memory/usuarios.md`](memory/usuarios.md). |
@@ -89,7 +89,7 @@ This flow must be demonstrable end to end: **React → Node/Express → MongoDB*
 
 ### What is being done now
 
-1. **Each teammate implements their assigned model** with its full MVC flow, on their own branch, with an AI agent as tutor (OpenCode or Claude Code). See [Model assignments](#model-assignments).
+1. **Frontend integration, one task per teammate** (Phase 1), on top of the shared base (Phase 0). See [Frontend integration assignments](#frontend-integration-assignments) and [`memory/integracion.md`](memory/integracion.md).
 2. **Validate the data model** with the professor (see [Current blockers](#current-blockers)).
 3. **Shared memory structure:** `memory/` folder with one file per model, so teammates' agents do not create conflicts in `MEMORY.md` and `AGENTS.md`.
 
@@ -158,6 +158,8 @@ real_state_management/
 | `/contacto` | ContactPage |
 | `/login` | LoginPage |
 | `/registro` | RegisterPage |
+| `/panel` | PanelLayout + PanelInicio (any logged-in user; sidebar by role from `layouts/menuPanel.js`) |
+| `/panel/*` | One route per section inside its role's group in `App.jsx`; unfinished sections show `EnConstruccion` |
 
 ### Existing backend endpoints
 
@@ -232,6 +234,20 @@ Each model of [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md) is assigned to **one** 
 **Branch names:** `feature/santiago/...`, `feature/jose/...`, `feature/ignacio/...`, `feature/roberto/...`, `feature/deyby/...`. The agent uses the name in the branch to find the owner in this table.
 
 **When a model depends on one that is not merged yet:** declare the reference anyway (`type: mongoose.Schema.Types.ObjectId, ref: "Propietario"`). Mongoose only needs the other model when using `populate`, so the work is not blocked. Never create the other teammate's model to unblock yourself: agree on it with its owner and write it down in both memory files under *Coordination with other models*.
+
+### Frontend integration assignments
+
+The full task of each teammate (screens, endpoints, files, `App.jsx` line, acceptance checks, suggested commits) is in [`memory/integracion.md`](memory/integracion.md). Rules: [`AGENTS.md → Frontend structure (React)`](AGENTS.md#frontend-structure-react).
+
+| Who | Screens | Panel route(s) | Status |
+|---|---|---|---|
+| Deyby | Base (Phase 0); property detail, catalog and filters, landing featured, registration, executive properties, owner's properties, audit log | `/propiedades/:id`, `propiedades`, `mis-propiedades`, `bitacora` | ✅ Phase 0 (PR pending) · ⬜ Phase 1 |
+| Santiago | Owners panel (executive) | `propietarios` | ⬜ |
+| Jose | Clients panel (executive) | `clientes` | ⬜ |
+| Ignacio | Visit schedule (executive); later "Agendar visita" for clients | `visitas` | ⬜ |
+| Roberto | Rental requests: executive panel, client's list and request form | `solicitudes`, `mis-solicitudes` | ⬜ |
+
+Branch: `feature/<name>/integracion-<modelo>`. Each teammate logs progress in a `## Frontend integration` section of their own `memory/<collection>.md`.
 
 ### Per-model workflow
 
@@ -359,6 +375,8 @@ Why a separate branch: a model's next task can take days. If the sync waited ins
 ### Step 5 — Connect the frontend to the API (after Postman)
 
 **Goal:** make the React pages stop being mockups and consume real data.
+
+> 🚧 **In progress since 2026-11-17.** CORS only (professor's instruction). Base and task split: [Frontend integration assignments](#frontend-integration-assignments).
 
 **What it involves:**
 
@@ -755,6 +773,7 @@ Test passwords go in the fixtures README, never real passwords.
 | 2026-11-13 | Reviewed Ignacio's `visitas` (changes requested: verify `clienteId`, fixtures with readable references and append-only seed, stale comments; client flow in a follow-up PR). Added `REPROGRAMACION` to the `bitacora` action enum so visit rescheduling can be logged (RNF-12). | Ignacio merges `development` and applies the review; then re-review. |
 | 2026-11-13 / 14 | `propiedades` phase B finished: public catalog with filters (`/api/catalogo`, allowlist of fields, only `PUBLICADA`) and owner view (`/api/mis-propiedades`, owner from `usuarios.propietarioId`, fail closed `409`, another owner's property `404`). New way of working: the agent shows the final code and explains it, the developer types it, and the agent keeps the memory files. Full pass 27/27 against the running stack. Merged (PR #36, merge commit). Proposal kept in `memory/propiedades.md` (not accepted yet): shared helper for the logged-in user's profile if a third model needs it. | `propiedades` complete; 7 of 8 models merged, only `visitas` pending. Next: re-review Ignacio's `visitas`. No `make seed` or `make build` needed after pulling. |
 | 2026-11-14 | Re-reviewed Ignacio's `visitas`: all 6 review steps applied (merged `development`, active client check on `POST`, static fixtures with readable references and `Visita.deleteMany({})`, comment cleanup, `REPROGRAMACION` logged in `putVisita`). Verified 74/74 integration checks against the live stack and two `make seed` runs (6 visits, 0 empty references). `visitas` merged (PR #26). Accepted lesson moved to `AGENTS.md`: list conflicted files explicitly in `git add` when resolving a merge. | All 8 of 8 models merged into `development`. After pulling: `make seed`. Next: `CLIENTE` visit endpoints (follow-up PR), Postman collection and frontend integration. |
+| 2026-11-17 | Frontend integration Phase 0 on `feature/deyby/integracion-base`: CORS with explicit origin (`CORS_ORIGIN`), `VITE_API_URL`, `apiFetch` client with `ApiError`, `AuthContext` (token in `localStorage`, user from `/auth/me`), `RutaProtegida`, role-based `/panel`, login and header connected. Added `AGENTS.md → Frontend structure (React)` and `memory/integracion.md` with one task card per teammate. Back to the agent writing code and explaining it, to speed up. | Merge the base PR, then the team starts Phase 1. After pulling: `make build` (new `cors` dependency) and `make up`. |
 
 ---
 

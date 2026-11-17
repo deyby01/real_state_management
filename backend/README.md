@@ -34,6 +34,7 @@ The server reads its configuration from environment variables, so the same code 
 | `MONGO_URI` | MongoDB connection string | `mongodb://localhost:27017/real_estate` | `mongodb://mongo:27017/real_estate` |
 | `JWT_SECRET` | Key used to sign and verify JWT tokens | Development key from `.env.example` | Development key from `docker-compose.yml` |
 | `JWT_EXPIRES_IN` | How long a token is valid (`15m`, `1h`, `1d`...) | `1d` | `1d` |
+| `CORS_ORIGIN` | Frontend origin(s) allowed to call the API, comma separated | `http://localhost:5173` | `http://localhost:5173` |
 
 > The `JWT_SECRET` in the repository is **for local development only**. Anyone who reads the repo knows it, so it must never be used in production.
 

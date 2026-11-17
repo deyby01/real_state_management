@@ -5,6 +5,10 @@ import AboutUs from "./pages/AboutUs";
 import ContactPage from "./pages/ContactPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import RutaProtegida from "./components/RutaProtegida";
+import PanelLayout from "./layouts/PanelLayout";
+import PanelInicio from "./pages/panel/PanelInicio";
+import EnConstruccion from "./pages/panel/EnConstruccion";
 
 function App() {
   return (
@@ -16,6 +20,28 @@ function App() {
         <Route path="/contacto" element={<ContactPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/registro" element={<RegisterPage />} />
+
+        {/* Panel: any logged-in user; each group below adds its role check.
+            Add your page's <Route> inside your role's group (see menuPanel.js). */}
+        <Route element={<RutaProtegida />}>
+          <Route path="/panel" element={<PanelLayout />}>
+            <Route index element={<PanelInicio />} />
+
+            <Route element={<RutaProtegida roles={["ADMIN"]} />}>
+            </Route>
+
+            <Route element={<RutaProtegida roles={["EJECUTIVO"]} />}>
+            </Route>
+
+            <Route element={<RutaProtegida roles={["PROPIETARIO"]} />}>
+            </Route>
+
+            <Route element={<RutaProtegida roles={["CLIENTE"]} />}>
+            </Route>
+
+            <Route path="*" element={<EnConstruccion />} />
+          </Route>
+        </Route>
       </Routes>
     </BrowserRouter>
   );
