@@ -1,136 +1,87 @@
-import { useState, useMemo } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import PropertiesFilters from "./PropertiesFilters";
 import PropertiesCatalog from "./PropertiesCatalog";
+import { listarCatalogo } from "../../services/catalogo.service";
+import { listarTiposPropiedad } from "../../services/tipoPropiedad.service";
 
-const properties = [
-    {
-    id: 1,
-    operation: "arriendo",
-    type: "casa",
-    region: "metropolitana",
-    location: "La Reina · Región Metropolitana",
-    title: "Alonso de Camargo 890",
-    bedrooms: 4,
-    bathrooms: 3,
-    area: 180,
-    price: 1450000,
-    status: "disponible",
-    tag: "Destacada",
-    image: "/casa1.jpg",
-    dateAdded: "2026-09-01"
-  },
-  {
-    id: 2,
-    operation: "arriendo",
-    type: "departamento",
-    region: "metropolitana",
-    location: "Providencia · Región Metropolitana",
-    title: "Av. Los Leones 1240",
-    bedrooms: 2,
-    bathrooms: 2,
-    area: 68,
-    price: 680000,
-    status: "disponible",
-    tag: "Disponible",
-    image: "/departamento1.jpg",
-    dateAdded: "2026-08-20"
-  },
-  {
-    id: 3,
-    operation: "arriendo",
-    type: "oficina",
-    region: "metropolitana",
-    location: "Las Condes · Región Metropolitana",
-    title: "Apoquindo 4501, of 802",
-    office: 4,
-    bathrooms: 2,
-    area: 96,
-    price: 1200000,
-    status: "reservada",
-    tag: "Comercial",
-    image: "/oficina.jpg",
-    dateAdded: "2026-08-15"
-  },
-  {
-    id: 4,
-    operation: "venta",
-    type: "departamento",
-    region: "valparaiso",
-    location: "Viña del Mar · Región de Valparaíso",
-    title: "Calle Los Sargazos 415, Jardín del Mar",
-    bedrooms: 3,
-    bathrooms: 2,
-    area: 180,
-    price: 195000000,
-    status: "disponible",
-    tag: "Nueva",
-    image: "/casa3.jpg",
-    dateAdded: "2026-09-03"
-  },
-  {
-    id: 5,
-    operation: "arriendo",
-    type: "departamento",
-    region: "metropolitana",
-    location: "Santiago Centro · Región Metropolitana",
-    title: "Irarrazabal 3320, depto 502",
-    bedrooms: 1,
-    bathrooms: 1,
-    area: 44,
-    price: 520000,
-    status: "arrendada",
-    tag: "Oportunidad",
-    image: "/departamento2.jpg",
-    dateAdded: "2026-07-28"
-  }
-]
+// Every filter of GET /api/catalogo, empty: the form needs a value for each field
+const FILTROS_VACIOS = { comuna: "", tipo: "", precioMin: "", precioMax: "", dormitorios: "", banos: "" };
 
-const initialFilters = { operation: "todos", type: "todos", region: "todos", status: "todos" };
+/** Sorts a copy of the results. "recientes" keeps the API order (newest first). */
+const ordenar = (propiedades, orden) => {
+    const copia = [...propiedades];
+    if (orden === "menor-precio") copia.sort((a, b) => a.valorArriendo - b.valorArriendo);
+    if (orden === "mayor-precio") copia.sort((a, b) => b.valorArriendo - a.valorArriendo);
+    return copia;
+};
 
+/**
+ * Public catalog: filters + results from GET /api/catalogo (only PUBLICADA, RF5).
+ *
+ * The applied filters live in the URL (/propiedades?comuna=Ñuñoa&dormitorios=2),
+ * not in a state: a search can be shared or bookmarked, the back button returns
+ * to the previous search, and the landing page can link to a search.
+ */
 function Feed() {
-    const [filters, setFilters] = useState(initialFilters);
-    const [sortBy, setSortBy] = useState("recientes");
+    const [searchParams, setSearchParams] = useSearchParams();
+    // A string is a stable effect dependency: it only changes when the search changes
+    const consulta = searchParams.toString();
+    const filtros = { ...FILTROS_VACIOS, ...Object.fromEntries(searchParams) };
 
-    function handleFilterChange(event) {
-        const { name, value } = event.target;
-        setFilters((prev) => ({ ...prev, [name]: value }));
-    }
+    const [resultado, setResultado] = useState({ consulta: null, propiedades: [], error: "" });
+    const [orden, setOrden] = useState("recientes");
+    const [tipos, setTipos] = useState([]);
+    const [comunas, setComunas] = useState([]);
 
-    function handleClearFilters() {
-        setFilters(initialFilters);
-    }
+    // Options of the selects, loaded once. If they fail, the selects only show
+    // "Todos": the search itself still works and shows its own error
+    useEffect(() => {
+        listarTiposPropiedad().then(setTipos).catch(() => setTipos([]));
+        listarCatalogo()
+            .then((todas) => {
+                const unicas = new Set(todas.map((propiedad) => propiedad.direccion.comuna));
+                setComunas([...unicas].sort((a, b) => a.localeCompare(b, "es")));
+            })
+            .catch(() => setComunas([]));
+    }, []);
 
-    const filteredProperties = useMemo(() => {
-        const result = properties.filter((p) => {
-            if (filters.operation !== "todos" && p.operation !== filters.operation) return false;
-            if (filters.type !== "todos" && p.type !== filters.type) return false;
-            if (filters.region !== "todos" && p.region !== filters.region) return false;
-            if (filters.status !== "todos" && p.status !== filters.status) return false;
-            return true;
-        });
+    // One request per search. Same stale-answer guard as the detail page
+    useEffect(() => {
+        let vigente = true;
+        listarCatalogo(Object.fromEntries(new URLSearchParams(consulta)))
+            .then((propiedades) => vigente && setResultado({ consulta, propiedades, error: "" }))
+            .catch((error) => vigente && setResultado({ consulta, propiedades: [], error: error.message }));
+        return () => {
+            vigente = false;
+        };
+    }, [consulta]);
 
-        const sorted = [...result];
-        if (sortBy === "menor-precio") sorted.sort((a, b) => a.price - b.price);
-        else if (sortBy === "mayor-precio") sorted.sort((a, b) => b.price - a.price);
-        else sorted.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+    const cargando = resultado.consulta !== consulta;
+    const propiedades = cargando ? null : ordenar(resultado.propiedades, orden);
 
-        return sorted;
-    }, [filters, sortBy]);
+    /** Writes the filters in the URL, without the empty ones; the effect does the search. */
+    const buscar = (nuevos) => {
+        setSearchParams(Object.fromEntries(Object.entries(nuevos).filter(([, valor]) => valor !== "")));
+    };
 
     return (
-        <div className="container mx-auto px-6 max-w-6xl">
+        <div className="max-w-6xl mx-auto px-4 md:px-6">
             <PropertiesFilters
-                filters={filters}
-                total={filteredProperties.length}
-                onChange={handleFilterChange}
-                onClear={handleClearFilters}
+                key={consulta}
+                filtros={filtros}
+                tipos={tipos}
+                comunas={comunas}
+                total={cargando || resultado.error ? null : resultado.propiedades.length}
+                onBuscar={buscar}
             />
             <PropertiesCatalog
-                properties={filteredProperties}
-                sortBy={sortBy}
-                onSortChange={setSortBy}
+                propiedades={propiedades}
+                error={cargando ? "" : resultado.error}
+                orden={orden}
+                onOrdenChange={setOrden}
             />
         </div>
-    )
+    );
 }
 export default Feed;
