@@ -47,6 +47,16 @@ Requested after `clientes`, `propietarios`, the property fixtures (#33) and `sol
 > `*`: `CLIENTE` endpoints are deferred to a follow-up PR (CU6: request and cancel own visits). The `usuarios.clienteId` link already exists (PR #33), so that PR only needs the session-based `clienteId`, the ownership check and the `populate("clienteId")`.
 > `ADMIN` has no access to any visit route: per the case, its visit use case is CU10 (reports), through `/api/reportes/visitas`, which is not implemented yet.
 
+## Frontend integration
+
+| # | Step | Browser check | Status |
+|---|---|---|---|
+| F0 | populate clienteId on GET list/detail | Network: clienteId.nombre | ✅ |
+| F1 | visita.service.js | — | ⬜ |
+| F2 | VisitasPanel list + filter | 6 seed visits | ⬜ |
+| F3 | State actions (PATCH) | Confirm SOLICITADA → CONFIRMADA | ⬜ |
+| F4 | Create + reschedule (Modal) | 409 overlap, 400 past date | ⬜ |
+
 ## Decisions
 
 - **Fixed 1-hour duration (D8):** `fechaFin` is automatically calculated as `fechaInicio` + 60 minutes.
