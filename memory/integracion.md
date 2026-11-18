@@ -22,6 +22,9 @@ The professor asked for **CORS only** (no Vite proxy, no new dependencies). The 
    | Protected routes | `frontend-react/src/components/RutaProtegida.jsx` | `<RutaProtegida roles={[...]} />` as a layout route |
    | Panel | `frontend-react/src/layouts/PanelLayout.jsx`, `layouts/menuPanel.js`, `pages/panel/` | `/panel` with a sidebar by role; unfinished sections show "Sección en construcción" |
    | Reference form | `frontend-react/src/pages/LoginPage.jsx` | Controlled form, `try/catch/finally`, error box, disabled button while sending |
+   | Display helpers (Phase 1) | `frontend-react/src/utils/formato.js` | `formatearPrecio`, `formatearDireccion`, `formatearFechaHora` |
+   | Dialog (Phase 1) | `frontend-react/src/components/panel/Modal.jsx` | `<Modal titulo onCerrar>` for create/edit forms (Escape and click outside close it) |
+   | Reference panel screen (Phase 1) | `frontend-react/src/pages/panel/PropiedadesPanel.jsx` | List with filters, table, dialogs, state buttons from a transition table, reload after every change, success/error notice. **Copy its structure** |
 
 2. **Phase 1 — one task per teammate (in parallel).** Each teammate builds the screens of **their own model** on their own branch, following the card below. The sidebar link already exists: you only add your page and **one `<Route>` line** in `App.jsx`.
 
@@ -49,7 +52,7 @@ The professor asked for **CORS only** (no Vite proxy, no new dependencies). The 
 
 | Who | Task | Panel route(s) | Status |
 |---|---|---|---|
-| Deyby | Base (Phase 0); public property detail; catalog with filters; landing featured; registration; executive properties panel; owner's properties; audit log | `/propiedades/:id`, `propiedades`, `mis-propiedades`, `bitacora` | ✅ Phase 0 (PR #39) · 🚧 Phase 1 (detail page done, PR pending) |
+| Deyby | Base (Phase 0); public property detail; catalog with filters; landing featured; registration; executive properties panel; owner's properties; audit log | `/propiedades/:id`, `propiedades`, `mis-propiedades`, `bitacora` | ✅ Phase 0 (PR #39) · 🚧 Phase 1: detail (#40), catalog + home + fixtures (#41), properties panel (PR pending); registration postponed (technical debt) |
 | Santiago | Owners panel (executive) | `propietarios` | ⬜ |
 | Jose | Clients panel (executive) | `clientes` | ⬜ |
 | Ignacio | Visit schedule (executive); later the client's "Agendar visita" | `visitas` | ⬜ |
@@ -169,3 +172,4 @@ Status icons: ✅ merged · 🚧 PR open / in progress · ⬜ not started. The i
 |---|---|---|
 | 2026-11-17 | Phase 0 built on `feature/deyby/integracion-base`: CORS, `VITE_API_URL`, `apiFetch`, `AuthContext`, `RutaProtegida`, role-based panel, login and header connected; frontend conventions added to `AGENTS.md`; task cards for every teammate. Tested in the browser with every seed role. | Merge the base PR, notify the team, start Phase 1 (Deyby: property detail first). |
 | 2026-11-17 | Base merged (PR #39). Phase 1, Deyby: public property detail `/propiedades/:id` with the action box where Roberto's and Ignacio's components go; shared `utils/formato.js`. | PR for the detail, then the catalog with real data. |
+| 2026-11-17 | Detail (#40) and catalog + home + 25 property fixtures (#41) merged. Registration postponed as technical debt (seed accounts for the presentation). Executive properties panel (edit, state, delete) with the shared `Modal`: reference screen for every teammate's panel. | Teammates: copy `PropiedadesPanel.jsx`. Santiago: merge `propietario.service.js` early (needed for creating properties). |

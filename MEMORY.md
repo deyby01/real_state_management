@@ -159,6 +159,7 @@ real_state_management/
 | `/login` | LoginPage |
 | `/registro` | RegisterPage |
 | `/propiedades/:id` | DetallePropiedadPage (public detail from `GET /api/catalogo/:id`; action box by session) |
+| `/panel/propiedades` | PropiedadesPanel (`EJECUTIVO`: list, edit, state changes, soft delete) |
 | `/panel` | PanelLayout + PanelInicio (any logged-in user; sidebar by role from `layouts/menuPanel.js`) |
 | `/panel/*` | One route per section inside its role's group in `App.jsx`; unfinished sections show `EnConstruccion` |
 
@@ -414,6 +415,7 @@ Why a separate branch: a model's next task can take days. If the sync waited ins
 | Data model validation with the professor | The definitive schemas should not be written until it is confirmed. | Present `docs/DATA_MODEL.md` and resolve doubts. |
 | Visit duration | Affects overlap calculation (RN-10). Proposal: fixed 1 hour. | Confirm with the professor. |
 | Rental request background data | Defines the `antecedentes` object. Proposal: monthly income, occupation, number of occupants, pets. | Confirm with the professor. |
+| Registration (technical debt, 2026-11-17) | The register form is not connected: the API stores only `nombre`, `email`, `password` and a new account has no `clienteId` (it could not request a rental). For the presentation the seed accounts are used. | After the presentation: register creates `Usuario` + `Cliente` + link in one operation; validate with the professor. |
 | Who creates the accounts | Defines the registration flow and permissions. Proposal: clients self-register; owners and executives are created by the admin. | Confirm with the professor. |
 | Executive assignment to a property | Affects `propiedades.ejecutivoId`. Proposal: manual assignment when creating the property. | Confirm with the professor. |
 | Scope of contracts, payments and requirements | RF12 mentions them, but the document does not define models. Proposal: out of scope at this stage. | Confirm with the professor. |
