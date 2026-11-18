@@ -54,6 +54,20 @@ The five routes are protected by a single `router.use(verificarToken, permitirRo
 - Who creates the client record (executive from the admin panel vs. public registration) — *(pending professor validation; affects the controller and `auth.controller.js`)*
 - Is `telefono` required? The model docs mark it optional, but RN-11 mentions phone as a duplicate signal. Proposal: keep it optional in the schema and do not treat it as a unique key for now. *(pending professor validation)*
 
+## Frontend integration
+
+> Task card: [`memory/integracion.md → Jose — Clients panel`](integracion.md#jose--clients-panel-clientes). Branch: `feature/jose/integracion-clientes`.
+> Phase 0 base is merged (PR #39): `apiFetch`, `AuthContext`, `RutaProtegida`, `Modal`, `utils/formato.js` and `PropiedadesPanel.jsx` are the reference implementation. Rules: [`AGENTS.md → Frontend structure (React)`](../AGENTS.md#frontend-structure-react).
+
+| # | Step | What to test in the browser | Status |
+|---|---|---|---|
+| 0 | Branch from `development` + this plan | — | ⬜ |
+| 1 | `services/cliente.service.js` with the five calls | The panel imports it without console errors | ⬜ |
+| 2 | `pages/panel/ClientesPanel.jsx` + one `<Route path="clientes">` in the `EJECUTIVO` group of `App.jsx` | Carla sees the 3 seed clients with their `estado`; loading, error and empty states | ⬜ |
+| 3 | `components/clientes/ClienteForm.jsx` used for create and edit | Create → `INTERESADO`; edit reloads the list; duplicate RUT or email shows the backend `409` message | ⬜ |
+| 4 | Soft delete with `window.confirm` | The client disappears from the list, stays in Compass with `activo: false`; a second attempt answers `404` | ⬜ |
+| 5 | Acceptance checks of the card + PR with screenshots | `propietario@gup.cl` cannot open `/panel/clientes` (redirected to `/`) | ⬜ |
+
 ## Test evidence
 
 > The tables in this section record each pass as it happened. Roles, `estado` handling and the inactive-client filter changed in step 9 (2026-11-12): for the current behaviour see *Review round* at the end of the section.
@@ -208,3 +222,4 @@ Three tasks remain and none of them is code: upload the new screenshots (I, J, K
 | 2026-11-12 | This memory updated with step 9: endpoints table to `EJECUTIVO`, decisions for `estado` and the `activo` filter, the review-round evidence, the obsolete `DELETE` screenshots, the admin-access note, four new lessons and the session rows. | Next: new Postman screenshots (successful `EJECUTIVO` and a `403`), update the PR description, tell Deyby, and rebase when `propietarios` is merged. |
 | 2026-11-12 | **Audit of Deyby's review** against the branch instead of memory: the three mandatory changes are closed by `041d344`, `3dbc1f1` and `2ae96b5`, the endpoints table and the decisions were already updated in `2fb3024`, and the optional RUT setter is blocked because `Propietario.js` is still absent from `origin/development` (verified with `git ls-tree`: only `Bitacora`, `Propiedad`, `TipoPropiedad`, `Usuario`). The old non-conventional commits stay in the history by agreement. Audit table added to *Test evidence* and the three remaining developer tasks written down. | Remaining, all outside the code: screenshots I/J/K in PR #25, *Notes for the reviewer* pasted, and the integrator notified. Then rebase + RUT setter when `propietarios` lands. |
 | 2026-11-12 | Re-review approved by Deyby (the three behaviour changes passed his own tests). Last round: three **documentation-only** fixes in `cliente.controller.js` — `getClienteById` claimed `404 not found or inactive` while `findById` returns `200` for an inactive client, `postCliente` and `putCliente` had lost their `Responses:` block, and the `Route: PUT` line had lost its leading space. Comments only: `node --check` passes and `git diff` shows nothing outside the JSDoc blocks. | Committed as `docs: fix client controller JSDoc responses`; waiting for the merge. |
+| 2026-11-17 | **Frontend integration started** (Phase 1 of the base merged in PR #39). Read `AGENTS.md → Frontend structure`, `memory/integracion.md` and the reference files (`api.js`, `propiedad.service.js`, `PropiedadesPanel.jsx`, `PropiedadForm.jsx`, `Modal.jsx`). Verified: the sidebar link `/panel/clientes` already exists, `cliente.service.js` does not exist yet and the route falls into `EnConstruccion`. Added the `## Frontend integration` plan with the five steps and their browser checks. | Next: branch `feature/jose/integracion-clientes`, then the service (`feat: add client service`). |
