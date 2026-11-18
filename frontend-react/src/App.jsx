@@ -10,6 +10,7 @@ import RutaProtegida from "./components/RutaProtegida";
 import PanelLayout from "./layouts/PanelLayout";
 import PanelInicio from "./pages/panel/PanelInicio";
 import EnConstruccion from "./pages/panel/EnConstruccion";
+import PropiedadesPanel from "./pages/panel/PropiedadesPanel";
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
             </Route>
 
             <Route element={<RutaProtegida roles={["EJECUTIVO"]} />}>
+              <Route path="propiedades" element={<PropiedadesPanel />} />
             </Route>
 
             <Route element={<RutaProtegida roles={["PROPIETARIO"]} />}>
