@@ -1,18 +1,26 @@
 import { useEffect, useState } from "react"
-import { listarVisitas } from "../../services/visita.service"
-import { formatearFechaHora } from "../../utils/formato"
-import { ESTADOS_VISITA, VALORES_ESTADO } from "../../components/visitas/estadosVisita"
+import Modal from "../../components/panel/Modal"
+import VisitaForm from "../../components/visitas/VisitaForm"
 import AccionesVisita from "../../components/visitas/AccionesVisita"
+import { ESTADOS_VISITA, VALORES_ESTADO } from "../../components/visitas/estadosVisita"
+import { crearVisita, listarVisitas, reprogramarVisita } from "../../services/visita.service"
+import { listarPropiedades } from "../../services/propiedad.service"
+import { apiFetch } from "../../services/api"
+import { formatearFechaHora } from "../../utils/formato"
 
 /**
- * Executive visit agenda (/panel/visitas, CU7): list with estado filter and
- * state actions (confirm, reject, cancel, record outcome).
+ * Executive visit agenda (/panel/visitas, CU7): list, filter, create, reschedule
+ * and PATCH state actions. List reload uses `version` after every mutation.
  */
 export default function VisitasPanel() {
     const [filtros, setFiltros] = useState({ estado: "" })
     const [version, setVersion] = useState(0)
     const [resultado, setResultado] = useState({ clave: null, visitas: [], error: "" })
     const [aviso, setAviso] = useState({ tipo: "", texto: "" })
+
+    const [modal, setModal] = useState(null)
+    const [catalogos, setCatalogos] = useState({ propiedades: [], clientes: [] })
+    const [cargandoCatalogos, setCargandoCatalogos] = useState(false)
 
     const clave = `${filtros.estado}|${version}`
 
@@ -37,30 +45,75 @@ export default function VisitasPanel() {
         setAviso({ tipo: "error", texto: mensaje })
     }
 
+    const cerrarModal = () => setModal(null)
+
+    const abrirCrear = async () => {
+        setCargandoCatalogos(true)
+        setModal({ tipo: "crear" })
+        try {
+            const [propiedades, clientes] = await Promise.all([
+                listarPropiedades({ estado: "PUBLICADA" }),
+                apiFetch("/clientes"),
+            ])
+            setCatalogos({ propiedades, clientes })
+        } catch (error) {
+            setModal(null)
+            mostrarError(error.message)
+        } finally {
+            setCargandoCatalogos(false)
+        }
+    }
+
+    const abrirReprogramar = (visita) => {
+        setModal({ tipo: "reprogramar", visita })
+    }
+
+    const guardarCrear = async (datos) => {
+        await crearVisita(datos)
+        cerrarModal()
+        recargarExito("Visita agendada")
+    }
+
+    const guardarReprogramar = async (datos) => {
+        await reprogramarVisita(modal.visita._id, datos)
+        cerrarModal()
+        recargarExito("Visita reprogramada")
+    }
+
     return (
         <section>
             <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-semibold">Visitas</h1>
                     <p className="text-smoke-700 mt-1">
-                        Confirma, rechaza, cancela o registra el resultado según el estado de cada visita.
+                        Agenda, confirmación, cancelación y reprogramación de visitas a propiedades publicadas.
                     </p>
                 </div>
-                <label className="text-sm">
-                    <span className="sr-only">Filtrar por estado</span>
-                    <select
-                        value={filtros.estado}
-                        onChange={(e) => setFiltros({ estado: e.target.value })}
-                        className="px-3 py-2 border border-smoke-300 rounded-lg bg-white"
+                <div className="flex flex-wrap items-center gap-3">
+                    <button
+                        type="button"
+                        onClick={abrirCrear}
+                        disabled={cargandoCatalogos}
+                        className="px-4 py-2 text-sm rounded-lg bg-emerald-700 text-white hover:bg-emerald-800 disabled:opacity-50"
                     >
-                        <option value="">Todos los estados</option>
-                        {VALORES_ESTADO.map((valor) => (
-                            <option key={valor} value={valor}>
-                                {ESTADOS_VISITA[valor]?.texto ?? valor}
-                            </option>
-                        ))}
-                    </select>
-                </label>
+                        Nueva visita
+                    </button>
+                    <label className="text-sm">
+                        <span className="sr-only">Filtrar por estado</span>
+                        <select
+                            value={filtros.estado}
+                            onChange={(e) => setFiltros({ estado: e.target.value })}
+                            className="px-3 py-2 border border-smoke-300 rounded-lg bg-white"
+                        >
+                            <option value="">Todos los estados</option>
+                            {VALORES_ESTADO.map((valor) => (
+                                <option key={valor} value={valor}>
+                                    {ESTADOS_VISITA[valor]?.texto ?? valor}
+                                </option>
+                            ))}
+                        </select>
+                    </label>
+                </div>
             </div>
 
             {aviso.texto && (
@@ -110,17 +163,45 @@ export default function VisitasPanel() {
                                     visita={visita}
                                     onExito={recargarExito}
                                     onError={mostrarError}
+                                    onReprogramar={abrirReprogramar}
                                 />
                             ))}
                         </tbody>
                     </table>
                 )}
             </div>
+
+            {modal?.tipo === "crear" && (
+                <Modal titulo="Agendar visita" onCerrar={cerrarModal}>
+                    {cargandoCatalogos ? (
+                        <p className="text-sm text-smoke-700">Cargando propiedades y clientes…</p>
+                    ) : (
+                        <VisitaForm
+                            modo="crear"
+                            propiedades={catalogos.propiedades}
+                            clientes={catalogos.clientes}
+                            onGuardar={guardarCrear}
+                            onCancelar={cerrarModal}
+                        />
+                    )}
+                </Modal>
+            )}
+
+            {modal?.tipo === "reprogramar" && (
+                <Modal titulo="Reprogramar visita" onCerrar={cerrarModal}>
+                    <VisitaForm
+                        modo="reprogramar"
+                        visita={modal.visita}
+                        onGuardar={guardarReprogramar}
+                        onCancelar={cerrarModal}
+                    />
+                </Modal>
+            )}
         </section>
     )
 }
 
-function FilaVisita({ visita, onExito, onError }) {
+function FilaVisita({ visita, onExito, onError, onReprogramar }) {
     const estado = ESTADOS_VISITA[visita.estado]
 
     return (
@@ -142,7 +223,12 @@ function FilaVisita({ visita, onExito, onError }) {
                 </span>
             </td>
             <td className="p-3 align-top">
-                <AccionesVisita visita={visita} onExito={onExito} onError={onError} />
+                <AccionesVisita
+                    visita={visita}
+                    onExito={onExito}
+                    onError={onError}
+                    onReprogramar={onReprogramar}
+                />
             </td>
         </tr>
     )

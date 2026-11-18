@@ -13,13 +13,14 @@ const ETIQUETAS = {
     rechazar: "Rechazar",
     cancelar: "Cancelar",
     resultado: "Resultado",
+    reprogramar: "Reprogramar",
 }
 
 /**
  * Row actions for one visit: PATCH transitions allowed for the current estado.
- * Calls the API and notifies the parent to reload the list on success.
+ * Reprogramar opens the parent modal via onReprogramar (PUT, not a state change).
  */
-export default function AccionesVisita({ visita, onExito, onError }) {
+export default function AccionesVisita({ visita, onExito, onError, onReprogramar }) {
     const [enviando, setEnviando] = useState(false)
     const [modalResultado, setModalResultado] = useState(false)
     const [resultado, setResultado] = useState("")
@@ -76,11 +77,14 @@ export default function AccionesVisita({ visita, onExito, onError }) {
         await ejecutar(registrarResultadoVisita(visita._id, texto), "Resultado registrado")
     }
 
+    const reprogramar = () => onReprogramar?.(visita)
+
     const handlers = {
         confirmar,
         rechazar,
         cancelar,
         resultado: abrirResultado,
+        reprogramar,
     }
 
     return (
@@ -120,7 +124,11 @@ export default function AccionesVisita({ visita, onExito, onError }) {
                             <button type="button" onClick={() => setModalResultado(false)} className={boton}>
                                 Volver
                             </button>
-                            <button type="submit" disabled={enviando} className={`${boton} bg-emerald-700 text-white border-emerald-700`}>
+                            <button
+                                type="submit"
+                                disabled={enviando}
+                                className={`${boton} bg-emerald-700 text-white border-emerald-700`}
+                            >
                                 Marcar como realizada
                             </button>
                         </div>

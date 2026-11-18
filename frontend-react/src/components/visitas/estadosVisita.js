@@ -18,8 +18,8 @@ export const VALORES_ESTADO = Object.keys(ESTADOS_VISITA)
  * Reprogramar is not a state change: it is handled in VisitaForm (step F4).
  */
 export const ACCIONES_POR_ESTADO = {
-    SOLICITADA: ["confirmar", "rechazar", "cancelar"],
-    CONFIRMADA: ["resultado", "cancelar"],
+    SOLICITADA: ["confirmar", "rechazar", "cancelar", "reprogramar"],
+    CONFIRMADA: ["resultado", "cancelar", "reprogramar"],
     REALIZADA: [],
     RECHAZADA: [],
     CANCELADA: [],
