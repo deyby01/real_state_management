@@ -160,6 +160,8 @@ real_state_management/
 | `/registro` | RegisterPage |
 | `/propiedades/:id` | DetallePropiedadPage (public detail from `GET /api/catalogo/:id`; action box by session) |
 | `/panel/propiedades` | PropiedadesPanel (`EJECUTIVO`: list, edit, state changes, soft delete) |
+| `/panel/mis-propiedades` | MisPropiedades (`PROPIETARIO`: their properties by state and the executive in charge) |
+| `/panel/bitacora` | BitacoraPanel (`ADMIN`: audit log with entity and action filters) |
 | `/panel` | PanelLayout + PanelInicio (any logged-in user; sidebar by role from `layouts/menuPanel.js`) |
 | `/panel/*` | One route per section inside its role's group in `App.jsx`; unfinished sections show `EnConstruccion` |
 

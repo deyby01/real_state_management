@@ -11,6 +11,8 @@ import PanelLayout from "./layouts/PanelLayout";
 import PanelInicio from "./pages/panel/PanelInicio";
 import EnConstruccion from "./pages/panel/EnConstruccion";
 import PropiedadesPanel from "./pages/panel/PropiedadesPanel";
+import MisPropiedades from "./pages/panel/MisPropiedades";
+import BitacoraPanel from "./pages/panel/BitacoraPanel";
 
 function App() {
   return (
@@ -31,6 +33,7 @@ function App() {
             <Route index element={<PanelInicio />} />
 
             <Route element={<RutaProtegida roles={["ADMIN"]} />}>
+              <Route path="bitacora" element={<BitacoraPanel />} />
             </Route>
 
             <Route element={<RutaProtegida roles={["EJECUTIVO"]} />}>
@@ -38,6 +41,7 @@ function App() {
             </Route>
 
             <Route element={<RutaProtegida roles={["PROPIETARIO"]} />}>
+              <Route path="mis-propiedades" element={<MisPropiedades />} />
             </Route>
 
             <Route element={<RutaProtegida roles={["CLIENTE"]} />}>
