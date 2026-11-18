@@ -53,7 +53,7 @@ Requested after `clientes`, `propietarios`, the property fixtures (#33) and `sol
 |---|---|---|---|
 | F0 | populate clienteId on GET list/detail | Network: clienteId.nombre | ✅ |
 | F1 | visita.service.js | — | ✅ |
-| F2 | VisitasPanel list + filter | 6 seed visits | ⬜ |
+| F2 | VisitasPanel list + filter | 6 seed visits | ✅ |
 | F3 | State actions (PATCH) | Confirm SOLICITADA → CONFIRMADA | ⬜ |
 | F4 | Create + reschedule (Modal) | 409 overlap, 400 past date | ⬜ |
 
