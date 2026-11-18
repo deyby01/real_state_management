@@ -17,6 +17,29 @@
 | 6 | Fixtures and seed integration | Test data loads | ✅ Actual seed run in isolated database |
 | 7 | Postman and Pull Request | Happy path and errors | 🚧 Automated HTTP pass complete; PR opened, manual screenshots not confirmed |
 
+## Frontend integration
+
+Branch: `feature/santiago/integracion-propietarios`. Assignment: executive owner panel at `/panel/propietarios`, following `memory/integracion.md`.
+
+| Step | Status |
+|---|---|
+| Service functions through apiFetch | All five functions source reviewed; JSDoc indentation corrected and node --check passed. Runtime verification pending |
+| Active owner table, loading/error/empty states and protected route | Pending |
+| Shared create/edit form and API error messages | Pending |
+| Confirmed soft delete and list reload | Pending |
+| Browser acceptance checks and PR | Pending |
+
+### Session log
+
+| Date | Work | Next step |
+|---|---|---|
+| 2026-11-18 | Confirmed new integration branch and reviewed listarPropietarios in propietario.service.js: correct apiFetch import, GET path and English JSDoc. | Complete remaining service functions, verify and commit the service step; runtime behavior not yet tested. |
+| 2026-11-18 | Reviewed obtenerPropietario: ID parameter, template literal and JSDoc are correct. | Next: crearPropietario with POST and body. |
+| 2026-11-18 | Reviewed crearPropietario: POST method, data body and JSDoc are correct. | Next: actualizarPropietario with ID and PUT body. |
+| 2026-11-18 | Reviewed actualizarPropietario: ID interpolation, PUT and body are correct; pointed out extra indentation before JSDoc. | Next: eliminarPropietario; runtime checks pending. |
+| 2026-11-18 | Reviewed eliminarPropietario and all five service functions; node --check passed. DELETE correctly sends the ID without a body. | Align JSDoc openings for update/delete, then verify runtime service behavior before committing. |
+| 2026-11-18 | Verified corrected JSDoc indentation and syntax before the requested service commit. ESLint could not run in the container: no configuration was found. | Commit service and memory; browser/API verification remains pending. |
+
 ## Current next step
 
 Latest integration check (2026-11-12): Santiago started merging updated development; conflicts in app.js and seed.js were resolved by preserving both owner and client contributions. Real seed execution in a temporary database loaded 3 owners and 3 clients; six HTTP checks passed for owner/client/property listing (401 without token, 200 as executive). Temporary database removed. Next: developer stages the two resolutions and this memory, completes the merge commit, pushes, attaches Postman evidence and requests re-review. The merge has not yet been committed by the agent.
@@ -58,6 +81,8 @@ All routes return `401` without a token, `403` for CLIENTE, PROPIETARIO or ADMIN
 - Deyby owns `usuarios`: account creation and linking through `usuarios.propietarioId` must be coordinated with him. Owner business records are separate from login accounts.
 
 ## Proposals for AGENTS.md
+
+- 2026-11-18: Invoked npx eslint without first checking the container working directory and installed tooling; npx attempted to install ESLint and found no configuration. Inspect package scripts/configuration first and avoid implicit package installs for verification.
 
 - 2026-11-12: The owner normalization and tests covered punctuation but missed the k/K check digit variants. Normalize letter case before unique-index enforcement and include case variants in duplicate tests, as identified by Deyby's PR #27 review.
 
