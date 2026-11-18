@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ROLES, iniciales } from "../layouts/menuPanel";
@@ -17,6 +17,24 @@ function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const { usuario, logout } = useAuth();
     const navegar = useNavigate();
+    // The user menu (button + dropdown): a click outside this element closes it
+    const menuUsuario = useRef(null);
+
+    // Only while the dropdown is open: close it on a click outside or on Escape.
+    // The cleanup removes the listeners when it closes, so they never pile up
+    useEffect(() => {
+        if (!isOpen) return;
+        const alHacerClic = (e) => {
+            if (!menuUsuario.current.contains(e.target)) setIsOpen(false);
+        };
+        const alPresionar = (e) => e.key === "Escape" && setIsOpen(false);
+        document.addEventListener("mousedown", alHacerClic);
+        document.addEventListener("keydown", alPresionar);
+        return () => {
+            document.removeEventListener("mousedown", alHacerClic);
+            document.removeEventListener("keydown", alPresionar);
+        };
+    }, [isOpen]);
 
     const cerrarSesion = () => {
         setIsOpen(false);
@@ -42,7 +60,7 @@ function Header() {
                     {navLinks.map((nlink) => (
                         <li key={nlink.label}><Link className="py-2.5 px-3.75 hover:bg-smoke-700 rounded block transition-colors duration-300" to={nlink.to}>{nlink.label}</Link></li>
                     ))}
-                    <li className="relative">
+                    <li className="relative" ref={menuUsuario}>
                         <button
                             type="button"
                             aria-label="Menú de usuario"
