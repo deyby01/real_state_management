@@ -13,6 +13,7 @@ import EnConstruccion from "./pages/panel/EnConstruccion";
 import PropiedadesPanel from "./pages/panel/PropiedadesPanel";
 import MisPropiedades from "./pages/panel/MisPropiedades";
 import BitacoraPanel from "./pages/panel/BitacoraPanel";
+import MiPerfil from "./pages/panel/MiPerfil";
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
         <Route element={<RutaProtegida />}>
           <Route path="/panel" element={<PanelLayout />}>
             <Route index element={<PanelInicio />} />
+            <Route path="perfil" element={<MiPerfil />} />
 
             <Route element={<RutaProtegida roles={["ADMIN"]} />}>
               <Route path="bitacora" element={<BitacoraPanel />} />

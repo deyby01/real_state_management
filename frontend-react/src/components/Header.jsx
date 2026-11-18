@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { ROLES, iniciales } from "../layouts/menuPanel";
 
 const navLinks = [
     { label: "Inicio", to: "/" },
@@ -45,16 +46,37 @@ function Header() {
                         <button
                             type="button"
                             aria-label="Menú de usuario"
-                            className="py-2.5 px-3.75 hover:bg-smoke-700 rounded transition-colors duration-300 text-[25px] cursor-pointer"
+                            aria-expanded={isOpen}
+                            className="py-2.5 px-3.75 hover:bg-smoke-700 rounded transition-colors duration-300 cursor-pointer inline-flex items-center gap-2"
                             onClick={() => setIsOpen(!isOpen)}>
-                            <i className="fa-regular fa-user"></i>
+                            {/* With a session the icon becomes the user's initials and name,
+                                so it is obvious that someone is logged in */}
+                            {usuario ? (
+                                <>
+                                    <span className="w-9 h-9 rounded-full bg-smoke-100 text-smoke-900 text-sm font-bold flex items-center justify-center">
+                                        {iniciales(usuario.nombre)}
+                                    </span>
+                                    <span className="text-sm">{usuario.nombre.split(" ")[0]}</span>
+                                    <i className="fa-solid fa-chevron-down text-xs"></i>
+                                </>
+                            ) : (
+                                <i className="fa-regular fa-user text-[25px]"></i>
+                            )}
                         </button>
                         {isOpen && (
-                            <ul className="absolute top-full mt-2 right-0 bg-smoke-100 border border-smoke-300 rounded-lg min-w-45 overflow-hidden py-1.5 shadow-lg">
+                            <ul className="absolute top-full mt-2 right-0 bg-smoke-100 border border-smoke-300 rounded-lg min-w-60 overflow-hidden py-1.5 shadow-lg">
                                 {usuario ? (
                                     <>
-                                        <li className="text-center text-smoke-700 text-sm py-2 px-3.75">{usuario.nombre}</li>
-                                        <li><Link onClick={() => setIsOpen(false)} className={`${claseOpcion} text-ink hover:bg-smoke-500 hover:text-smoke-100`} to="/panel">Mi panel</Link></li>
+                                        <li className="px-4 py-2.5 text-left">
+                                            <p className="text-ink font-semibold">{usuario.nombre}</p>
+                                            <p className="text-smoke-700 text-xs">{usuario.email}</p>
+                                            <span className="inline-block mt-1.5 px-2 py-0.5 rounded-md bg-smoke-900 text-smoke-100 text-xs">
+                                                {ROLES[usuario.rol]?.texto ?? usuario.rol}
+                                            </span>
+                                        </li>
+                                        <li className="bg-smoke-300 h-px my-1.5"></li>
+                                        <li><Link onClick={() => setIsOpen(false)} className={`${claseOpcion} text-ink hover:bg-smoke-500 hover:text-smoke-100`} to="/panel"><i className="fa-solid fa-gauge mr-2"></i>Mi panel</Link></li>
+                                        <li><Link onClick={() => setIsOpen(false)} className={`${claseOpcion} text-ink hover:bg-smoke-500 hover:text-smoke-100`} to="/panel/perfil"><i className="fa-solid fa-id-card mr-2"></i>Mi perfil</Link></li>
                                         <li className="bg-smoke-300 h-px my-1.5"></li>
                                         <li><button type="button" onClick={cerrarSesion} className={`${claseOpcion} w-full cursor-pointer text-danger hover:bg-danger hover:text-smoke-100`}>Cerrar Sesión</button></li>
                                     </>
