@@ -1,6 +1,6 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
-import { MENU_POR_ROL } from "./menuPanel"
+import { MENU_POR_ROL, ROLES, iniciales } from "./menuPanel"
 
 const claseEnlace = ({ isActive }) =>
     `flex items-center gap-3 px-4 py-2.5 rounded-lg whitespace-nowrap transition-colors duration-300 ${
@@ -33,10 +33,15 @@ export default function PanelLayout() {
                         <span className="hidden sm:inline font-semibold">Panel GUP</span>
                     </Link>
                     <div className="flex items-center gap-4">
-                        <div className="text-right leading-tight">
-                            <p className="font-semibold">{usuario.nombre}</p>
-                            <p className="text-xs text-smoke-300">{usuario.rol}</p>
-                        </div>
+                        <Link to="/panel/perfil" title="Mi perfil" className="flex items-center gap-3 rounded-lg px-2 py-1 hover:bg-smoke-700 transition-colors duration-300">
+                            <div className="text-right leading-tight">
+                                <p className="font-semibold">{usuario.nombre}</p>
+                                <p className="text-xs text-smoke-300">{ROLES[usuario.rol]?.texto ?? usuario.rol}</p>
+                            </div>
+                            <span className="w-9 h-9 rounded-full bg-smoke-100 text-smoke-900 text-sm font-bold flex items-center justify-center">
+                                {iniciales(usuario.nombre)}
+                            </span>
+                        </Link>
                         <button
                             type="button"
                             onClick={cerrarSesion}
@@ -61,6 +66,12 @@ export default function PanelLayout() {
                             {item.texto}
                         </NavLink>
                     ))}
+                    {/* Every role has a profile, so it is not part of MENU_POR_ROL */}
+                    <span className="hidden md:block h-px bg-smoke-700 my-2" aria-hidden="true"></span>
+                    <NavLink to="/panel/perfil" className={claseEnlace}>
+                        <i className="fa-solid fa-id-card w-5 text-center"></i>
+                        Mi perfil
+                    </NavLink>
                 </nav>
 
                 <main className="flex-1 p-4 md:p-8 min-w-0">

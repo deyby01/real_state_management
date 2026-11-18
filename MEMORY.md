@@ -162,6 +162,7 @@ real_state_management/
 | `/panel/propiedades` | PropiedadesPanel (`EJECUTIVO`: list, edit, state changes, soft delete) |
 | `/panel/mis-propiedades` | MisPropiedades (`PROPIETARIO`: their properties by state and the executive in charge) |
 | `/panel/bitacora` | BitacoraPanel (`ADMIN`: audit log with entity and action filters) |
+| `/panel/perfil` | MiPerfil (any logged-in role: account data from `/auth/me`, role description, shortcuts to the role's sections). Also reachable from the header user menu (initials + name when logged in) |
 | `/panel` | PanelLayout + PanelInicio (any logged-in user; sidebar by role from `layouts/menuPanel.js`) |
 | `/panel/*` | One route per section inside its role's group in `App.jsx`; unfinished sections show `EnConstruccion` |
 
