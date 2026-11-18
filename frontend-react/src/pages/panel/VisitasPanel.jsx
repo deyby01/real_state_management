@@ -2,10 +2,11 @@ import { useEffect, useState } from "react"
 import { listarVisitas } from "../../services/visita.service"
 import { formatearFechaHora } from "../../utils/formato"
 import { ESTADOS_VISITA, VALORES_ESTADO } from "../../components/visitas/estadosVisita"
+import AccionesVisita from "../../components/visitas/AccionesVisita"
 
 /**
- * Executive visit agenda (/panel/visitas, CU7): list with optional estado filter.
- * State action buttons are added in AccionesVisita (integration step F3).
+ * Executive visit agenda (/panel/visitas, CU7): list with estado filter and
+ * state actions (confirm, reject, cancel, record outcome).
  */
 export default function VisitasPanel() {
     const [filtros, setFiltros] = useState({ estado: "" })
@@ -27,13 +28,22 @@ export default function VisitasPanel() {
 
     const cargando = resultado.clave !== clave
 
-  return (
+    const recargarExito = (mensaje) => {
+        setAviso({ tipo: "ok", texto: mensaje })
+        setVersion((v) => v + 1)
+    }
+
+    const mostrarError = (mensaje) => {
+        setAviso({ tipo: "error", texto: mensaje })
+    }
+
+    return (
         <section>
             <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-semibold">Visitas</h1>
                     <p className="text-smoke-700 mt-1">
-                        Agenda de visitas a propiedades publicadas. Confirmación y resultados en el siguiente paso.
+                        Confirma, rechaza, cancela o registra el resultado según el estado de cada visita.
                     </p>
                 </div>
                 <label className="text-sm">
@@ -95,7 +105,12 @@ export default function VisitasPanel() {
                         </thead>
                         <tbody>
                             {resultado.visitas.map((visita) => (
-                                <FilaVisita key={visita._id} visita={visita} />
+                                <FilaVisita
+                                    key={visita._id}
+                                    visita={visita}
+                                    onExito={recargarExito}
+                                    onError={mostrarError}
+                                />
                             ))}
                         </tbody>
                     </table>
@@ -105,8 +120,7 @@ export default function VisitasPanel() {
     )
 }
 
-/** One row: date, related people, estado badge; actions come in step F3. */
-function FilaVisita({ visita }) {
+function FilaVisita({ visita, onExito, onError }) {
     const estado = ESTADOS_VISITA[visita.estado]
 
     return (
@@ -121,11 +135,15 @@ function FilaVisita({ visita }) {
             <td className="p-3 whitespace-nowrap">{visita.clienteId?.nombre ?? "—"}</td>
             <td className="p-3 whitespace-nowrap">{visita.ejecutivoId?.nombre ?? "—"}</td>
             <td className="p-3">
-                <span className={`px-2 py-1 rounded-md text-xs font-semibold whitespace-nowrap ${estado?.clase ?? ""}`}>
+                <span
+                    className={`px-2 py-1 rounded-md text-xs font-semibold whitespace-nowrap ${estado?.clase ?? ""}`}
+                >
                     {estado?.texto ?? visita.estado}
                 </span>
             </td>
-            <td className="p-3 text-right text-smoke-500">—</td>
+            <td className="p-3 align-top">
+                <AccionesVisita visita={visita} onExito={onExito} onError={onError} />
+            </td>
         </tr>
     )
 }

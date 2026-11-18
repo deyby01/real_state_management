@@ -12,3 +12,15 @@ export const ESTADOS_VISITA = {
 
 /** Values accepted by GET /api/visitas?estado= (same as backend ESTADOS_VISITA). */
 export const VALORES_ESTADO = Object.keys(ESTADOS_VISITA)
+
+/**
+ * Buttons to show per state (mirror of backend TRANSICIONES + UI only).
+ * Reprogramar is not a state change: it is handled in VisitaForm (step F4).
+ */
+export const ACCIONES_POR_ESTADO = {
+    SOLICITADA: ["confirmar", "rechazar", "cancelar"],
+    CONFIRMADA: ["resultado", "cancelar"],
+    REALIZADA: [],
+    RECHAZADA: [],
+    CANCELADA: [],
+}
