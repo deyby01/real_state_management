@@ -52,7 +52,7 @@ The professor asked for **CORS only** (no Vite proxy, no new dependencies). The 
 
 | Who | Task | Panel route(s) | Status |
 |---|---|---|---|
-| Deyby | Base (Phase 0); public property detail; catalog with filters; landing featured; registration; executive properties panel; owner's properties; audit log | `/propiedades/:id`, `propiedades`, `mis-propiedades`, `bitacora` | ✅ Phase 0 (PR #39) · 🚧 Phase 1: detail (#40), catalog + home + fixtures (#41), properties panel (PR pending); registration postponed (technical debt) |
+| Deyby | Base (Phase 0); public property detail; catalog with filters; landing featured; registration; executive properties panel; owner's properties; audit log | `/propiedades/:id`, `propiedades`, `mis-propiedades`, `bitacora` | ✅ Phase 0 (PR #39) · 🚧 Phase 1: detail (#40), catalog + home + fixtures (#41), properties panel (#42), owner view + audit log (PR pending); create property waits for Santiago's service; registration postponed (technical debt) |
 | Santiago | Owners panel (executive) | `propietarios` | ⬜ |
 | Jose | Clients panel (executive) | `clientes` | ⬜ |
 | Ignacio | Visit schedule (executive); later the client's "Agendar visita" | `visitas` | ⬜ |
