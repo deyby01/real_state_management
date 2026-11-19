@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react"
 import Modal from "../../components/panel/Modal"
 import ClienteForm from "../../components/clientes/ClienteForm"
-import { crearCliente, listarClientes } from "../../services/cliente.service"
+import { actualizarCliente, crearCliente, listarClientes } from "../../services/cliente.service"
 
 /**
  * Client states as stored by the backend (rule 9). Same idea as ESTADOS_PROPIEDAD:
@@ -14,8 +14,8 @@ const ESTADOS_CLIENTE = {
 
 /**
  * Clients panel for the executive (/panel/clientes, CU5): the active clients with
- * their contact data and state, plus the dialog to register a new one. Edit and
- * delete come in the next steps.
+ * their contact data and state, plus the dialog to register a new one or edit an
+ * existing one. Delete comes in the next step.
  *
  * After saving, the list is requested again (`version`): the server sets `estado`,
  * `activo` and the timestamps, so it is the source of truth. `clave` keeps each
@@ -50,6 +50,11 @@ export default function ClientesPanel() {
     // No try/catch here: if the API fails, the form catches the error and shows
     // the backend's message (400 or 409) inside the dialog.
     const guardar = async (datos) => {
+        if (modal.cliente) {
+            await actualizarCliente(modal.cliente._id, datos)
+            terminar("Cliente actualizado.")
+            return
+        }
         await crearCliente(datos)
         terminar("Cliente creado.")
     }
@@ -97,6 +102,7 @@ export default function ClientesPanel() {
                                 <th className="p-3">Teléfono</th>
                                 <th className="p-3">Comuna</th>
                                 <th className="p-3">Estado</th>
+                                <th className="p-3 text-right">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -114,6 +120,17 @@ export default function ClientesPanel() {
                                                 {estado?.texto ?? cliente.estado}
                                             </span>
                                         </td>
+                                        <td className="p-3 text-right whitespace-nowrap">
+                                            <button
+                                                type="button"
+                                                onClick={() => setModal({ cliente })}
+                                                title={`Editar a ${cliente.nombre}`}
+                                                aria-label={`Editar a ${cliente.nombre}`}
+                                                className="py-1 px-2 rounded-md text-smoke-700 hover:bg-smoke-100 cursor-pointer"
+                                            >
+                                                <i className="fa-solid fa-pencil"></i>
+                                            </button>
+                                        </td>
                                     </tr>
                                 )
                             })}
@@ -123,8 +140,8 @@ export default function ClientesPanel() {
             </div>
 
             {modal && (
-                <Modal titulo="Nuevo cliente" onCerrar={cerrarModal}>
-                    <ClienteForm onGuardar={guardar} onCancelar={cerrarModal} />
+                <Modal titulo={modal.cliente ? "Editar cliente" : "Nuevo cliente"} onCerrar={cerrarModal}>
+                    <ClienteForm cliente={modal.cliente} onGuardar={guardar} onCancelar={cerrarModal} />
                 </Modal>
             )}
         </section>
