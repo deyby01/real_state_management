@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react"
-import { listarClientes } from "../../services/cliente.service"
+import { useCallback, useEffect, useState } from "react"
+import Modal from "../../components/panel/Modal"
+import ClienteForm from "../../components/clientes/ClienteForm"
+import { crearCliente, listarClientes } from "../../services/cliente.service"
 
 /**
  * Client states as stored by the backend (rule 9). Same idea as ESTADOS_PROPIEDAD:
@@ -12,23 +14,45 @@ const ESTADOS_CLIENTE = {
 
 /**
  * Clients panel for the executive (/panel/clientes, CU5): the active clients with
- * their contact data and state. Read only for now; create, edit and delete come in
- * the next steps. An inactive client never appears here (the API filters them out).
+ * their contact data and state, plus the dialog to register a new one. Edit and
+ * delete come in the next steps.
+ *
+ * After saving, the list is requested again (`version`): the server sets `estado`,
+ * `activo` and the timestamps, so it is the source of truth. `clave` keeps each
+ * answer tied to its request, so a slow one cannot overwrite a newer answer.
  */
 export default function ClientesPanel() {
-    const [resultado, setResultado] = useState(null)
+    const [version, setVersion] = useState(0)
+    const [resultado, setResultado] = useState({ clave: null, clientes: [], error: "" })
+    const [modal, setModal] = useState(null)
+    const [aviso, setAviso] = useState({ tipo: "", texto: "" })
 
     useEffect(() => {
         let vigente = true
         listarClientes()
-            .then((clientes) => vigente && setResultado({ clientes, error: "" }))
-            .catch((error) => vigente && setResultado({ clientes: [], error: error.message }))
+            .then((clientes) => vigente && setResultado({ clave: version, clientes, error: "" }))
+            .catch((error) => vigente && setResultado({ clave: version, clientes: [], error: error.message }))
         return () => {
             vigente = false
         }
-    }, [])
+    }, [version])
 
-    const cargando = resultado === null
+    const cargando = resultado.clave !== version
+    const cerrarModal = useCallback(() => setModal(null), [])
+
+    /** Closes the dialog, shows a message and reloads the list from the API. */
+    const terminar = (texto) => {
+        setModal(null)
+        setAviso({ tipo: "ok", texto })
+        setVersion((v) => v + 1)
+    }
+
+    // No try/catch here: if the API fails, the form catches the error and shows
+    // the backend's message (400 or 409) inside the dialog.
+    const guardar = async (datos) => {
+        await crearCliente(datos)
+        terminar("Cliente creado.")
+    }
 
     return (
         <section>
@@ -37,7 +61,24 @@ export default function ClientesPanel() {
                     <h1 className="text-3xl font-semibold">Clientes</h1>
                     <p className="text-smoke-700 mt-1">Cartera de interesados y arrendatarios de la inmobiliaria.</p>
                 </div>
+                <button type="button" onClick={() => setModal({})} className="py-2 px-4 rounded-lg bg-smoke-900 text-smoke-100 cursor-pointer">
+                    <i className="fa-solid fa-plus mr-2"></i>Nuevo cliente
+                </button>
             </div>
+
+            {aviso.texto && (
+                <p
+                    role={aviso.tipo === "error" ? "alert" : "status"}
+                    className={`mt-4 px-4 py-3 rounded-lg text-sm flex justify-between gap-4 ${
+                        aviso.tipo === "error" ? "bg-red-50 text-danger" : "bg-emerald-50 text-emerald-800"
+                    }`}
+                >
+                    {aviso.texto}
+                    <button type="button" onClick={() => setAviso({ tipo: "", texto: "" })} aria-label="Cerrar aviso" className="cursor-pointer">
+                        <i className="fa-solid fa-xmark"></i>
+                    </button>
+                </p>
+            )}
 
             <div className="mt-6 bg-white rounded-xl shadow-sm overflow-x-auto">
                 {cargando ? (
@@ -80,6 +121,12 @@ export default function ClientesPanel() {
                     </table>
                 )}
             </div>
+
+            {modal && (
+                <Modal titulo="Nuevo cliente" onCerrar={cerrarModal}>
+                    <ClienteForm onGuardar={guardar} onCancelar={cerrarModal} />
+                </Modal>
+            )}
         </section>
     )
 }
