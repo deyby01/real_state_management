@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react"
 import Modal from "../../components/panel/Modal"
 import ClienteForm from "../../components/clientes/ClienteForm"
-import { actualizarCliente, crearCliente, listarClientes } from "../../services/cliente.service"
+import { actualizarCliente, crearCliente, eliminarCliente, listarClientes } from "../../services/cliente.service"
 
 /**
  * Client states as stored by the backend (rule 9). Same idea as ESTADOS_PROPIEDAD:
@@ -57,6 +57,21 @@ export default function ClientesPanel() {
         }
         await crearCliente(datos)
         terminar("Cliente creado.")
+    }
+
+    // The browser dialog is the only confirmation: a soft delete cannot be undone
+    // from the panel. Here the error IS caught, because there is no form to show
+    // it: a second attempt answers 404 (the endpoint filters `activo: true`).
+    const borrar = async (cliente) => {
+        if (!window.confirm(`¿Eliminar a ${cliente.nombre}? Dejará de aparecer en la lista.`)) {
+            return
+        }
+        try {
+            await eliminarCliente(cliente._id)
+            terminar("Cliente eliminado.")
+        } catch (error) {
+            setAviso({ tipo: "error", texto: error.message })
+        }
     }
 
     return (
@@ -121,15 +136,26 @@ export default function ClientesPanel() {
                                             </span>
                                         </td>
                                         <td className="p-3 text-right whitespace-nowrap">
-                                            <button
-                                                type="button"
-                                                onClick={() => setModal({ cliente })}
-                                                title={`Editar a ${cliente.nombre}`}
-                                                aria-label={`Editar a ${cliente.nombre}`}
-                                                className="py-1 px-2 rounded-md text-smoke-700 hover:bg-smoke-100 cursor-pointer"
-                                            >
-                                                <i className="fa-solid fa-pencil"></i>
-                                            </button>
+                                            <div className="inline-flex gap-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setModal({ cliente })}
+                                                    title={`Editar a ${cliente.nombre}`}
+                                                    aria-label={`Editar a ${cliente.nombre}`}
+                                                    className="py-1 px-2 rounded-md text-smoke-700 hover:bg-smoke-100 cursor-pointer"
+                                                >
+                                                    <i className="fa-solid fa-pencil"></i>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => borrar(cliente)}
+                                                    title={`Eliminar a ${cliente.nombre}`}
+                                                    aria-label={`Eliminar a ${cliente.nombre}`}
+                                                    className="py-1 px-2 rounded-md text-danger hover:bg-red-50 cursor-pointer"
+                                                >
+                                                    <i className="fa-solid fa-trash-can"></i>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 )
