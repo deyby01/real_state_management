@@ -23,16 +23,17 @@ Branch: `feature/santiago/integracion-propietarios`. Assignment: executive owner
 
 | Step | Status |
 |---|---|
-| Service functions through apiFetch | All five functions source reviewed; JSDoc indentation corrected and node --check passed. Runtime verification pending |
+| Service functions through apiFetch | Committed as 8200c93; JSDoc corrected, node --check passed, and the endpoints were exercised over HTTP during the list and delete checks |
 | Active owner table, loading/error/empty states and protected route | Implemented and committed as fc6b038; production build and targeted lint passed. Live API returned 3 active owners, CORS matched localhost:5173, no token 401 and ADMIN 403. Santiago confirmed the table renders in the browser; visual empty/error checks pending |
 | Shared create/edit form and API error messages | Form wired into shared Modal with Nuevo propietario/Editar buttons; service POST/PUT and version-based API reload implemented, API errors retained in form. Dialog closing blocked while saving. Build and targeted lint passed; browser create/edit/duplicate checks pending |
 | Confirmed soft delete and list reload | Eliminar button with window.confirm, DELETE call, success/error notice and version-based list reload; row buttons disabled while deleting. Build and targeted lint passed; DELETE verified over HTTP against the live stack (201 create, 200 soft delete, activo false, 404 on repeat, absent from list). Santiago's browser check pending |
-| Browser acceptance checks and PR | Pending |
+| Browser acceptance checks and PR | Confirmed in the browser: 2 active seed owners, create with normalized RUT, duplicate 409 message, phone edit, delete. `RutaProtegida roles={["EJECUTIVO"]}` sends CLIENTE to `/` (code reviewed, browser check pending). Commits: 8200c93, fc6b038, 5c456cb, b81e16d. Push and PR pending |
 
 ### Session log
 
 | Date | Work | Next step |
 |---|---|---|
+| 2026-11-20 | Verified focused commit b81e16d (owner soft delete) and updated the plan rows. Reviewed the route group in App.jsx and RutaProtegida: owners live under roles EJECUTIVO, so CLIENTE is redirected to `/`; the sidebar link already exists in menuPanel.js. | Santiago checks the CLIENTE redirect in the browser, pushes the branch and opens the Pull Request with the drafted description. |
 | 2026-11-20 | Added the confirmed soft delete: window.confirm before the DELETE, aviso state reused for success/error notices, list reload through version, all row actions disabled while a deletion is in flight. Production build, targeted oxlint and diff check passed. Verified over HTTP with a throwaway owner (99.999.999-9): 201 create, 200 delete with "Propietario dado de baja", activo false in MongoDB, 404 on GET and repeat DELETE, absent from the 3 active owners. Test document hard-deleted afterwards; no seed reset. | Santiago confirms the Eliminar button in the browser, then commit the soft delete step and run the full acceptance card. |
 | 2026-11-20 | Wired owner form to create/edit dialogs and service calls; successful saves close the dialog and trigger API list reload. Errors propagate to the form; closing is blocked during saves. Production build, targeted lint and diff check passed. | Santiago verifies create, duplicate RUT and phone update in browser before committing the form feature. |
 | 2026-11-20 | Created PropietarioForm at Santiago's request: four controlled fields, optional phone, required name/RUT/email, email input, disabled inputs/buttons while saving and retained values on errors. Targeted oxlint passed (0 warnings/errors). | Connect create/edit dialogs in PropietariosPanel, reload the API list after saves, then verify in browser before committing the form feature. |
