@@ -15,7 +15,8 @@ const ESTADOS_CLIENTE = {
 /**
  * Clients panel for the executive (/panel/clientes, CU5): the active clients with
  * their contact data and state, plus the dialog to register a new one or edit an
- * existing one. Delete comes in the next step.
+ * existing one, and the soft delete of a client (AGENTS.md rule 11: nothing with
+ * history is physically deleted, it is flagged `activo: false`).
  *
  * After saving, the list is requested again (`version`): the server sets `estado`,
  * `activo` and the timestamps, so it is the source of truth. `clave` keeps each
@@ -129,7 +130,7 @@ export default function ClientesPanel() {
                                         <td className="p-3 font-semibold">{cliente.nombre}</td>
                                         <td className="p-3">{cliente.email}</td>
                                         <td className="p-3 whitespace-nowrap">{cliente.telefono || "—"}</td>
-                                        <td className="p-3 whitespace-nowrap">{cliente.comuna}</td>
+                                        <td className="p-3 whitespace-nowrap">{cliente.comuna || "—"}</td>
                                         <td className="p-3">
                                             <span className={`px-2 py-1 rounded-md text-xs font-semibold whitespace-nowrap ${estado?.clase ?? ""}`}>
                                                 {estado?.texto ?? cliente.estado}
