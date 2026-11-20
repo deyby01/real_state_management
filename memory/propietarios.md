@@ -24,7 +24,7 @@ Branch: `feature/santiago/integracion-propietarios`. Assignment: executive owner
 | Step | Status |
 |---|---|
 | Service functions through apiFetch | All five functions source reviewed; JSDoc indentation corrected and node --check passed. Runtime verification pending |
-| Active owner table, loading/error/empty states and protected route | Pending |
+| Active owner table, loading/error/empty states and protected route | Implemented; production build and targeted lint passed. Live API returned 3 active owners, CORS matched localhost:5173, no token 401 and ADMIN 403. Vite served the panel URL; visual/browser state checks pending |
 | Shared create/edit form and API error messages | Pending |
 | Confirmed soft delete and list reload | Pending |
 | Browser acceptance checks and PR | Pending |
@@ -33,6 +33,9 @@ Branch: `feature/santiago/integracion-propietarios`. Assignment: executive owner
 
 | Date | Work | Next step |
 |---|---|---|
+| 2026-11-20 | Verified production build, targeted oxlint (0 warnings/errors), diff check and read-only HTTP checks: executive login/list with CORS, 3 active owners, no token 401, ADMIN 403, panel HTML 200. | Confirm table rendering and loading/error/empty states in the browser; then commit the list step. No database writes or seed reset performed. |
+| 2026-11-20 | Connected PropietariosPanel to listarPropietarios, ignored late responses after unmount, rendered the table and mounted the protected route. git diff --check passed; build/lint could not run because Docker Engine is unavailable. | Start Docker, run build/lint and browser checks before committing the listing step. |
+| 2026-11-20 | Created the requested PropietariosPanel.jsx scaffold with result state, heading and loading message. setResultado is intentionally unused until the next teaching step. | Add useEffect and listarPropietarios, render results/errors/empty state and mount the protected route before testing and committing the list step. |
 | 2026-11-18 | Confirmed new integration branch and reviewed listarPropietarios in propietario.service.js: correct apiFetch import, GET path and English JSDoc. | Complete remaining service functions, verify and commit the service step; runtime behavior not yet tested. |
 | 2026-11-18 | Reviewed obtenerPropietario: ID parameter, template literal and JSDoc are correct. | Next: crearPropietario with POST and body. |
 | 2026-11-18 | Reviewed crearPropietario: POST method, data body and JSDoc are correct. | Next: actualizarPropietario with ID and PUT body. |
