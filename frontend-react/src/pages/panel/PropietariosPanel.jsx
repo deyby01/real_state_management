@@ -1,17 +1,18 @@
 import { useCallback, useEffect, useState } from "react"
-import { actualizarPropietario, crearPropietario, listarPropietarios } from "../../services/propietario.service"
+import { actualizarPropietario, crearPropietario, eliminarPropietario, listarPropietarios } from "../../services/propietario.service"
 import Modal from "../../components/panel/Modal"
 import PropietarioForm from "../../components/propietarios/PropietarioForm"
 
 /**
- * Lists, creates and edits active owners in the executive panel (CU2).
+ * Lists, creates, edits and soft-deletes owners in the executive panel (CU2).
  * Reloads the list after saving so normalized values come from the API.
  */
 export default function PropietariosPanel() {
     const [version, setVersion] = useState(0)
     const [modal, setModal] = useState(null)
     const [guardando, setGuardando] = useState(false)
-    const [aviso, setAviso] = useState("")
+    const [aviso, setAviso] = useState(null)
+    const [eliminandoId, setEliminandoId] = useState(null)
     const [resultado, setResultado] = useState({
         version: null,
         propietarios: [],
@@ -49,7 +50,7 @@ export default function PropietariosPanel() {
             } else {
                 await crearPropietario(datos)
             }
-            setAviso(modal.tipo === "editar" ? "Propietario actualizado correctamente." : "Propietario creado correctamente.")
+            setAviso({ tipo: "ok", texto: modal.tipo === "editar" ? "Propietario actualizado correctamente." : "Propietario creado correctamente." })
             setModal(null)
             setVersion((anterior) => anterior + 1)
         } finally {
@@ -58,16 +59,37 @@ export default function PropietariosPanel() {
         }
     }
 
+    /** Confirms a soft delete and reloads the server's active-owner list. */
+    const eliminar = async (propietario) => {
+        if (eliminandoId) return
+        if (!window.confirm(`¿Dar de baja a "${propietario.nombre}"? Dejará de aparecer en la lista de propietarios activos.`)) return
+        setAviso(null)
+        setEliminandoId(propietario._id)
+        try {
+            const { mensaje } = await eliminarPropietario(propietario._id)
+            setAviso({ tipo: "ok", texto: mensaje })
+            setVersion((anterior) => anterior + 1)
+        } catch (error) {
+            setAviso({ tipo: "error", texto: error.message })
+        } finally {
+            setEliminandoId(null)
+        }
+    }
+
     return (
         <section>
             <div className="flex flex-wrap items-center justify-between gap-4">
                 <h1 className="text-3xl font-semibold">Propietarios</h1>
-                <button type="button" onClick={() => { setAviso(""); setModal({ tipo: "crear" }) }} className="px-4 py-2 rounded-lg bg-ink text-white cursor-pointer">
+                <button type="button" disabled={Boolean(eliminandoId)} onClick={() => { setAviso(null); setModal({ tipo: "crear" }) }} className="px-4 py-2 rounded-lg bg-ink text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                     Nuevo propietario
                 </button>
             </div>
 
-            {aviso && <p role="status" className="mt-4 px-4 py-3 rounded-lg bg-emerald-50 text-emerald-800 text-sm">{aviso}</p>}
+            {aviso && (
+                <p role={aviso.tipo === "error" ? "alert" : "status"} className={`mt-4 px-4 py-3 rounded-lg text-sm ${aviso.tipo === "error" ? "bg-red-50 text-danger" : "bg-emerald-50 text-emerald-800"}`}>
+                    {aviso.texto}
+                </p>
+            )}
 
             <div className="mt-6 bg-white rounded-xl shadow-sm overflow-x-auto">
                 {cargando ? (
@@ -96,9 +118,12 @@ export default function PropietariosPanel() {
                                     <td className="p-3">{propietario.nombre}</td>
                                     <td className="p-3">{propietario.email}</td>
                                     <td className="p-3 whitespace-nowrap">{propietario.telefono || "—"}</td>
-                                    <td className="p-3 text-right">
-                                        <button type="button" onClick={() => { setAviso(""); setModal({ tipo: "editar", propietario }) }} aria-label={`Editar a ${propietario.nombre}`} className="px-3 py-2 rounded-lg hover:bg-canvas cursor-pointer">
+                                    <td className="p-3 text-right whitespace-nowrap">
+                                        <button type="button" disabled={Boolean(eliminandoId)} onClick={() => { setAviso(null); setModal({ tipo: "editar", propietario }) }} aria-label={`Editar a ${propietario.nombre}`} className="px-3 py-2 rounded-lg hover:bg-canvas cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                                             Editar
+                                        </button>
+                                        <button type="button" disabled={Boolean(eliminandoId)} onClick={() => eliminar(propietario)} aria-label={`Eliminar a ${propietario.nombre}`} className="px-3 py-2 rounded-lg hover:bg-canvas text-danger cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                                            {eliminandoId === propietario._id ? "Eliminando..." : "Eliminar"}
                                         </button>
                                     </td>
                                 </tr>
