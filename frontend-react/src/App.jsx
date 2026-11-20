@@ -12,6 +12,8 @@ import PanelInicio from "./pages/panel/PanelInicio";
 import EnConstruccion from "./pages/panel/EnConstruccion";
 import PropiedadesPanel from "./pages/panel/PropiedadesPanel";
 import MisPropiedades from "./pages/panel/MisPropiedades";
+import SolicitudesPanel from "./pages/panel/SolicitudesPanel";
+import MisSolicitudes from "./pages/panel/MisSolicitudes";
 import BitacoraPanel from "./pages/panel/BitacoraPanel";
 import MiPerfil from "./pages/panel/MiPerfil";
 
@@ -40,6 +42,7 @@ function App() {
 
             <Route element={<RutaProtegida roles={["EJECUTIVO"]} />}>
               <Route path="propiedades" element={<PropiedadesPanel />} />
+              <Route path="solicitudes" element={<SolicitudesPanel />} />
             </Route>
 
             <Route element={<RutaProtegida roles={["PROPIETARIO"]} />}>
@@ -47,6 +50,7 @@ function App() {
             </Route>
 
             <Route element={<RutaProtegida roles={["CLIENTE"]} />}>
+              <Route path="mis-solicitudes" element={<MisSolicitudes />} />
             </Route>
 
             <Route path="*" element={<EnConstruccion />} />
