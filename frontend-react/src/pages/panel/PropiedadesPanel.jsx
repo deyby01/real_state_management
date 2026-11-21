@@ -8,15 +8,17 @@ import { ESTADOS_PROPIEDAD } from "../../components/propiedades/estadosPropiedad
 import {
     actualizarPropiedad,
     cambiarEstadoPropiedad,
+    crearPropiedad,
     eliminarPropiedad,
     listarPropiedades,
 } from "../../services/propiedad.service"
+import { listarPropietarios } from "../../services/propietario.service"
 import { listarTiposPropiedad } from "../../services/tipoPropiedad.service"
 import { formatearPrecio } from "../../utils/formato"
 
 /**
  * Executive's property management (/panel/propiedades, CU3): list with filters,
- * edit, state changes by the transition table and soft delete. Every change is
+ * create, edit, state changes by the transition table and soft delete. Every change is
  * logged in the audit log by the backend.
  *
  * After any change the list is requested again (`version`): the server sets
@@ -58,6 +60,26 @@ export default function PropiedadesPanel() {
         setVersion((v) => v + 1)
     }
 
+    /**
+     * Opens the create dialog. The owners are requested at this moment, not on
+     * page load, so an owner registered a minute ago in Propietarios already appears.
+     */
+    const abrirCreacion = async () => {
+        setModal({ tipo: "crear", propietarios: null })
+        try {
+            const propietarios = await listarPropietarios()
+            setModal({ tipo: "crear", propietarios })
+        } catch (error) {
+            setModal(null)
+            setAviso({ tipo: "error", texto: error.message })
+        }
+    }
+
+    const guardarCreacion = async (datos) => {
+        const { mensaje } = await crearPropiedad(datos)
+        terminar(mensaje)
+    }
+
     const guardarEdicion = async (datos) => {
         const { mensaje } = await actualizarPropiedad(modal.propiedad._id, datos)
         terminar(mensaje)
@@ -87,6 +109,13 @@ export default function PropiedadesPanel() {
                     <p className="text-smoke-700 mt-1">Administra la cartera, sus estados y su publicación.</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-4">
+                    <button
+                        type="button"
+                        onClick={abrirCreacion}
+                        className="py-2 px-4 rounded-lg bg-smoke-900 text-smoke-100 hover:bg-smoke-700 cursor-pointer"
+                    >
+                        <i className="fa-solid fa-plus mr-2"></i>Nueva propiedad
+                    </button>
                     <label className="text-sm">
                         <span className="sr-only">Filtrar por estado</span>
                         <select
@@ -159,6 +188,15 @@ export default function PropiedadesPanel() {
                 )}
             </div>
 
+            {modal?.tipo === "crear" && (
+                <Modal titulo="Nueva propiedad" onCerrar={cerrarModal}>
+                    {modal.propietarios === null ? (
+                        <p className="text-sm text-smoke-700">Cargando propietarios...</p>
+                    ) : (
+                        <PropiedadForm tipos={tipos} propietarios={modal.propietarios} onGuardar={guardarCreacion} onCancelar={cerrarModal} />
+                    )}
+                </Modal>
+            )}
             {modal?.tipo === "editar" && (
                 <Modal titulo="Editar propiedad" onCerrar={cerrarModal}>
                     <PropiedadForm propiedad={modal.propiedad} tipos={tipos} onGuardar={guardarEdicion} onCancelar={cerrarModal} />
