@@ -159,7 +159,7 @@ real_state_management/
 | `/login` | LoginPage |
 | `/registro` | RegisterPage |
 | `/propiedades/:id` | DetallePropiedadPage (public detail from `GET /api/catalogo/:id`; action box by session) |
-| `/panel/propiedades` | PropiedadesPanel (`EJECUTIVO`: list, edit, state changes, soft delete) |
+| `/panel/propiedades` | PropiedadesPanel (`EJECUTIVO`: list, create, edit, state changes, soft delete) |
 | `/panel/mis-propiedades` | MisPropiedades (`PROPIETARIO`: their properties by state and the executive in charge) |
 | `/panel/bitacora` | BitacoraPanel (`ADMIN`: audit log with entity and action filters) |
 | `/panel/propietarios` | PropietariosPanel (`EJECUTIVO`: list, create, edit, soft delete) |
@@ -251,7 +251,7 @@ The full task of each teammate (screens, endpoints, files, `App.jsx` line, accep
 
 | Who | Screens | Panel route(s) | Status |
 |---|---|---|---|
-| Deyby | Base (Phase 0); property detail, catalog and filters, landing featured, registration, executive properties, owner's properties, audit log | `/propiedades/:id`, `propiedades`, `mis-propiedades`, `bitacora` | ✅ Phase 0 (#39) · ✅ Phase 1: detail (#40), catalog + home + fixtures (#41), properties panel (#42), owner view + audit log (#43), profile and session menu (#44). Pending: create property (F4b); registration is technical debt |
+| Deyby | Base (Phase 0); property detail, catalog and filters, landing featured, registration, executive properties, owner's properties, audit log | `/propiedades/:id`, `propiedades`, `mis-propiedades`, `bitacora` | ✅ Phase 0 (#39) · ✅ Phase 1: detail (#40), catalog + home + fixtures (#41), properties panel (#42), owner view + audit log (#43), profile and session menu (#44). Create property (F4b) done after the merges; registration is technical debt |
 | Santiago | Owners panel (executive) | `propietarios` | ✅ Merged (PR #48) |
 | Jose | Clients panel (executive) | `clientes` | ✅ Merged (PR #46) |
 | Ignacio | Visit schedule (executive); later "Agendar visita" for clients | `visitas` | ✅ Executive panel merged (PR #45). Pending: `CLIENTE` visit endpoints + "Agendar visita" |

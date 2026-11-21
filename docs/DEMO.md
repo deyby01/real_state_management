@@ -58,7 +58,7 @@ Log out and log in as `ejecutivo1@gup.cl`.
 | 1 | Sidebar | The executive has five sections; each role sees only its own. | Use-case matrix |
 | 2 | **Solicitudes** → Ana's request → **Evaluar** → **Aprobar** | Only the allowed buttons appear in each state. Approving **reserves the property** in the same operation. | CU9, RN-14 |
 | 3 | **Propiedades** → the property shows **Reservada**. Try to **delete** it | The API answers `409`: a reserved property cannot be deleted. | RN, `409` |
-| 4 | Change the state of another property (e.g. **Local comercial en esquina** → Publicada) | Only the transitions of the state machine are offered; the backend checks them again. | RN-01, RN-03 |
+| 4 | **Nueva propiedad**: title, type, owner (Jorge), address, rent, one image URL → Guardar. Then **Cambiar estado → Publicada** and open the public catalog | A new property is always **Disponible** and belongs to the executive of the token. Only the transitions of the state machine are offered; once **Publicada** it appears in the catalog, without the owner's data. | CU3, CU4, RN-01, RN-03, RN-15 |
 | 5 | **Visitas** → note the date and time of a **Solicitada** visit of "Departamento luminoso cerca del metro" → **Nueva visita** for that same property and time | The API rejects the overlap for the same executive (`409`). Then confirm the pending visit. | RN-10, CU7 |
 | 6 | **Clientes** / **Propietarios** → create one with an existing RUT | Duplicate RUT → `409`; the RUT is normalized (dots, `k`/`K`). | RN-11 |
 
@@ -84,7 +84,6 @@ Log out and log in as `ejecutivo1@gup.cl`.
 |---|---|
 | Registration form | Visual only: the API stores name, email and password, and a new account is not linked to a client record. Seed accounts are used. Planned after the presentation. |
 | Contact form, Google/Apple login, "Recuérdame" | Visual only. |
-| Create property from the panel | Edit, state and delete work; create is the next step. |
 | Client books a visit | The executive books it today; the client endpoints are the next step. |
 | RUT check digit (módulo 11) and RUT without hyphen | Format is checked in the client form; full validation in the API is pending (decision for the professor). |
 
