@@ -17,6 +17,37 @@
 | 6 | Fixtures and seed integration | Test data loads | ✅ Actual seed run in isolated database |
 | 7 | Postman and Pull Request | Happy path and errors | 🚧 Automated HTTP pass complete; PR opened, manual screenshots not confirmed |
 
+## Frontend integration
+
+Branch: `feature/santiago/integracion-propietarios`. Assignment: executive owner panel at `/panel/propietarios`, following `memory/integracion.md`.
+
+| Step | Status |
+|---|---|
+| Service functions through apiFetch | Committed as 8200c93; JSDoc corrected, node --check passed, and the endpoints were exercised over HTTP during the list and delete checks |
+| Active owner table, loading/error/empty states and protected route | Implemented and committed as fc6b038; production build and targeted lint passed. Live API returned 3 active owners, CORS matched localhost:5173, no token 401 and ADMIN 403. Santiago confirmed the table renders in the browser; visual empty/error checks pending |
+| Shared create/edit form and API error messages | Form wired into shared Modal with Nuevo propietario/Editar buttons; service POST/PUT and version-based API reload implemented, API errors retained in form. Dialog closing blocked while saving. Build and targeted lint passed; browser create/edit/duplicate checks pending |
+| Confirmed soft delete and list reload | Eliminar button with window.confirm, DELETE call, success/error notice and version-based list reload; row buttons disabled while deleting. Build and targeted lint passed; DELETE verified over HTTP against the live stack (201 create, 200 soft delete, activo false, 404 on repeat, absent from list). Santiago's browser check pending |
+| Browser acceptance checks and PR | Confirmed in the browser: 2 active seed owners, create with normalized RUT, duplicate 409 message, phone edit, delete. `RutaProtegida roles={["EJECUTIVO"]}` sends CLIENTE to `/` (code reviewed, browser check pending). Commits: 8200c93, fc6b038, 5c456cb, b81e16d. Push and PR pending |
+
+### Session log
+
+| Date | Work | Next step |
+|---|---|---|
+| 2026-11-20 | Verified focused commit b81e16d (owner soft delete) and updated the plan rows. Reviewed the route group in App.jsx and RutaProtegida: owners live under roles EJECUTIVO, so CLIENTE is redirected to `/`; the sidebar link already exists in menuPanel.js. | Santiago checks the CLIENTE redirect in the browser, pushes the branch and opens the Pull Request with the drafted description. |
+| 2026-11-20 | Added the confirmed soft delete: window.confirm before the DELETE, aviso state reused for success/error notices, list reload through version, all row actions disabled while a deletion is in flight. Production build, targeted oxlint and diff check passed. Verified over HTTP with a throwaway owner (99.999.999-9): 201 create, 200 delete with "Propietario dado de baja", activo false in MongoDB, 404 on GET and repeat DELETE, absent from the 3 active owners. Test document hard-deleted afterwards; no seed reset. | Santiago confirms the Eliminar button in the browser, then commit the soft delete step and run the full acceptance card. |
+| 2026-11-20 | Wired owner form to create/edit dialogs and service calls; successful saves close the dialog and trigger API list reload. Errors propagate to the form; closing is blocked during saves. Production build, targeted lint and diff check passed. | Santiago verifies create, duplicate RUT and phone update in browser before committing the form feature. |
+| 2026-11-20 | Created PropietarioForm at Santiago's request: four controlled fields, optional phone, required name/RUT/email, email input, disabled inputs/buttons while saving and retained values on errors. Targeted oxlint passed (0 warnings/errors). | Connect create/edit dialogs in PropietariosPanel, reload the API list after saves, then verify in browser before committing the form feature. |
+| 2026-11-20 | Santiago confirmed the table renders; verified focused commit fc6b038 and clean working tree before recording this note. Reviewed shared Modal and PropiedadForm as references for the next teaching step. | Build reusable owner create/edit form with controlled inputs, then wire it to the panel and reload from API. |
+| 2026-11-20 | Verified production build, targeted oxlint (0 warnings/errors), diff check and read-only HTTP checks: executive login/list with CORS, 3 active owners, no token 401, ADMIN 403, panel HTML 200. | Confirm table rendering and loading/error/empty states in the browser; then commit the list step. No database writes or seed reset performed. |
+| 2026-11-20 | Connected PropietariosPanel to listarPropietarios, ignored late responses after unmount, rendered the table and mounted the protected route. git diff --check passed; build/lint could not run because Docker Engine is unavailable. | Start Docker, run build/lint and browser checks before committing the listing step. |
+| 2026-11-20 | Created the requested PropietariosPanel.jsx scaffold with result state, heading and loading message. setResultado is intentionally unused until the next teaching step. | Add useEffect and listarPropietarios, render results/errors/empty state and mount the protected route before testing and committing the list step. |
+| 2026-11-18 | Confirmed new integration branch and reviewed listarPropietarios in propietario.service.js: correct apiFetch import, GET path and English JSDoc. | Complete remaining service functions, verify and commit the service step; runtime behavior not yet tested. |
+| 2026-11-18 | Reviewed obtenerPropietario: ID parameter, template literal and JSDoc are correct. | Next: crearPropietario with POST and body. |
+| 2026-11-18 | Reviewed crearPropietario: POST method, data body and JSDoc are correct. | Next: actualizarPropietario with ID and PUT body. |
+| 2026-11-18 | Reviewed actualizarPropietario: ID interpolation, PUT and body are correct; pointed out extra indentation before JSDoc. | Next: eliminarPropietario; runtime checks pending. |
+| 2026-11-18 | Reviewed eliminarPropietario and all five service functions; node --check passed. DELETE correctly sends the ID without a body. | Align JSDoc openings for update/delete, then verify runtime service behavior before committing. |
+| 2026-11-18 | Verified corrected JSDoc indentation and syntax before the requested service commit. ESLint could not run in the container: no configuration was found. | Commit service and memory; browser/API verification remains pending. |
+
 ## Current next step
 
 Latest integration check (2026-11-12): Santiago started merging updated development; conflicts in app.js and seed.js were resolved by preserving both owner and client contributions. Real seed execution in a temporary database loaded 3 owners and 3 clients; six HTTP checks passed for owner/client/property listing (401 without token, 200 as executive). Temporary database removed. Next: developer stages the two resolutions and this memory, completes the merge commit, pushes, attaches Postman evidence and requests re-review. The merge has not yet been committed by the agent.
@@ -58,6 +89,8 @@ All routes return `401` without a token, `403` for CLIENTE, PROPIETARIO or ADMIN
 - Deyby owns `usuarios`: account creation and linking through `usuarios.propietarioId` must be coordinated with him. Owner business records are separate from login accounts.
 
 ## Proposals for AGENTS.md
+
+- 2026-11-18: Invoked npx eslint without first checking the container working directory and installed tooling; npx attempted to install ESLint and found no configuration. Inspect package scripts/configuration first and avoid implicit package installs for verification.
 
 - 2026-11-12: The owner normalization and tests covered punctuation but missed the k/K check digit variants. Normalize letter case before unique-index enforcement and include case variants in duplicate tests, as identified by Deyby's PR #27 review.
 
