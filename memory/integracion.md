@@ -1,6 +1,6 @@
 # integracion — Frontend integration (React ↔ API)
 
-> **Owner:** Deyby (integrator) · **Base:** merged (PR #39) · **Status:** 🚧 Phase 1 open
+> **Owner:** Deyby (integrator) · **Base:** merged (PR #39) · **Status:** ✅ Phase 1 merged for every teammate (2026-11-20)
 > **Rules:** [`AGENTS.md → Frontend structure (React)`](../AGENTS.md#frontend-structure-react). **Endpoints:** [`MEMORY.md → Existing backend endpoints`](../MEMORY.md#existing-backend-endpoints).
 > **Who edits this file:** only the integrator. Each teammate records their progress in a **`## Frontend integration`** section of their **own** `memory/<collection>.md` (plan table + session log), not here.
 
@@ -52,11 +52,11 @@ The professor asked for **CORS only** (no Vite proxy, no new dependencies). The 
 
 | Who | Task | Panel route(s) | Status |
 |---|---|---|---|
-| Deyby | Base (Phase 0); public property detail; catalog with filters; landing featured; registration; executive properties panel; owner's properties; audit log | `/propiedades/:id`, `propiedades`, `mis-propiedades`, `bitacora` | ✅ Phase 0 (PR #39) · 🚧 Phase 1: detail (#40), catalog + home + fixtures (#41), properties panel (#42), owner view + audit log (PR pending); create property waits for Santiago's service; registration postponed (technical debt) |
-| Santiago | Owners panel (executive) | `propietarios` | ⬜ |
-| Jose | Clients panel (executive) | `clientes` | ⬜ |
-| Ignacio | Visit schedule (executive); later the client's "Agendar visita" | `visitas` | ⬜ |
-| Roberto | Rental requests: executive panel, client's list and "Solicitar arriendo" form | `solicitudes`, `mis-solicitudes` | ⬜ |
+| Deyby | Base (Phase 0); public property detail; catalog with filters; landing featured; registration; executive properties panel; owner's properties; audit log | `/propiedades/:id`, `propiedades`, `mis-propiedades`, `bitacora` | ✅ Phase 0 (#39) · ✅ Phase 1: detail (#40), catalog + home + fixtures (#41), properties panel (#42), owner view + audit log (#43), profile and session menu (#44). Pending: create property (F4b); registration is technical debt |
+| Santiago | Owners panel (executive) | `propietarios` | ✅ PR #48 |
+| Jose | Clients panel (executive) | `clientes` | ✅ PR #46 |
+| Ignacio | Visit schedule (executive); later the client's "Agendar visita" | `visitas` | ✅ PR #45 (executive panel) · ⬜ client visits |
+| Roberto | Rental requests: executive panel, client's list and "Solicitar arriendo" form | `solicitudes`, `mis-solicitudes` | ✅ PR #47 |
 
 Status icons: ✅ merged · 🚧 PR open / in progress · ⬜ not started. The integrator updates this table after each merge.
 
@@ -174,3 +174,4 @@ Status icons: ✅ merged · 🚧 PR open / in progress · ⬜ not started. The i
 | 2026-11-17 | Base merged (PR #39). Phase 1, Deyby: public property detail `/propiedades/:id` with the action box where Roberto's and Ignacio's components go; shared `utils/formato.js`. | PR for the detail, then the catalog with real data. |
 | 2026-11-17 | Detail (#40) and catalog + home + 25 property fixtures (#41) merged. Registration postponed as technical debt (seed accounts for the presentation). Executive properties panel (edit, state, delete) with the shared `Modal`: reference screen for every teammate's panel. | Teammates: copy `PropiedadesPanel.jsx`. Santiago: merge `propietario.service.js` early (needed for creating properties). |
 | 2026-11-17 | Owner view + audit log merged (#43). Session made visible: header user menu with initials, name, role, "Mi panel" and "Mi perfil"; profile page `/panel/perfil` with the role's shortcuts; `ROLES` and `iniciales` added to `layouts/menuPanel.js`. | Teammates do not touch the header or the profile; their sections already appear as shortcuts. |
+| 2026-11-20 | Merged clients (#46), owners (#48), rental requests (#47) and visits (#45). Conflicts in `App.jsx` resolved by keeping every route; the visits review fixes (colors, newlines, JSDoc, `listarClientes()` instead of `apiFetch("/clientes")`) were applied by the integrator. Final end-to-end pass on `development` with every role. | Presentation (`docs/DEMO.md`). Next: Ignacio's client visits, Deyby's create property, RUT normalization fix, registration. |
