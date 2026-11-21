@@ -23,6 +23,15 @@ const manejarError = (res, error) => {
 const igual = (a, b) => Boolean(a && b) && String(a) === String(b)
 
 /**
+ * References the panel screens show as names instead of ids. Only the fields the
+ * screens need are selected; the owner's data never enters this model.
+ */
+const POBLAR = [
+    { path: "propiedadId", select: "titulo direccion valorArriendo" },
+    { path: "clienteId", select: "nombre email" },
+]
+
+/**
  * Reads the `clientes` record linked to the logged-in user.
  * The JWT only carries `_id` and `rol`, so `usuarios.clienteId` is queried here.
  *
@@ -72,6 +81,7 @@ const bitacoraPropiedad = (req, propiedad, accion, estadoAnterior, estadoNuevo, 
  * Route: GET /api/solicitudes (CLIENTE or EJECUTIVO).
  * - CLIENTE sees only their own requests (client id from the token, rule 17).
  * - EJECUTIVO sees only requests assigned to them (D10).
+ * - The property and the client are populated so the panel shows names, not ids.
  *
  * Responses: 200 newest first · 401/403 auth · 500 server error.
  */
@@ -83,7 +93,7 @@ export const listarSolicitudes = async (req, res) => {
         else if (rol === "EJECUTIVO") filtro = { ejecutivoId: _id }
         else return res.status(403).json({ mensaje: "Sin permisos" })
 
-        const solicitudes = await SolicitudArriendo.find(filtro).sort({ createdAt: -1 })
+        const solicitudes = await SolicitudArriendo.find(filtro).sort({ createdAt: -1 }).populate(POBLAR)
         res.status(200).json(solicitudes)
     } catch (error) {
         manejarError(res, error)
@@ -95,6 +105,7 @@ export const listarSolicitudes = async (req, res) => {
  *
  * Route: GET /api/solicitudes/:id (CLIENTE or EJECUTIVO).
  * - CLIENTE: only their own request; EJECUTIVO: only the assigned one.
+ * - The property and the client are populated after the ownership check.
  *
  * Responses: 200 · 400 invalid id · 404 not found or not yours · 500 server error.
  */
@@ -109,6 +120,8 @@ export const obtenerSolicitud = async (req, res) => {
         if (!(await puedeVer(req, solicitud)))
             return res.status(404).json({ mensaje: "Solicitud no encontrada" })
 
+        // Populate after the ownership check: `puedeVer` compares the raw clienteId
+        await solicitud.populate(POBLAR)
         res.status(200).json(solicitud)
     } catch (error) {
         manejarError(res, error)
