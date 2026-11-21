@@ -31,7 +31,7 @@ export default function AccionesVisita({ visita, onExito, onError, onReprogramar
     }
 
     const boton =
-        "px-2 py-1 rounded-lg text-xs font-medium border border-smoke-300 hover:bg-canvas disabled:opacity-50 disabled:cursor-not-allowed"
+        "px-2 py-1 rounded-lg text-xs font-medium border border-smoke-300 hover:bg-canvas cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
 
     const ejecutar = async (promesa, mensajeExito) => {
         if (enviando) return
@@ -127,7 +127,7 @@ export default function AccionesVisita({ visita, onExito, onError, onReprogramar
                             <button
                                 type="submit"
                                 disabled={enviando}
-                                className={`${boton} bg-emerald-700 text-white border-emerald-700`}
+                                className={`${boton} bg-smoke-900 text-smoke-100 border-smoke-900`}
                             >
                                 Marcar como realizada
                             </button>

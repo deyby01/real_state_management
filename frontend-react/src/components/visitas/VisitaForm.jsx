@@ -156,14 +156,14 @@ export default function VisitaForm({ modo, visita, propiedades = [], clientes = 
                     type="button"
                     onClick={onCancelar}
                     disabled={enviando}
-                    className="px-4 py-2 text-sm rounded-lg border border-smoke-300 hover:bg-canvas"
+                    className="px-4 py-2 text-sm rounded-lg border border-smoke-300 hover:bg-canvas cursor-pointer"
                 >
                     Cancelar
                 </button>
                 <button
                     type="submit"
                     disabled={enviando}
-                    className="px-4 py-2 text-sm rounded-lg bg-emerald-700 text-white disabled:opacity-50"
+                    className="px-4 py-2 text-sm rounded-lg bg-smoke-900 text-smoke-100 hover:bg-smoke-700 cursor-pointer disabled:opacity-50"
                 >
                     {enviando ? "Guardando…" : modo === "crear" ? "Agendar visita" : "Guardar nueva fecha"}
                 </button>

@@ -5,7 +5,7 @@ import AccionesVisita from "../../components/visitas/AccionesVisita"
 import { ESTADOS_VISITA, VALORES_ESTADO } from "../../components/visitas/estadosVisita"
 import { crearVisita, listarVisitas, reprogramarVisita } from "../../services/visita.service"
 import { listarPropiedades } from "../../services/propiedad.service"
-import { apiFetch } from "../../services/api"
+import { listarClientes } from "../../services/cliente.service"
 import { formatearFechaHora } from "../../utils/formato"
 
 /**
@@ -53,7 +53,7 @@ export default function VisitasPanel() {
         try {
             const [propiedades, clientes] = await Promise.all([
                 listarPropiedades({ estado: "PUBLICADA" }),
-                apiFetch("/clientes"),
+                listarClientes(),
             ])
             setCatalogos({ propiedades, clientes })
         } catch (error) {
@@ -94,7 +94,7 @@ export default function VisitasPanel() {
                         type="button"
                         onClick={abrirCrear}
                         disabled={cargandoCatalogos}
-                        className="px-4 py-2 text-sm rounded-lg bg-emerald-700 text-white hover:bg-emerald-800 disabled:opacity-50"
+                        className="px-4 py-2 text-sm rounded-lg bg-smoke-900 text-smoke-100 hover:bg-smoke-700 cursor-pointer disabled:opacity-50"
                     >
                         Nueva visita
                     </button>
@@ -210,7 +210,7 @@ function FilaVisita({ visita, onExito, onError, onReprogramar }) {
             <td className="p-3">
                 <p className="font-medium">{visita.propiedadId?.titulo ?? "—"}</p>
                 {visita.observaciones && (
-                    <p className="text-xs text-smoke-600 mt-0.5 line-clamp-2">{visita.observaciones}</p>
+                    <p className="text-xs text-smoke-700 mt-0.5 line-clamp-2">{visita.observaciones}</p>
                 )}
             </td>
             <td className="p-3 whitespace-nowrap">{visita.clienteId?.nombre ?? "—"}</td>
