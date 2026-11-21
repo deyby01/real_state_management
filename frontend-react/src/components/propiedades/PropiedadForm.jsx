@@ -10,6 +10,7 @@ const labelClass = "block text-sm font-medium text-smoke-700"
 const aFormulario = (propiedad) => ({
     titulo: propiedad?.titulo ?? "",
     tipoId: propiedad?.tipoId?._id ?? "",
+    propietarioId: "",
     calle: propiedad?.direccion?.calle ?? "",
     numero: propiedad?.direccion?.numero ?? "",
     comuna: propiedad?.direccion?.comuna ?? "",
@@ -28,11 +29,13 @@ const aFormulario = (propiedad) => ({
 /**
  * The opposite of aFormulario: the body the API expects. Numbers are sent as
  * numbers (rule 10), `direccion` goes complete (the PUT replaces it whole) and the
- * image order is the order of the lines.
+ * image order is the order of the lines. `propietarioId` is only sent when creating:
+ * the owner of an existing property cannot change (the PUT ignores it).
  */
-const aApi = (form) => ({
+const aApi = (form, creando) => ({
     titulo: form.titulo,
     tipoId: form.tipoId,
+    ...(creando && { propietarioId: form.propietarioId }),
     direccion: { calle: form.calle, numero: form.numero, comuna: form.comuna, ciudad: form.ciudad },
     superficie: Number(form.superficie),
     dormitorios: Number(form.dormitorios),
@@ -49,14 +52,18 @@ const aApi = (form) => ({
  * Create/edit form of a property. It does not call the API: it hands the body to
  * `onGuardar`, which the page connects to crearPropiedad or actualizarPropiedad,
  * and shows the API's error message if that promise fails.
+ * When creating it asks for the owner; when editing it only shows it, because the
+ * owner of a property is fixed once it is registered.
  *
  * @param {Object} props
  * @param {Object} [props.propiedad] - The property to edit; omit it to create.
  * @param {{ _id: string, nombre: string }[]} props.tipos
+ * @param {{ _id: string, nombre: string, rut: string }[]} [props.propietarios] - Active owners (create only).
  * @param {(datos: Object) => Promise} props.onGuardar
  * @param {Function} props.onCancelar
  */
-export default function PropiedadForm({ propiedad, tipos, onGuardar, onCancelar }) {
+export default function PropiedadForm({ propiedad, tipos, propietarios = [], onGuardar, onCancelar }) {
+    const creando = !propiedad
     const [form, setForm] = useState(() => aFormulario(propiedad))
     const [error, setError] = useState("")
     const [enviando, setEnviando] = useState(false)
@@ -71,7 +78,7 @@ export default function PropiedadForm({ propiedad, tipos, onGuardar, onCancelar 
         setError("")
         setEnviando(true)
         try {
-            await onGuardar(aApi(form))
+            await onGuardar(aApi(form, creando))
         } catch (err) {
             setError(err.message)
             setEnviando(false)
@@ -103,6 +110,25 @@ export default function PropiedadForm({ propiedad, tipos, onGuardar, onCancelar 
                     </select>
                 </label>
             </div>
+
+            {creando ? (
+                <label className={labelClass}>
+                    Propietario
+                    <select name="propietarioId" value={form.propietarioId} onChange={cambiarCampo} required className={campoClass}>
+                        <option value="">Selecciona un propietario</option>
+                        {propietarios.map((propietario) => (
+                            <option key={propietario._id} value={propietario._id}>
+                                {propietario.nombre} ({propietario.rut})
+                            </option>
+                        ))}
+                    </select>
+                </label>
+            ) : (
+                <p className="text-sm text-smoke-700">
+                    Propietario: <span className="font-semibold text-ink">{propiedad.propietarioId?.nombre ?? "—"}</span>
+                    <span className="block text-xs text-smoke-500">El propietario no se cambia una vez registrada la propiedad.</span>
+                </p>
+            )}
 
             <fieldset className="grid sm:grid-cols-4 gap-4">
                 <legend className="text-sm font-semibold mb-1">Dirección</legend>
