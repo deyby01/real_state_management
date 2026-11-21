@@ -18,6 +18,7 @@ import BitacoraPanel from "./pages/panel/BitacoraPanel";
 import MiPerfil from "./pages/panel/MiPerfil";
 import ClientesPanel from "./pages/panel/ClientesPanel";
 import PropietariosPanel from "./pages/panel/PropietariosPanel";
+import VisitasPanel from "./pages/panel/VisitasPanel";
 
 function App() {
   return (
@@ -47,6 +48,7 @@ function App() {
               <Route path="clientes" element={<ClientesPanel />} />
               <Route path="propietarios" element={<PropietariosPanel />} />
               <Route path="solicitudes" element={<SolicitudesPanel />} />
+              <Route path="visitas" element={<VisitasPanel />} />
             </Route>
 
             <Route element={<RutaProtegida roles={["PROPIETARIO"]} />}>

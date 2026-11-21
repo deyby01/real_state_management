@@ -1,6 +1,6 @@
 # visitas — Visita
 
-> **Owner:** Ignacio · **Branch:** `feature/ignacio/visitas` (merged) · **Status:** ✅ Merged (PR #26, 2026-11-14); `CLIENTE` endpoints deferred to a follow-up PR
+> **Owner:** Ignacio · **Branch:** `feature/ignacio/integracion-visitas` · **Status:** Backend ✅ merged (PR #26, 2026-11-14); executive panel F0–F4 on this branch; `CLIENTE` visit endpoints deferred to a follow-up PR
 > **Specification:** [`docs/DATA_MODEL.md → visitas`](../docs/DATA_MODEL.md#visitas-visit-requests)
 > **Depends on:** `propiedades` (Deyby, merged ✅ PR #28 + fixtures PR #33), `clientes` (Jose, merged ✅ PR #25), `usuarios` (merged ✅, linked to `clientes` and `propietarios` by PR #33), `bitacora` (merged ✅, `REPROGRAMACION` added in PR #35)
 > **Used by:** — (nothing references `visitas` yet; it feeds the visit reports, RF12)
@@ -46,6 +46,25 @@ Requested after `clientes`, `propietarios`, the property fixtures (#33) and `sol
 
 > `*`: `CLIENTE` endpoints are deferred to a follow-up PR (CU6: request and cancel own visits). The `usuarios.clienteId` link already exists (PR #33), so that PR only needs the session-based `clienteId`, the ownership check and the `populate("clienteId")`.
 > `ADMIN` has no access to any visit route: per the case, its visit use case is CU10 (reports), through `/api/reportes/visitas`, which is not implemented yet.
+
+## Frontend integration
+
+| # | Step | Browser check | Status |
+|---|---|---|---|
+| F0 | populate clienteId on GET list/detail | Network: clienteId.nombre | ✅ |
+| F1 | visita.service.js | — | ✅ |
+| F2 | VisitasPanel list + filter | 6 seed visits | ✅ |
+| F3 | State actions (PATCH) | Confirm SOLICITADA → CONFIRMADA | ✅ |
+| F4 | Create + reschedule (Modal) | 409 overlap, 400 past date | ✅ |
+
+**Dependencies (Phase 1):**
+
+| Need | Owner | Current workaround | Replace when |
+|---|---|---|---|
+| Client list for the create form | Jose (`clientes`) | `apiFetch("/clientes")` in `VisitasPanel.jsx` → `abrirCrear` | Jose merges `frontend-react/src/services/cliente.service.js` with `listarClientes()` |
+| `PUBLICADA` properties for the create form | Deyby (`propiedades`) | `listarPropiedades({ estado: "PUBLICADA" })` from `propiedad.service.js` | ✅ no change |
+
+**After Jose's service is merged:** in `VisitasPanel.jsx`, remove `import { apiFetch } from "../../services/api"`, add `import { listarClientes } from "../../services/cliente.service"`, and use `listarClientes()` inside `Promise.all` instead of `apiFetch("/clientes")`. Do **not** duplicate `listarClientes` in `visita.service.js` (per `memory/integracion.md`).
 
 ## Decisions
 
@@ -95,6 +114,7 @@ Requested after `clientes`, `propietarios`, the property fixtures (#33) and `sol
 - **Fixture `clienteId` and `ejecutivoId`:** `clienteId` comes from `clientesPorEmail` (real `ObjectId` from the seeded clients, so `populate("clienteId")` resolves) and `ejecutivoId` is copied from the property document (D10). The seed has no fixed ids.
 - **Fixture schedule avoids RN-10 by construction:** the six visits land on three properties — `ejecutivo1` gets -168 h, +72 h, +96 h and +168 h; `ejecutivo2` gets +120 h and +144 h. Every pair is at least 24 h apart and each visit lasts 1 h, so the overlap check never triggers on seeded data. Verified with an aggregation over `visitas`: 0 overlaps.
 - **Local helper script removed (step 7):** `backend/scripts/seed-visitas-only.js` was a temporary workaround until the properties fixture existed. PR #33 merged `fixtures/data/propiedades.js` and the seed now empties and reloads `propiedades`, so `make seed` loads the visits by itself and the script (and its folder) was deleted.
+- **Frontend create form client list (F4, 2026-11-18):** `VisitasPanel` loads clients for the "Nueva visita" select with a direct `GET /api/clientes` via `apiFetch` because `cliente.service.js` (Jose, panel integration) is not merged yet. Properties use `listarPropiedades({ estado: "PUBLICADA" })` (Deyby). **Cleanup:** switch to `listarClientes()` when Jose's service lands; same endpoint, same EJECUTIVO guard, only the import path changes.
 
 ## Coordination with other models
 
@@ -105,6 +125,7 @@ Requested after `clientes`, `propietarios`, the property fixtures (#33) and `sol
   `populate("propiedadId", "titulo direccion estado")` works; it does not cascade to `propietarioId` on the property response (by design).
 - **Properties fixture (Deyby, merged ✅ PR #33):** `fixtures/data/propiedades.js` loads 11 properties (one per state, one soft-deleted), the seed empties `propiedades` and links the accounts `propietario@gup.cl` / `cliente@gup.cl`. Since review R3 the visit fixtures reuse its `propiedadesPorTitulo` map (built in the rental-request step), so a visit reaches its property and executive through the title, not through a fixed id.
 - **`clientes` (Jose, merged ✅ PR #25; account link merged in PR #33):** `clienteId` reference, the fixtures use the seeded clients through `clientesPorEmail`, and `POST` validates the client (review R2). **Still pending (follow-up PR):** `CLIENTE` endpoints, resolving `clienteId` from the session instead of the body, the ownership check, and `populate("clienteId", "nombre email")` in the responses.
+- **Frontend (Ignacio, F4):** the visit create form needs a client `<select>`. Until Jose merges `cliente.service.js` (`listarClientes`), `VisitasPanel.jsx` calls `apiFetch("/clientes")` once when opening the modal (coordinate with Jose: merge the service early if possible, as in `memory/integracion.md`). Roberto/Ignacio should not copy that function into another service file.
 - **`bitacora` (Deyby, merged ✅):** call `registrarBitacora` with `entidad: "VISITA"` on every state transition (RN-13). The enum has `CREACION`, `CAMBIO_ESTADO`, `ELIMINACION` and, since PR #35, `REPROGRAMACION`; review R5 now logs the reschedule (`PUT`) with `estadoAnterior === estadoNuevo`, because moving the date is not a state change. **Pending with Deyby:** the JSDoc of `registrarBitacora` in `services/bitacora.service.js` (his file) still lists the actions without `REPROGRAMACION`, although the enum and the `Bitacora` model comment already include it.
 
 ## Proposals for AGENTS.md
@@ -160,3 +181,4 @@ The step 7 suite (`step7-full-2.ps1`, kept outside the repo in a temp folder) cr
 | 2026-11-13 | Review R5: reschedule in the audit log | `putVisita` keeps `fechaAnterior` before mutating the document and calls `registrarBitacora` after `save()` with `accion: "REPROGRAMACION"`, `estadoAnterior === estadoNuevo` and an observation with both ISO dates; JSDoc updated. 21/21 checks: one entry per successful `PUT` (with the executive populated as `usuarioId`), zero entries on `400` past date, `409` overlap, `409` terminal state and `404`; `observaciones` still saved. `make seed` left `visitas` = 6 and `bitacora` = 0. Next: R6 (final checks, memory, push). |
 | 2026-11-13 | Review R6: final checks before the review | Updated the step 7 suite: the old "no REPROGRAMACION" assertion became three checks (3 entries = 3 successful `PUT`, `estadoAnterior === estadoNuevo`, observation with both dates). Full suite on a fresh seed: **105/105**, 0 failures. `node --check` on the five touched files and `git diff --check` clean; `make seed` left `visitas` = 6 and `bitacora` = 0. Next: push and ask Deyby for the final review. |
 | 2026-11-14 | Final integrator review and merge (PR #26) | Verified 74/74 live integration checks and two `make seed` runs (`Visitas: 6`, 0 empty references). Merged into `development` (PR #26). Memory synced on `docs/deyby/sync-pr26`. Next: `CLIENTE` visit endpoints in a follow-up PR. |
+| 2026-11-18 | Frontend F4: create + reschedule in VisitasPanel | `VisitaForm`, modales, `apiFetch("/clientes")` temporal. Browser: create 201, 400 past date, 409 overlap, PUT reschedule. `npm run build` ok. | F0–F4 ✅; header → `integracion-visitas`. Next: commit F4, PR screenshots, rebase on `development`, open PR. |

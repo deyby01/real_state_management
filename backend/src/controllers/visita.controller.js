@@ -16,7 +16,8 @@ const TRANSICIONES = {
 /**
  * Helper to execute a state transition consistently across endpoints.
  * Validates against TRANSICIONES, applies extra updates, saves the document,
- * logs a CAMBIO_ESTADO entry in the audit log (RN-13) and populates the response.
+ * logs a CAMBIO_ESTADO entry in the audit log (RN-13) and populates the response:
+ * executive, property and client (nombre email telefono).
  */
 const transicionarVisita = async (req, res, estadoNuevo, { observacion, cambios = {} } = {}) => {
     try {
@@ -57,6 +58,7 @@ const transicionarVisita = async (req, res, estadoNuevo, { observacion, cambios 
 
         await visitaGuardada.populate("ejecutivoId", "nombre email rol")
         await visitaGuardada.populate("propiedadId", "titulo direccion estado")
+        await visitaGuardada.populate("clienteId", "nombre email telefono")
 
         return res.status(200).json(visitaGuardada)
     } catch (error) {
@@ -81,7 +83,8 @@ const transicionarVisita = async (req, res, estadoNuevo, { observacion, cambios 
  *     with offset (e.g. ?desde=2026-11-15T00:00:00-03:00); bare YYYY-MM-DD parses
  *     as UTC midnight and truncates Chilean local time at 21:00 of the previous day.
  * - Chronological order: sorted by `fechaInicio` ascending (upcoming visits first).
- * - Populates executive (`nombre email rol`) and property (`titulo direccion estado`).
+ * - Populates executive (`nombre email rol`), property (`titulo direccion estado`)
+ *   and client (`nombre email telefono`).
  *
  * Responses: 200 list · 400 invalid filter/date/id · 401/403 auth · 500 server error.
  */
@@ -130,6 +133,7 @@ export const getVisitas = async (req, res) => {
             .sort({ fechaInicio: 1 })
             .populate("ejecutivoId", "nombre email rol")
             .populate("propiedadId", "titulo direccion estado")
+            .populate("clienteId", "nombre email telefono")
 
         res.status(200).json(visitas)
     } catch (error) {
@@ -160,6 +164,7 @@ export const getVisitaById = async (req, res) => {
         const visita = await Visita.findById(id)
             .populate("ejecutivoId", "nombre email rol")
             .populate("propiedadId", "titulo direccion estado")
+            .populate("clienteId", "nombre email telefono")
 
         if (!visita) {
             return res.status(404).json({ mensaje: "Visita no encontrada" })
@@ -293,9 +298,10 @@ export const postVisita = async (req, res) => {
             observacion: "Visita solicitada"
         })
 
-        // Populate both executive and property to match the GET response shape
+        // Populate executive, property and client to match the GET response shape
         await visitaGuardada.populate("ejecutivoId", "nombre email rol")
         await visitaGuardada.populate("propiedadId", "titulo direccion estado")
+        await visitaGuardada.populate("clienteId", "nombre email telefono")
 
         res.status(201).json(visitaGuardada)
     } catch (error) {
@@ -418,6 +424,7 @@ export const putVisita = async (req, res) => {
 
         await visitaGuardada.populate("ejecutivoId", "nombre email rol")
         await visitaGuardada.populate("propiedadId", "titulo direccion estado")
+        await visitaGuardada.populate("clienteId", "nombre email telefono")
 
         return res.status(200).json(visitaGuardada)
     } catch (error) {
