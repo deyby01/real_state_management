@@ -3,6 +3,7 @@ import { Link, useLocation, useParams } from "react-router-dom"
 import Header from "../components/Header"
 import Footer from "../components/Footer"
 import GaleriaPropiedad from "../components/propiedades/GaleriaPropiedad"
+import SolicitarArriendoForm from "../components/solicitudes/SolicitarArriendoForm"
 import { useAuth } from "../context/AuthContext"
 import { obtenerPropiedadCatalogo } from "../services/catalogo.service"
 import { formatearDireccion, formatearPrecio } from "../utils/formato"
@@ -98,7 +99,7 @@ export default function DetallePropiedadPage() {
                                 </p>
                             )}
                             <hr className="my-5 border-stone-200" />
-                            <AccionesCliente usuario={usuario} ubicacion={ubicacion} />
+                            <AccionesCliente usuario={usuario} ubicacion={ubicacion} propiedadId={propiedad._id} />
                         </aside>
                     </article>
                 )}
@@ -122,10 +123,10 @@ function Dato({ icono, valor, texto }) {
 /**
  * What the visitor can do with the property, by session:
  * - no session: log in (and come back here thanks to `state.desde`);
- * - CLIENTE: the rental request form and visit scheduling go here (Roberto, Ignacio);
+ * - CLIENTE: the rental request form (Roberto); visit scheduling (Ignacio) comes next to it;
  * - other roles: they manage properties from the panel, not from the catalog.
  */
-function AccionesCliente({ usuario, ubicacion }) {
+function AccionesCliente({ usuario, ubicacion, propiedadId }) {
     if (!usuario) {
         return (
             <div className="text-center">
@@ -155,13 +156,8 @@ function AccionesCliente({ usuario, ubicacion }) {
         )
     }
 
-    // Roberto renders <SolicitarArriendoForm propiedadId={...} /> here, and Ignacio
-    // the visit scheduling, when their tasks are merged (memory/integracion.md)
-    return (
-        <p className="text-stone-600 text-sm text-center">
-            Muy pronto podrás solicitar el arriendo y agendar una visita desde aquí.
-        </p>
-    )
+    // Ignacio's visit scheduling will render next to this form (memory/integracion.md)
+    return <SolicitarArriendoForm propiedadId={propiedadId} />
 }
 
 /**

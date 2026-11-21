@@ -143,6 +143,31 @@ State-change endpoints accept an optional `{ "observacion": "..." }` in the body
 | No token / ADMIN | ✅ `401` / `403` |
 | Other user's request | ✅ `404` on GET (other client and other executive), PATCH (other executive) and unknown id |
 
+## Frontend integration
+
+Branch `feature/roberto/integracion-solicitudes`, from the integration base (PR #39). Card: [`memory/integracion.md → Roberto`](integracion.md). Own section per the integrator rule; this file is updated only by the model owner.
+
+| # | Step | Status |
+|---|---|---|
+| 0 | Read the base (`api.js`, `auth.service.js`, `PropiedadesPanel.jsx`, `Modal.jsx`, `menuPanel.js`, `formato.js`) | ✅ |
+| 1 | Backend touch-up (own file): populate `propiedadId` and `clienteId` in `GET /solicitudes` and `/:id` | ✅ |
+| 2 | `frontend-react/src/services/solicitud.service.js` + `components/solicitudes/estadosSolicitud.js` | ✅ |
+| 3 | `pages/panel/MisSolicitudes.jsx` (CLIENTE) | ✅ |
+| 4 | `pages/panel/SolicitudesPanel.jsx` + `components/solicitudes/AccionSolicitudForm.jsx` (EJECUTIVO) | ✅ |
+| 5 | `components/solicitudes/SolicitarArriendoForm.jsx` rendered in the `CLIENTE` branch of `AccionesCliente` (`DetallePropiedadPage.jsx`) | ✅ |
+| 6 | Routes in `App.jsx`: `solicitudes` (EJECUTIVO), `mis-solicitudes` (CLIENTE) | ✅ |
+| 7 | Browser pass with the seed users + PR | 🚧 |
+
+- **Why the populate happens after the ownership check in `obtenerSolicitud`:** `puedeVer` compares the raw `clienteId`; populating first would turn it into an object and break the comparison.
+- **Client screen** shows only the cancel action while `PENDIENTE`; the executive screen offers the actions each state allows and a detail dialog with the antecedentes and the observations history.
+- **No new dependencies:** React Router, `apiFetch`, `Modal` and the `formato.js` helpers.
+
+### Session log (frontend integration)
+
+| Date | What was done | Result / next step |
+|---|---|---|
+| 2026-11-19 | Pulled `development` (`9273bba`), rebuilt Docker, seeded, verified `5173`/`4000`. Built the service, state helper, client list, executive panel, action dialog, request form and routes; wired the form into the property detail. | Test the acceptance checks in the browser and open the PR. |
+
 ## Pending
 
 - Verify the partial index and the 5 seeded documents visually in Compass.
